@@ -1,0 +1,26 @@
+import { CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface RoleOptionProps {
+  title: string;
+  description: string;
+  selected?: boolean;
+  icon: React.ReactNode;
+}
+
+export function RoleOption({ title, description, selected = false, icon }: RoleOptionProps) {
+  return (
+    <div className={cn('rounded-2xl border p-4 transition', selected ? 'border-primary bg-primary/10 shadow-sm' : 'border-border bg-white')}>
+      <div className="flex items-start gap-3">
+        <div className="rounded-2xl bg-primary/10 p-3 text-primary">{icon}</div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-semibold text-slate-900">{title}</h3>
+            {selected ? <CheckCircle2 className="h-5 w-5 text-primary" /> : null}
+          </div>
+          <p className="mt-2 text-sm leading-7 text-slate-600">{description}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
