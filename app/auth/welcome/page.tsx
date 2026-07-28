@@ -34,7 +34,7 @@ export default function WelcomePage() {
         </div>
 
         <Button asChild size="lg" className="w-full">
-          <Link href="/auth/create-account">
+          <Link href="/auth/sign-up">
             Get started <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
