@@ -10,6 +10,7 @@ import { SystemController } from './controllers/system.controller';
 import { AuthController } from './controllers/auth.controller';
 import { CatalogController } from './controllers/catalog.controller';
 import { InventoryController } from './controllers/inventory.controller';
+import { CommerceController } from './controllers/commerce.controller';
 import { createAuthenticate } from './middlewares/authentication.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/not-found.middleware';
@@ -18,12 +19,14 @@ import { HealthRepository } from './repositories/health.repository';
 import { AuthRepository } from './repositories/auth.repository';
 import { CatalogRepository } from './repositories/catalog.repository';
 import { InventoryRepository } from './repositories/inventory.repository';
+import { CommerceRepository } from './repositories/commerce.repository';
 import { createApiRouter } from './routes';
 import { SystemService } from './services/system.service';
 import { AuthService } from './services/auth.service';
 import { EmailService } from './services/email.service';
 import { CatalogService } from './services/catalog.service';
 import { InventoryService } from './services/inventory.service';
+import { CommerceService } from './services/commerce.service';
 import { API_PREFIX } from './constants/application';
 
 export function createApp(): Express {
@@ -38,6 +41,7 @@ export function createApp(): Express {
   const catalogService = new CatalogService(new CatalogRepository(prisma));
   const catalogController = new CatalogController(catalogService);
   const inventoryController = new InventoryController(new InventoryService(new InventoryRepository(prisma), catalogService));
+  const commerceController = new CommerceController(new CommerceService(new CommerceRepository(prisma)));
 
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -57,7 +61,7 @@ export function createApp(): Express {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
-  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController));
+  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 

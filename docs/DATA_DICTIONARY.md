@@ -82,7 +82,7 @@ Buyer-owned working basket. It can retain an optional selected reusable delivery
 
 ### CartItem
 
-Unique product line in a cart with decimal quantity and provisional delivery method. Farmer grouping is derived through `Product.farmerId`, avoiding a duplicated farmer key.
+Unique product line in a cart with decimal quantity, provisional delivery method, and a `savedForLater` state. Farmer grouping is derived through `Product.farmerId`, avoiding a duplicated farmer key.
 
 ### Wishlist
 

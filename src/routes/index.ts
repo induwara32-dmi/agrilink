@@ -7,6 +7,8 @@ import type { CatalogController } from '../controllers/catalog.controller';
 import type { InventoryController } from '../controllers/inventory.controller';
 import { createCatalogRouter } from './catalog.routes';
 import { createSystemRouter } from './system.routes';
+import type { CommerceController } from '../controllers/commerce.controller';
+import { createCommerceRouter } from './commerce.routes';
 
 export function createApiRouter(
   systemController: SystemController,
@@ -14,10 +16,12 @@ export function createApiRouter(
   authenticate: RequestHandler,
   catalogController: CatalogController,
   inventoryController: InventoryController,
+  commerceController: CommerceController,
 ): Router {
   const router = Router();
   router.use(createSystemRouter(systemController));
   router.use('/auth', createAuthRouter(authController, authenticate));
   router.use(createCatalogRouter(catalogController, inventoryController, authenticate));
+  router.use(createCommerceRouter(commerceController, authenticate));
   return router;
 }

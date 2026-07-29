@@ -472,12 +472,14 @@ model CartItem {
   productId      String          @db.Uuid
   quantity       Decimal         @db.Decimal(18, 3)
   deliveryMethod DeliveryMethod?
+  savedForLater  Boolean         @default(false)
   createdAt      DateTime        @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime        @updatedAt @db.Timestamptz(6)
   cart           Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product        Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
 
   @@unique([cartId, productId])
+  @@index([cartId, savedForLater])
   @@index([productId])
 }
 

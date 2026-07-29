@@ -14,7 +14,7 @@ AgriLink will use versioned REST resources for frontend integration. This plan d
 
 ## Planned resources
 
-Authentication, catalog, product management, and inventory resources listed below are implemented in the backend. Remaining resources are planned.
+Authentication, catalog, inventory, cart, checkout, and order-read resources listed below are implemented in the backend. Remaining resources are planned.
 
 ### Authentication and identity
 
@@ -40,8 +40,8 @@ Authentication, catalog, product management, and inventory resources listed belo
 
 ### Cart and checkout
 
-- `/cart`, `/cart/items`, `/cart/items/{itemId}`
-- `/checkout/quote`
+- `/cart`, `/cart/items`, `/cart/items/{itemId}`, `/cart/items/{itemId}/save-for-later`
+- `/checkout`
 - `/orders`, `/orders/{orderId}`
 - `/orders/{orderId}/cancel`
 - `/orders/{orderId}/status-history`

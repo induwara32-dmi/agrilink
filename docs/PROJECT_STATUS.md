@@ -29,17 +29,18 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Backend foundation
 - [x] Authentication backend
 - [x] Product and inventory backend
+- [x] Cart and order backend
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
 ## Current limitations
 
 - Authentication APIs are implemented, but the frontend screens are not connected to them yet.
-- Marketplace, cart, checkout, and order screens still use mock data until frontend integration.
+- Marketplace, cart, checkout, and order screens still use mock data until frontend integration; their backend resources are implemented.
 - Dashboard actions do not yet call backend services.
 - Product search, filtering, sorting, pagination, category management, media references, inventory history, and low-stock APIs are implemented but not connected to the frontend.
 - Payments, notifications, file storage, and live tracking are not integrated.
 
 ## Next milestone
 
-The next milestone is orders and logistics, including transactional checkout, inventory reservation, farmer fulfillment groups, delivery assignment, and tracking.
+The next milestone is the remaining logistics workflow, including transporter job acceptance, vehicles, delivery transitions, and tracking.
