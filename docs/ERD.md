@@ -15,6 +15,10 @@ erDiagram
     User ||--o{ Vehicle : owns
     User ||--o{ Notification : receives
     User ||--o{ AuditLog : performs
+    User ||--o{ RefreshToken : owns
+    RefreshToken o|--o| RefreshToken : rotates_to
+    User ||--o{ EmailVerificationToken : verifies_with
+    User ||--o{ PasswordResetToken : resets_with
 
     Category o|--o{ Category : contains
     FarmerProfile ||--o{ Product : lists

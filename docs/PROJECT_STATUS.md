@@ -2,7 +2,7 @@
 
 ## Current state
 
-The frontend UI phase is complete. The application is a stabilized Next.js frontend backed by centralized mock data; it does not yet have a production database or application API.
+The frontend UI phase is complete. The repository now also contains the Express/TypeScript backend foundation, a validated Prisma/PostgreSQL domain model, and the authentication API. Marketplace and commerce screens still use frontend mock data until later integration phases.
 
 Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 
@@ -25,12 +25,15 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Order details
 - [x] Order tracking
 - [x] UI stabilization
+- [x] Database domain model
+- [x] Backend foundation
+- [x] Authentication backend
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
 ## Current limitations
 
-- Authentication screens are frontend-only and do not create sessions.
+- Authentication APIs are implemented, but the frontend screens are not connected to them yet.
 - Marketplace, cart, checkout, and order records use mock data.
 - Dashboard actions do not yet call backend services.
 - Search and filtering are local UI demonstrations.
@@ -39,4 +42,3 @@ The stabilization phase covered navigation validity, active navigation states, r
 ## Next milestone
 
 The next milestone is database design. Entity boundaries, lifecycle rules, indexing needs, and migration strategy must be agreed before a final schema or backend API is implemented.
-

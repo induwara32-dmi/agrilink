@@ -11,5 +11,7 @@ export interface AccessTokenPayload extends AuthenticatedUser {
 
 export interface RefreshTokenPayload {
   userId: string;
+  tokenId: string;
+  familyId: string;
   type: 'refresh';
 }

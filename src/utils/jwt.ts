@@ -1,6 +1,21 @@
 import jwt, { type SignOptions } from 'jsonwebtoken';
+import { Role } from '@prisma/client';
+import { z } from 'zod';
 import { env } from '../config/env';
 import type { AccessTokenPayload, RefreshTokenPayload } from '../types/authentication';
+
+const accessTokenSchema = z.object({
+  userId: z.string().uuid(),
+  role: z.nativeEnum(Role),
+  type: z.literal('access'),
+});
+
+const refreshTokenSchema = z.object({
+  userId: z.string().uuid(),
+  tokenId: z.string().uuid(),
+  familyId: z.string().uuid(),
+  type: z.literal('refresh'),
+});
 
 function signToken<TPayload extends object>(
   payload: TPayload,
@@ -28,10 +43,10 @@ export const jwtUtility = {
   },
 
   verifyAccessToken(token: string): AccessTokenPayload {
-    return jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] }) as AccessTokenPayload;
+    return accessTokenSchema.parse(jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] }));
   },
 
   verifyRefreshToken(token: string): RefreshTokenPayload {
-    return jwt.verify(token, env.JWT_REFRESH_SECRET, { algorithms: ['HS256'] }) as RefreshTokenPayload;
+    return refreshTokenSchema.parse(jwt.verify(token, env.JWT_REFRESH_SECRET, { algorithms: ['HS256'] }));
   },
 };

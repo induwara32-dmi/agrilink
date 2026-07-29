@@ -36,6 +36,18 @@ One-to-one logistics business record containing business/license identity, verif
 
 One-to-one privileged account metadata. `createdBy` records the provisioning admin identifier for audit correlation. Admin accounts are provisioned only by trusted administration workflows.
 
+### RefreshToken
+
+Hashed, revocable refresh session. `familyId` groups a rotation chain; `replacedById` links the consumed token to its successor. Expiry, revocation, IP, and user-agent fields support rotation, logout, reuse detection, and session auditing without storing the raw JWT.
+
+### EmailVerificationToken
+
+One-time hashed email-verification secret with expiry and consumption time. Issuing a new verification token should invalidate prior unconsumed tokens for that user.
+
+### PasswordResetToken
+
+One-time hashed password-reset secret with expiry and consumption time. Successful reset consumes the token and revokes every active refresh session for the user.
+
 ### Address
 
 Reusable user-owned address with recipient details, geographic hierarchy, optional coordinates, and default marker. Orders do not depend on mutable address rows; farmer groups store an immutable delivery snapshot.

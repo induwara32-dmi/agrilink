@@ -196,10 +196,60 @@ model User {
   auditLogs                AuditLog[]                 @relation("AuditActor")
   provisionedAdmins        AdminProfile[]             @relation("AdminProvisioner")
   recentlyViewedItems      RecentlyViewedItem[]
+  refreshTokens            RefreshToken[]
+  emailVerificationTokens  EmailVerificationToken[]
+  passwordResetTokens      PasswordResetToken[]
 
   @@index([role, status])
   @@index([createdAt])
   @@index([deletedAt])
+}
+
+model RefreshToken {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @db.Uuid
+  familyId     String        @db.Uuid
+  tokenHash    String        @unique @db.Char(64)
+  expiresAt    DateTime      @db.Timestamptz(6)
+  revokedAt    DateTime?     @db.Timestamptz(6)
+  replacedById String?       @unique @db.Uuid
+  createdByIp  String?       @db.VarChar(64)
+  revokedByIp  String?       @db.VarChar(64)
+  userAgent    String?       @db.VarChar(500)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replacedBy   RefreshToken? @relation("RefreshTokenRotation", fields: [replacedById], references: [id], onDelete: SetNull)
+  replaces     RefreshToken? @relation("RefreshTokenRotation")
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique @db.Char(64)
+  expiresAt  DateTime  @db.Timestamptz(6)
+  consumedAt DateTime? @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique @db.Char(64)
+  expiresAt  DateTime  @db.Timestamptz(6)
+  consumedAt DateTime? @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
 }
 
 model Profile {

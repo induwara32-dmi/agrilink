@@ -12,7 +12,7 @@ AgriLink currently uses a single Next.js 16 App Router application. React Server
 - `config/` contains design and domain constants.
 - `providers/` hosts application-wide client providers.
 
-There is no application backend in this repository today. Pages render local mock records and do not persist user actions.
+The repository now includes a separate Express/TypeScript application under `src/`, with Prisma/PostgreSQL access, layered repositories/services/controllers, centralized middleware, and versioned routes under `/api/v1`. Authentication endpoints persist users and secure token records. Frontend pages still render local mock commerce records until their later integration phase.
 
 ## Major modules
 
@@ -75,4 +75,3 @@ The exact language, framework, database engine, hosting provider, and vendor int
 - Run database migrations as a controlled release step with rollback guidance.
 - Use managed TLS, backups, monitoring, error reporting, and health checks.
 - Validate staging with smoke tests before production promotion.
-

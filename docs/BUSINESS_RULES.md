@@ -9,6 +9,10 @@
 5. Farmers and transporters cannot publish/fulfill or accept jobs until their verification and account states permit it.
 6. Suspended, disabled, or soft-deleted users cannot authenticate or start new business operations. Historical records remain intact.
 7. Authorization always combines role, ownership/assignment, account state, and resource lifecycle state.
+8. Access tokens are short-lived signed JWTs. Refresh JWTs are stored only as SHA-256 hashes and rotated on every use.
+9. Reuse of a revoked refresh token revokes its entire token family. Logout is idempotent and revokes the presented session.
+10. Email-verification and password-reset tokens are cryptographically random, stored only as hashes, expire, and are consumed once.
+11. Password-reset responses never reveal whether an email exists. A successful reset revokes all refresh sessions.
 
 ## Product and inventory rules
 
@@ -120,4 +124,3 @@
 - **Payment webhook:** claim idempotency identity, append/update transaction, recalculate payment state, enqueue consequences.
 
 The future backend must implement these boundaries with database transactions and retry handling for serialization/deadlock conflicts.
-

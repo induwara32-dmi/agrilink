@@ -12,6 +12,15 @@ const environmentSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().min(1).default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().min(1).default('7d'),
   BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
+  SMTP_HOST: z.string().min(1),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
+  SMTP_SECURE: z.stringbool().default(false),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASSWORD: z.string().default(''),
+  SMTP_FROM: z.string().min(3),
+  EMAIL_VERIFICATION_EXPIRES_IN: z.string().min(1).default('24h'),
+  PASSWORD_RESET_EXPIRES_IN: z.string().min(1).default('1h'),
 });
 
 const parsedEnvironment = environmentSchema.safeParse(process.env);

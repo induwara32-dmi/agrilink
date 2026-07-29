@@ -14,6 +14,8 @@ AgriLink will use versioned REST resources for frontend integration. This plan d
 
 ## Planned resources
 
+Authentication resources listed below are implemented in the backend. Remaining resources are planned.
+
 ### Authentication and identity
 
 - `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/refresh`
@@ -99,4 +101,3 @@ Ownership, assignment, account state, and lifecycle state must be checked in add
 - Rate limits and abuse controls
 - Media upload flow
 - Payment and messaging providers
-
