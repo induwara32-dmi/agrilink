@@ -18,5 +18,6 @@ export function createCommerceRouter(controller: CommerceController, authenticat
   router.post('/checkout', ...buyer, validateRequest(checkoutSchema), controller.checkout);
   router.get('/orders', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.ADMIN), validateRequest(orderListSchema), controller.listOrders);
   router.get('/orders/:orderId', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.ADMIN), validateRequest(orderIdSchema), controller.getOrder);
+  router.post('/orders/:orderId/cancel', ...buyer, validateRequest(orderIdSchema), controller.cancelOrder);
   return router;
 }

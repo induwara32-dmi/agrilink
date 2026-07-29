@@ -1,6 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { getStatusVariant, type OrderStatus } from '@/components/features/orders/order-data';
+import type { OrderStatusCode } from '@/lib/api/commerce';
 
-export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  return <Badge variant={getStatusVariant(status)}>{status}</Badge>;
-}
+const labels: Record<OrderStatusCode, string> = { PENDING: 'Pending', CONFIRMED: 'Confirmed', PROCESSING: 'Processing', PARTIALLY_FULFILLED: 'Partially fulfilled', FULFILLED: 'Fulfilled', CANCELLED: 'Cancelled' };
+export function OrderStatusBadge({ status }: { status: OrderStatusCode }) { const variant = status === 'FULFILLED' ? 'success' : status === 'CANCELLED' ? 'danger' : status === 'PROCESSING' ? 'warning' : 'outline'; return <Badge variant={variant}>{labels[status]}</Badge>; }

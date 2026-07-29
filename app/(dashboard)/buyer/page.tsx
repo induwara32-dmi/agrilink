@@ -1,21 +1,17 @@
-import { Bell, CheckCircle2, Heart, Package, ShoppingCart } from 'lucide-react';
+import { Heart, Package } from 'lucide-react';
 import { KPICard } from '@/components/features/dashboard/kpi-card';
 import { DataTable } from '@/components/features/dashboard/data-table';
 import { MarketTrendChart } from '@/components/features/dashboard/market-trend-chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { NotificationPanel } from '@/components/features/notifications/notification-panel';
+import { BuyerOrderStats, BuyerOrderTrackingShortcut, BuyerRecentOrders } from '@/components/features/orders/buyer-order-widgets';
 
 const featuredProducts = [
   { name: 'Organic Tomatoes', farmer: 'Green Valley Farms', price: '$3.20/kg', status: 'In Stock' },
   { name: 'Fresh Maize', farmer: 'North Ridge Co-op', price: '$1.80/kg', status: 'Limited' },
   { name: 'Cocoa Beans', farmer: 'Riverland Collective', price: '$5.10/kg', status: 'Popular' },
-];
-
-const recentOrders = [
-  { order: '#A104', item: 'Tomatoes', date: 'Today', status: 'Packed' },
-  { order: '#A098', item: 'Maize', date: 'Yesterday', status: 'In Transit' },
-  { order: '#A087', item: 'Cocoa', date: '2 days ago', status: 'Delivered' },
 ];
 
 const farmers = [
@@ -62,15 +58,14 @@ export function BuyerDashboardPage() {
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <KPICard title="Available Products" value="84" change="+12% vs last week" icon={<Package className="h-5 w-5" />} />
-          <KPICard title="Pending Orders" value="12" change="3 need confirmation" icon={<ShoppingCart className="h-5 w-5" />} />
-          <KPICard title="Completed Orders" value="46" change="+8 this week" icon={<CheckCircle2 className="h-5 w-5" />} />
+          <BuyerOrderStats />
           <KPICard title="Favorite Farmers" value="9" change="2 new follows" icon={<Heart className="h-5 w-5" />} />
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
             <DataTable title="Featured Products" columns={['Product', 'Farmer', 'Price', 'Status']} rows={featuredProducts} />
-            <DataTable title="Recent Orders" columns={['Order', 'Item', 'Date', 'Status']} rows={recentOrders} />
+            <BuyerRecentOrders />
             <MarketTrendChart />
           </div>
 
@@ -109,40 +104,13 @@ export function BuyerDashboardPage() {
               <CardHeader>
                 <CardTitle>Recent Notifications</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {[
-                  'Shipment update for order #A104',
-                  'New inventory from Green Valley Farms',
-                  'Payment confirmation received',
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-2 rounded-2xl border border-border bg-slate-50 p-3 text-sm text-slate-600">
-                    <Bell className="mt-0.5 h-4 w-4 text-primary" /> {item}
-                  </div>
-                ))}
-              </CardContent>
+              <CardContent><NotificationPanel compact /></CardContent>
             </Card>
           </div>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-          <Card className="border-border/80 bg-white">
-            <CardHeader>
-              <CardTitle>Order Status Timeline</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {['Order received', 'Packed', 'Picked up', 'In transit', 'Delivered'].map((step, index) => (
-                <div key={step} className="flex items-center gap-3 rounded-2xl border border-border bg-slate-50 p-3">
-                  <div className={`rounded-full p-2 ${index === 4 ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900">{step}</p>
-                    <p className="text-sm text-slate-600">Updated recently</p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <BuyerOrderTrackingShortcut />
 
           <Card className="border-border/80 bg-white">
             <CardHeader>

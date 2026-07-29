@@ -12,7 +12,7 @@ AgriLink currently uses a single Next.js 16 App Router application. React Server
 - `config/` contains design and domain constants.
 - `providers/` hosts application-wide client providers.
 
-The repository now includes a separate Express/TypeScript application under `src/`, with Prisma/PostgreSQL access, layered repositories/services/controllers, centralized middleware, and versioned routes under `/api/v1`. Authentication endpoints persist users and secure token records. Frontend pages still render local mock commerce records until their later integration phase.
+The repository includes a separate Express/TypeScript application under `src/`, with Prisma/PostgreSQL access, layered repositories/services/controllers, centralized middleware, and versioned routes under `/api/v1`. Authentication, marketplace, cart, checkout, order, delivery-tracking, and notification frontend paths now use centralized typed API clients and TanStack Query state.
 
 Backend domain services publish typed internal events after successful business operations. A notification subscriber renders centralized templates, creates idempotent user notifications, and records email delivery outcomes without coupling business services to SMTP or notification persistence. A durable outbox/queue is still required before multi-instance production deployment.
 

@@ -1,4 +1,4 @@
-import type { DeliveryMethod, Role } from '@prisma/client';
+import type { DeliveryMethod, OrderStatus, Role } from '@prisma/client';
 
 export interface CommerceActor { userId: string; role: Role; requestId: string }
 export interface CartItemInput { productId: string; quantity: string; deliveryMethod?: DeliveryMethod }
@@ -7,4 +7,4 @@ export interface DeliveryAddressInput { recipientName: string; recipientPhone: s
 export interface CheckoutGroupInput { farmerId: string; deliveryMethod: DeliveryMethod; deliveryAddressId?: string; deliveryAddress?: DeliveryAddressInput; buyerNotes?: string }
 export interface CheckoutInput { groups: CheckoutGroupInput[]; couponCode?: string; paymentProvider: string }
 export type CheckoutPreviewInput = Omit<CheckoutInput, 'paymentProvider'>;
-export interface OrderQuery { page: number; pageSize: number }
+export interface OrderQuery { page: number; pageSize: number; search?: string; status?: OrderStatus }

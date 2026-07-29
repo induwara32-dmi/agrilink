@@ -202,9 +202,39 @@ export class CommerceRepository extends BaseRepository {
   }
 
   public async listOrders(actor: CommerceActor, query: OrderQuery) {
-    const where: Prisma.OrderWhereInput = actor.role === Role.BUYER ? { buyerId: actor.userId } : actor.role === Role.FARMER ? { farmerOrders: { some: { farmer: { userId: actor.userId } } } } : {};
+    const access: Prisma.OrderWhereInput = actor.role === Role.BUYER ? { buyerId: actor.userId } : actor.role === Role.FARMER ? { farmerOrders: { some: { farmer: { userId: actor.userId } } } } : {};
+    const where: Prisma.OrderWhereInput = { ...access, ...(query.status ? { status: query.status } : {}), ...(query.search ? { OR: [{ orderNumber: { contains: query.search, mode: 'insensitive' } }, { farmerOrders: { some: { farmer: { farmName: { contains: query.search, mode: 'insensitive' } } } } }, { farmerOrders: { some: { items: { some: { productName: { contains: query.search, mode: 'insensitive' } } } } } }] } : {}) };
     const [items, total] = await this.database.$transaction([this.database.order.findMany({ where, include: orderIncludeFor(actor), orderBy: { createdAt: 'desc' }, skip: (query.page - 1) * query.pageSize, take: query.pageSize }), this.database.order.count({ where })]);
     return { items, total };
+  }
+
+  public async cancelOrder(orderId: string, buyerId: string, requestId: string) {
+    return this.database.$transaction(async transaction => {
+      await transaction.$queryRaw(Prisma.sql`SELECT id FROM "Order" WHERE id = ${orderId}::uuid FOR UPDATE`);
+      const order = await transaction.order.findFirst({ where: { id: orderId, buyerId }, include: orderInclude });
+      if (!order) throw new Error('ORDER_NOT_FOUND');
+      if (order.status !== OrderStatus.PENDING || order.payment?.status !== 'PENDING' || order.farmerOrders.some(group => group.status !== FarmerOrderStatus.PENDING)) throw new Error('ORDER_NOT_CANCELLABLE');
+      for (const group of order.farmerOrders) {
+        for (const item of group.items) {
+          const inventory = await transaction.inventory.findUnique({ where: { productId: item.productId } });
+          if (!inventory || inventory.quantityReserved.lessThan(item.quantity)) throw new Error('INVENTORY_RESERVATION_INVALID');
+          await transaction.inventory.update({ where: { id: inventory.id }, data: { quantityReserved: { decrement: item.quantity }, version: { increment: 1 } } });
+          await transaction.inventoryMovement.create({ data: { inventoryId: inventory.id, actorId: buyerId, type: InventoryMovementType.RESERVATION_RELEASE, quantity: item.quantity.negated(), balanceAfter: inventory.quantityOnHand, referenceType: 'Order', referenceId: order.id, reason: 'Buyer cancelled pending order' } });
+        }
+        await transaction.farmerOrder.update({ where: { id: group.id }, data: { status: FarmerOrderStatus.CANCELLED, cancelledAt: new Date() } });
+        await transaction.farmerOrderStatusHistory.create({ data: { farmerOrderId: group.id, actorId: buyerId, fromStatus: group.status, toStatus: FarmerOrderStatus.CANCELLED, reason: 'Buyer cancelled pending order' } });
+        if (group.delivery) {
+          await transaction.delivery.update({ where: { id: group.delivery.id }, data: { status: DeliveryStatus.CANCELLED } });
+          await transaction.deliveryStatusHistory.create({ data: { deliveryId: group.delivery.id, actorId: buyerId, fromStatus: group.delivery.status, toStatus: DeliveryStatus.CANCELLED, note: 'Buyer cancelled pending order' } });
+          if (group.delivery.transportJob) await transaction.transportJob.update({ where: { id: group.delivery.transportJob.id }, data: { status: TransportJobStatus.CANCELLED } });
+        }
+      }
+      await transaction.order.update({ where: { id: order.id }, data: { status: OrderStatus.CANCELLED, cancelledAt: new Date() } });
+      await transaction.orderStatusHistory.create({ data: { orderId: order.id, actorId: buyerId, fromStatus: order.status, toStatus: OrderStatus.CANCELLED, reason: 'Buyer cancelled pending order' } });
+      await transaction.payment.update({ where: { orderId: order.id }, data: { status: 'CANCELLED' } });
+      await transaction.auditLog.create({ data: { actorId: buyerId, action: 'ORDER_CANCELLED', entityType: 'Order', entityId: order.id, requestId } });
+      return transaction.order.findUniqueOrThrow({ where: { id: order.id }, include: orderInclude });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
   public findOrder(orderId: string, actor: CommerceActor) {

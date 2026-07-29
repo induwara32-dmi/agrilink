@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dashboardNavItems } from '@/components/layout/navigation-data';
 import { useAuth } from '@/providers/auth-provider';
+import { useQuery } from '@tanstack/react-query';
+import { NotificationPanel } from '@/components/features/notifications/notification-panel';
+import { getUnreadCount, notificationQueryKeys } from '@/lib/api/notifications';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -43,6 +46,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const breadcrumbs = getBreadcrumbs(pathname);
   const { user, logout } = useAuth();
   const displayName = user?.profile?.displayName || [user?.profile?.firstName, user?.profile?.lastName].filter(Boolean).join(' ') || user?.email;
+  const unread = useQuery({ queryKey: notificationQueryKeys.unread(), queryFn: getUnreadCount, enabled: Boolean(user), refetchInterval: 60_000 });
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -94,14 +98,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
                 <div className="relative">
                   <Button variant="ghost" size="icon" aria-label="Notifications" aria-expanded={isNotificationsOpen} onClick={() => { setIsNotificationsOpen((open) => !open); setIsProfileOpen(false); }}>
                     <Bell className="h-4 w-4" />
+                    {(unread.data?.data.count ?? 0) > 0 ? <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] text-white">{unread.data!.data.count > 99 ? '99+' : unread.data!.data.count}</span> : null}
                   </Button>
                   {isNotificationsOpen ? (
-                    <div className="absolute right-0 z-10 mt-2 w-64 rounded-2xl border border-border bg-white p-3 shadow-lg">
+                    <div className="absolute right-0 z-10 mt-2 max-h-[70vh] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-border bg-white p-3 shadow-lg">
                       <p className="mb-2 text-sm font-semibold text-slate-900">Notifications</p>
-                      <div className="space-y-2 text-sm text-slate-600">
-                        <div className="rounded-xl bg-slate-50 p-2">New inventory from Green Valley Farms</div>
-                        <div className="rounded-xl bg-slate-50 p-2">Delivery window changed for order #A104</div>
-                      </div>
+                      <NotificationPanel compact />
                     </div>
                   ) : null}
                 </div>

@@ -1,4 +1,4 @@
-import { DeliveryMethod } from '@prisma/client';
+import { DeliveryMethod, OrderStatus } from '@prisma/client';
 import { z } from 'zod';
 
 const empty = z.object({}).strict();
@@ -22,7 +22,7 @@ export const checkoutSchema = request(z.object({
   couponCode: z.string().trim().min(1).max(64).transform(value => value.toUpperCase()).optional(),
   paymentProvider: z.string().trim().min(2).max(80),
 }), empty, empty);
-export const orderListSchema = request(empty, empty, z.object({ page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(20) }));
+export const orderListSchema = request(empty, empty, z.object({ page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(20), search: z.string().trim().min(1).max(120).optional(), status: z.nativeEnum(OrderStatus).optional() }));
 export const orderIdSchema = request(empty, z.object({ orderId: uuid }), empty);
 
 export type AddCartItemBody = z.infer<typeof addCartItemSchema>['body'];

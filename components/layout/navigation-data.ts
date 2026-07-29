@@ -13,4 +13,5 @@ export const dashboardNavItems = [
   { label: 'Transporter workspace', href: '/transporter' },
   { label: 'Admin workspace', href: '/admin' },
   { label: 'Marketplace', href: '/marketplace' },
+  { label: 'Notifications', href: '/notifications' },
 ] as const;

@@ -18,7 +18,7 @@ export class LogisticsService extends BaseService {
   public async accept(id: string, vehicleId: string | undefined, actor: LogisticsActor) { try { const job = await this.repository.accept(id, actor.userId, vehicleId, actor.requestId); await this.publishJobEvent('DELIVERY_ACCEPTED', job); return job; } catch (error) { this.translate(error); } }
   public async reject(id: string, reason: string | undefined, actor: LogisticsActor) { try { return await this.repository.reject(id, actor.userId, reason, actor.requestId); } catch (error) { this.translate(error); } }
   public async listDeliveries(query: PageQuery, actor: LogisticsActor) { const result = await this.repository.listDeliveries(actor, query); return { ...result, meta: meta(query, result.total) }; }
-  public getDelivery(id: string, actor: LogisticsActor) { return this.requireDeliveryAccess(id, actor); }
+  public async getDelivery(id: string, actor: LogisticsActor) { const delivery = await this.repository.findDelivery(id); if (!delivery) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'DELIVERY_NOT_FOUND', 'Delivery not found.'); if (actor.role === Role.ADMIN || delivery.farmerOrder.order.buyerId === actor.userId || delivery.farmerOrder.farmer.userId === actor.userId || delivery.transportJob?.transporter?.userId === actor.userId) return delivery; throw new ApiError(HTTP_STATUS.FORBIDDEN, 'DELIVERY_FORBIDDEN', 'You cannot view this delivery.'); }
 
   public async schedule(id: string, input: ScheduleInput, actor: LogisticsActor) {
     const delivery = await this.requireDeliveryAccess(id, actor);

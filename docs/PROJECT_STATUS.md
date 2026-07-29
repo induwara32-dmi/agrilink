@@ -35,12 +35,13 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Role-based analytics backend
 - [x] Authentication and marketplace frontend API integration
 - [x] Cart and checkout frontend API integration
+- [x] Orders, tracking, and notifications frontend API integration
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
 ## Current limitations
 
-- Order list, order details, wishlist, and recently viewed screens still use mock data until their frontend integration phases.
+- Wishlist and recently viewed screens still use mock data until their frontend integration phases.
 - Dashboard actions do not yet call backend services.
 - Product search, filtering, sorting, pagination, category management, media references, inventory history, and low-stock APIs are implemented but not connected to the frontend.
 - Payments, object storage uploads, and live location streaming are not integrated. In-app and email notifications are implemented; a durable external queue/outbox remains a deployment hardening step.
@@ -53,3 +54,7 @@ The next milestone is payments.
 ## Phase 24 integration correction
 
 Cart and checkout integration required two narrow additions to the existing commerce API. `POST /checkout/preview` now validates current cart stock, farmer groups, and coupons while returning server-calculated group and order totals. Checkout groups may also submit validated inline delivery information because no address-management API exists yet; the checkout transaction stores the same immutable delivery snapshot and still accepts owned saved-address IDs for future clients. No inventory, coupon, order, or delivery business rule was relaxed.
+
+## Phase 25 integration corrections
+
+Order integration added the documented buyer cancellation endpoint with a deliberately narrow rule: only fully pending orders with pending payment may be cancelled. The serializable transaction releases inventory reservations and updates order, farmer-order, delivery, transport-job, payment, history, audit, and notification state together. Order listing now supports server-side search and status filtering so pagination metadata remains correct. Delivery read authorization was separated from operational mutation authorization, allowing a buyer to view every delivery belonging to their order without granting delivery-management permission.

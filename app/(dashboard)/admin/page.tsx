@@ -5,6 +5,7 @@ import { KPICard } from '@/components/features/dashboard/kpi-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { NotificationPanel } from '@/components/features/notifications/notification-panel';
 
 const userRegistrations = [
   { name: 'Nadia Boateng', role: 'Buyer', date: 'Today' },
@@ -186,10 +187,7 @@ export default function AdminDashboardPage() {
             <CardHeader>
               <CardTitle>Notifications</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-slate-600">
-              <div className="rounded-2xl border border-border bg-slate-50 p-3">3 new farmer approvals pending</div>
-              <div className="rounded-2xl border border-border bg-slate-50 p-3">2 route updates awaiting review</div>
-            </CardContent>
+            <CardContent><NotificationPanel compact /></CardContent>
           </Card>
         </div>
       </section>
