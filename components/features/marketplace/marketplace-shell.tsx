@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Filter, Search, SlidersHorizontal, Sparkles, Star } from 'lucide-react';
+import { Filter, Search, SlidersHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,8 +22,8 @@ export function MarketplaceShell({ title, description, children }: MarketplaceSh
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85">{description}</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button className="bg-white text-primary hover:bg-slate-50">Browse listings</Button>
-            <Button variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/10">Create listing</Button>
+            <Button asChild className="bg-white text-primary hover:bg-slate-50"><Link href="/marketplace/search">Browse listings</Link></Button>
+            <Button variant="outline" disabled title="Listing creation is not available in this release" className="border-white/40 bg-transparent text-white hover:bg-white/10">Create listing</Button>
           </div>
         </div>
       </section>
@@ -32,7 +32,7 @@ export function MarketplaceShell({ title, description, children }: MarketplaceSh
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-1 items-center gap-3 rounded-2xl border border-border bg-slate-50 px-3 py-2">
             <Search className="h-4 w-4 text-slate-400" />
-            <Input placeholder="Search products, farmers, or categories" className="border-0 bg-transparent shadow-none focus:ring-0" />
+            <Input aria-label="Search marketplace" placeholder="Search products, farmers, or categories" className="border-0 bg-transparent shadow-none focus:ring-0" />
           </div>
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" className="gap-2">

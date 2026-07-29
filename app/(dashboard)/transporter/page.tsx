@@ -1,4 +1,4 @@
-import { Bell, CheckCircle2, Clock3, Fuel, MapPinned, PackageCheck, Route, Truck, UserRound, Wallet } from 'lucide-react';
+import { CheckCircle2, Fuel, MapPinned, PackageCheck, Route, UserRound, Wallet } from 'lucide-react';
 import { AnalyticsChart } from '@/components/features/dashboard/analytics-chart';
 import { KPICard } from '@/components/features/dashboard/kpi-card';
 import { Badge } from '@/components/ui/badge';
@@ -97,7 +97,7 @@ export default function TransporterDashboardPage() {
 
           <Card className="border-border/80 bg-white">
             <CardHeader>
-              <CardTitle>Today's Route</CardTitle>
+              <CardTitle>Today&apos;s Route</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2 rounded-2xl border border-border bg-slate-50 p-3 text-sm text-slate-600">

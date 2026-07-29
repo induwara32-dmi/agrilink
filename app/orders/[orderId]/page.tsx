@@ -1,17 +1,15 @@
-'use client';
-
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Download, MessageCircle, Package, Phone, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { getOrderById } from '@/components/features/orders/order-data';
 import { OrderStatusBadge } from '@/components/features/orders/order-status-badge';
 import { OrderTimeline } from '@/components/features/orders/order-timeline';
 
-export default function OrderDetailsPage({ params }: { params: Promise<{ orderId: string }> }) {
-  const order = getOrderById('ag-48291');
+export default async function OrderDetailsPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = await params;
+  const order = getOrderById(orderId);
   if (!order) notFound();
 
   return (

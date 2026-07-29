@@ -1,29 +1,17 @@
 import Link from 'next/link';
-import { ArrowRight, Minus, Plus, Trash2, Truck } from 'lucide-react';
+import { Minus, Plus, Trash2, Truck } from 'lucide-react';
 import { ProductCard } from '@/components/features/marketplace/product-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { featuredProducts } from '@/components/features/marketplace/marketplace-data';
+import { DELIVERY_METHODS } from '@/config/domain';
 
-const cartItems = [
-  {
-    id: 1,
-    title: 'Organic Tomatoes',
-    farmer: 'Green Valley Farms',
-    price: '$3.20/kg',
-    quantity: 2,
-    delivery: 'Farmer Delivery',
-  },
-  {
-    id: 2,
-    title: 'Fresh Maize',
-    farmer: 'North Ridge Co-op',
-    price: '$1.80/kg',
-    quantity: 1,
-    delivery: 'Buyer Pickup',
-  },
-];
+const cartItems = featuredProducts.slice(0, 2).map((product, index) => ({
+  ...product,
+  quantity: index === 0 ? 2 : 1,
+  delivery: DELIVERY_METHODS[index],
+}));
 
 export default function CartPage() {
   return (
@@ -79,7 +67,7 @@ export default function CartPage() {
               <CardTitle>Delivery method</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-3">
-              {['Farmer Delivery', 'Buyer Pickup', 'Transport Partner'].map((option) => (
+              {DELIVERY_METHODS.map((option) => (
                 <div key={option} className="rounded-2xl border border-border bg-slate-50 p-3 text-sm text-slate-600">
                   <div className="flex items-center gap-2 font-semibold text-slate-900">
                     <Truck className="h-4 w-4 text-primary" /> {option}
@@ -121,7 +109,7 @@ export default function CartPage() {
               <div className="flex items-center justify-between"><span>Delivery fee</span><span>$2.50</span></div>
               <div className="flex items-center justify-between"><span>Discount</span><span>-$1.00</span></div>
               <div className="flex items-center justify-between border-t border-border pt-3 text-base font-semibold text-slate-900"><span>Total</span><span>$9.70</span></div>
-              <Button className="w-full">Checkout</Button>
+              <Button asChild className="w-full"><Link href="/checkout">Checkout</Link></Button>
             </CardContent>
           </Card>
 

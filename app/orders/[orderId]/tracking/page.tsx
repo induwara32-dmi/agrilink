@@ -1,6 +1,5 @@
-'use client';
-
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { ArrowLeft, CalendarDays, MapPin, MessageCircle, Phone, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { getOrderById } from '@/components/features/orders/order-data';
 import { OrderTimeline } from '@/components/features/orders/order-timeline';
 
-export default function OrderTrackingPage({ params }: { params: Promise<{ orderId: string }> }) {
-  const order = getOrderById('ag-48291');
-  if (!order) return null;
+export default async function OrderTrackingPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const { orderId } = await params;
+  const order = getOrderById(orderId);
+  if (!order) notFound();
 
   const renderMethodDetails = () => {
     if (order.deliveryMethod === 'Buyer Pickup') {

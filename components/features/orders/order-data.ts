@@ -1,5 +1,6 @@
-export type OrderStatus = 'Pending' | 'Preparing' | 'In Transit' | 'Delivered' | 'Cancelled';
-export type DeliveryMethod = 'Farmer Delivery' | 'Buyer Pickup' | 'Platform Transporter';
+import { ORDER_STATUSES, type DeliveryMethod, type OrderStatus } from '@/config/domain';
+
+export type { DeliveryMethod, OrderStatus } from '@/config/domain';
 export type TimelineStatus =
   | 'Order Placed'
   | 'Farmer Confirmed'
@@ -57,7 +58,7 @@ export interface OrderRecord {
   currentTimelineStatus: TimelineStatus;
 }
 
-export const ORDER_STATUS_OPTIONS = ['All', 'Pending', 'Preparing', 'In Transit', 'Delivered', 'Cancelled'] as const;
+export const ORDER_STATUS_OPTIONS = ['All', ...ORDER_STATUSES] as const;
 
 export const TIMELINE_STATUSES: TimelineStatus[] = [
   'Order Placed',

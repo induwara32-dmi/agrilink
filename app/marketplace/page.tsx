@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { MarketplaceShell } from '@/components/features/marketplace/marketplace-shell';
 import { CategoryCard } from '@/components/features/marketplace/category-card';
 import { ProductCard } from '@/components/features/marketplace/product-card';

@@ -1,4 +1,4 @@
-import { Bell, CheckCircle2, Leaf, Package, PlusCircle, ShoppingCart, TrendingUp, Truck, Users, Wallet } from 'lucide-react';
+import { CheckCircle2, Leaf, Package, PlusCircle, ShoppingCart, TrendingUp, Truck, Users, Wallet } from 'lucide-react';
 import { AnalyticsChart } from '@/components/features/dashboard/analytics-chart';
 import { DataTable } from '@/components/features/dashboard/data-table';
 import { KPICard } from '@/components/features/dashboard/kpi-card';
@@ -82,13 +82,13 @@ export default function FarmerDashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {([
-              ['Add Product', <PlusCircle className="h-4 w-4" />],
-              ['Update Stock', <Truck className="h-4 w-4" />],
-              ['Accept Order', <CheckCircle2 className="h-4 w-4" />],
-              ['Request Transport', <Truck className="h-4 w-4" />],
-              ['View Analytics', <TrendingUp className="h-4 w-4" />],
-            ] as Array<[string, React.ReactNode]>).map(([label, icon]) => (
+            {[
+              { label: 'Add Product', icon: <PlusCircle className="h-4 w-4" /> },
+              { label: 'Update Stock', icon: <Truck className="h-4 w-4" /> },
+              { label: 'Accept Order', icon: <CheckCircle2 className="h-4 w-4" /> },
+              { label: 'Request Transport', icon: <Truck className="h-4 w-4" /> },
+              { label: 'View Analytics', icon: <TrendingUp className="h-4 w-4" /> },
+            ].map(({ label, icon }) => (
               <Button key={label} variant="outline" className="justify-start">
                 {icon}
                 {label}

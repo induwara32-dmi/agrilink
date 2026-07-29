@@ -6,17 +6,17 @@ import { CheckCircle2, ChevronRight, CreditCard, MapPin, PackageCheck, Truck } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { DELIVERY_METHODS, type DeliveryMethod } from '@/config/domain';
+import { getOrderById } from '@/components/features/orders/order-data';
 
 const steps = ['Delivery Information', 'Delivery Method', 'Payment', 'Review Order', 'Success'];
 
-const products = [
-  { name: 'Organic Tomatoes', price: '$6.40' },
-  { name: 'Fresh Maize', price: '$1.80' },
-];
+const checkoutOrder = getOrderById('ag-48291');
+const products = checkoutOrder?.items ?? [];
 
 export default function CheckoutPage() {
   const [step, setStep] = useState(0);
-  const [selectedMethod, setSelectedMethod] = useState('Farmer Delivery');
+  const [selectedMethod, setSelectedMethod] = useState<DeliveryMethod>('Farmer Delivery');
   const [paymentMethod, setPaymentMethod] = useState('Cash on Delivery');
 
   const nextStep = () => setStep((current) => Math.min(current + 1, steps.length - 1));
@@ -71,8 +71,8 @@ export default function CheckoutPage() {
                 <CardTitle>Step 2 • Delivery method</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-3">
-                {['Farmer Delivery', 'Buyer Pickup', 'Transport Partner'].map((method) => (
-                  <button key={method} onClick={() => setSelectedMethod(method)} className={`rounded-2xl border p-4 text-left text-sm ${selectedMethod === method ? 'border-primary bg-primary/5 text-slate-900' : 'border-border bg-slate-50 text-slate-600'}`}>
+                {DELIVERY_METHODS.map((method) => (
+                  <button type="button" key={method} aria-pressed={selectedMethod === method} onClick={() => setSelectedMethod(method)} className={`rounded-2xl border p-4 text-left text-sm ${selectedMethod === method ? 'border-primary bg-primary/5 text-slate-900' : 'border-border bg-slate-50 text-slate-600'}`}>
                     <div className="flex items-center gap-2 font-semibold">
                       <Truck className="h-4 w-4 text-primary" /> {method}
                     </div>
@@ -91,7 +91,7 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-3">
                   {['Cash on Delivery', 'Card', 'Bank Transfer'].map((option) => (
-                    <button key={option} onClick={() => setPaymentMethod(option)} className={`rounded-2xl border p-4 text-left text-sm ${paymentMethod === option ? 'border-primary bg-primary/5 text-slate-900' : 'border-border bg-slate-50 text-slate-600'}`}>
+                    <button type="button" key={option} aria-pressed={paymentMethod === option} onClick={() => setPaymentMethod(option)} className={`rounded-2xl border p-4 text-left text-sm ${paymentMethod === option ? 'border-primary bg-primary/5 text-slate-900' : 'border-border bg-slate-50 text-slate-600'}`}>
                       <div className="flex items-center gap-2 font-semibold">
                         <CreditCard className="h-4 w-4 text-primary" /> {option}
                       </div>
@@ -118,7 +118,7 @@ export default function CheckoutPage() {
                   {products.map((product) => (
                     <div key={product.name} className="mt-2 flex items-center justify-between">
                       <span>{product.name}</span>
-                      <span>{product.price}</span>
+                      <span>{product.total}</span>
                     </div>
                   ))}
                 </div>
@@ -142,7 +142,7 @@ export default function CheckoutPage() {
                 <p>Order number: AG-48291</p>
                 <p>Estimated delivery: 2-6 hours</p>
                 <div className="flex flex-wrap gap-3">
-                  <Button>Track order</Button>
+                  <Button asChild><Link href="/orders/ag-48291/tracking">Track order</Link></Button>
                   <Button asChild variant="outline">
                     <Link href="/marketplace">Continue shopping</Link>
                   </Button>

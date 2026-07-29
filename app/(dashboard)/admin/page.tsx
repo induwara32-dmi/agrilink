@@ -90,13 +90,13 @@ export default function AdminDashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {([
-              ['Approve Farmer', <ShieldCheck className="h-4 w-4" />],
-              ['Approve Transporter', <CheckCircle2 className="h-4 w-4" />],
-              ['Add Category', <Package className="h-4 w-4" />],
-              ['View Reports', <TrendingUp className="h-4 w-4" />],
-              ['Manage Users', <Users className="h-4 w-4" />],
-            ] as Array<[string, React.ReactNode]>).map(([label, icon]) => (
+            {[
+              { label: 'Approve Farmer', icon: <ShieldCheck className="h-4 w-4" /> },
+              { label: 'Approve Transporter', icon: <CheckCircle2 className="h-4 w-4" /> },
+              { label: 'Add Category', icon: <Package className="h-4 w-4" /> },
+              { label: 'View Reports', icon: <TrendingUp className="h-4 w-4" /> },
+              { label: 'Manage Users', icon: <Users className="h-4 w-4" /> },
+            ].map(({ label, icon }) => (
               <Button key={label} variant="outline" className="justify-start">
                 {icon}
                 {label}

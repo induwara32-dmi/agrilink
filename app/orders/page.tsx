@@ -1,13 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ArrowLeft, Search, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
-import { ORDER_STATUS_OPTIONS, mockOrders, type OrderStatus } from '@/components/features/orders/order-data';
+import { ORDER_STATUS_OPTIONS, mockOrders } from '@/components/features/orders/order-data';
 import { OrderCard } from '@/components/features/orders/order-card';
 
 const ordersPerPage = 4;
@@ -43,13 +44,16 @@ export default function OrdersPage() {
     return matches;
   }, [activeTab, search, sortBy]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [activeTab, search, sortBy]);
-
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / ordersPerPage));
   const safePage = Math.min(page, totalPages);
   const visibleOrders = filteredOrders.slice((safePage - 1) * ordersPerPage, safePage * ordersPerPage);
+
+  const handleReset = () => {
+    setActiveTab('All');
+    setSearch('');
+    setSortBy('newest');
+    setPage(1);
+  };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -96,16 +100,13 @@ export default function OrdersPage() {
                 <option value="amount">Highest amount</option>
               </Select>
             </div>
-            <Button variant="outline" onClick={() => { setActiveTab('All'); setSearch(''); setSortBy('newest'); }}>
+            <Button variant="outline" onClick={handleReset}>
               Reset
             </Button>
           </div>
 
           {visibleOrders.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-slate-50 p-8 text-center text-sm text-slate-600">
-              <p className="text-base font-semibold text-slate-900">No orders match the current filters.</p>
-              <p className="mt-2">Try changing the search or status selection to find more orders.</p>
-            </div>
+            <EmptyState title="No orders match the current filters." description="Try changing the search or status selection to find more orders." />
           ) : (
             <div className="space-y-4">
               {visibleOrders.map((order) => (
