@@ -34,4 +34,9 @@ export class EmailService {
       html: `<p>A password reset was requested for your account.</p><p><a href="${resetUrl}">Reset password</a></p>`,
     });
   }
+
+  public async sendNotification(email: string, subject: string, body: string): Promise<void> {
+    const escaped = body.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+    await this.transporter.sendMail({ from: env.SMTP_FROM, to: email, subject, text: body, html: `<p>${escaped}</p>` });
+  }
 }

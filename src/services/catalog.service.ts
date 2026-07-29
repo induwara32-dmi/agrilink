@@ -6,11 +6,12 @@ import { ApiError } from '../utils/api-error';
 import { slugify } from '../utils/slug';
 import { createTokenId } from '../utils/token';
 import { BaseService } from './base.service';
+import type { DomainEventPublisher } from '../types/domain-events';
 
 const pageMeta = (page: number, pageSize: number, total: number) => ({ page, pageSize, total, totalPages: Math.ceil(total / pageSize) });
 
 export class CatalogService extends BaseService {
-  public constructor(private readonly repository: CatalogRepository) { super(); }
+  public constructor(private readonly repository: CatalogRepository, private readonly events: DomainEventPublisher) { super(); }
   public async listPublic(query: ProductQuery) { const result = await this.repository.listProducts(query, true); return { ...result, meta: pageMeta(query.page, query.pageSize, result.total) }; }
   public async listFarmer(query: ProductQuery, actor: Actor) { const farmer = await this.requireFarmer(actor.userId); const result = await this.repository.listProducts(query, false, farmer.id); return { ...result, meta: pageMeta(query.page, query.pageSize, result.total) }; }
   public async managedFarmerId(actor: Actor): Promise<string | undefined> { return actor.role === Role.FARMER ? (await this.requireFarmer(actor.userId)).id : undefined; }
@@ -23,7 +24,7 @@ export class CatalogService extends BaseService {
     if (actor.role !== Role.ADMIN && farmer.verificationStatus !== VerificationStatus.APPROVED) throw new ApiError(HTTP_STATUS.FORBIDDEN, 'FARMER_NOT_VERIFIED', 'Farmer verification is required.');
     if (!await this.repository.findCategory(input.categoryId)) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'CATEGORY_NOT_FOUND', 'Category not found.');
     const slug = input.slug ?? `${slugify(input.name)}-${createTokenId().slice(0, 8)}`;
-    try { return await this.repository.createProduct({ ...input, slug }, farmer.id, actor.userId, actor.requestId); } catch (error) { this.translateConflict(error); }
+    try { const product = await this.repository.createProduct({ ...input, slug }, farmer.id, actor.userId, actor.requestId); await this.events.publish({ type: 'PRODUCT_CREATED', recipientIds: [farmer.userId], data: { productId: product.id, productName: product.name } }); return product; } catch (error) { this.translateConflict(error); }
   }
   public async updateProduct(id: string, input: ProductUpdateInput, actor: Actor) { const product = await this.requireManagedProduct(id, actor); if (input.categoryId && !await this.repository.findCategory(input.categoryId)) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'CATEGORY_NOT_FOUND', 'Category not found.'); if (input.status === ProductStatus.ACTIVE && actor.role !== Role.ADMIN && product.farmer.verificationStatus !== VerificationStatus.APPROVED) throw new ApiError(HTTP_STATUS.FORBIDDEN, 'FARMER_NOT_VERIFIED', 'Farmer verification is required.'); try { return await this.repository.updateProduct(id, input, actor.userId, actor.requestId); } catch (error) { this.translateConflict(error); } }
   public async deleteProduct(id: string, actor: Actor): Promise<void> { await this.requireManagedProduct(id, actor); await this.repository.deleteProduct(id, actor.userId, actor.requestId); }

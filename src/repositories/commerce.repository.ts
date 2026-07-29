@@ -3,7 +3,7 @@ import type { CartItemInput, CartItemUpdate, CheckoutInput, CommerceActor, Order
 import { BaseRepository } from './base.repository';
 
 const cartInclude = { items: { include: { product: { include: { farmer: { select: { id: true, farmName: true } }, images: { orderBy: { sortOrder: 'asc' as const }, take: 1 }, inventory: true } } }, orderBy: { createdAt: 'asc' as const } } } satisfies Prisma.CartInclude;
-const orderInclude = { farmerOrders: { include: { items: true, delivery: { include: { statusHistory: { orderBy: { occurredAt: 'asc' as const } }, transportJob: true } }, statusHistory: { orderBy: { createdAt: 'asc' as const } }, farmer: { select: { id: true, farmName: true } } } }, statusHistory: { orderBy: { createdAt: 'asc' as const } }, couponRedemptions: { include: { coupon: { select: { code: true, type: true, value: true } } } }, payment: true } satisfies Prisma.OrderInclude;
+const orderInclude = { farmerOrders: { include: { items: true, delivery: { include: { statusHistory: { orderBy: { occurredAt: 'asc' as const } }, transportJob: true } }, statusHistory: { orderBy: { createdAt: 'asc' as const } }, farmer: { select: { id: true, farmName: true, userId: true } } } }, statusHistory: { orderBy: { createdAt: 'asc' as const } }, couponRedemptions: { include: { coupon: { select: { code: true, type: true, value: true } } } }, payment: true } satisfies Prisma.OrderInclude;
 const orderIncludeFor = (actor: CommerceActor): Prisma.OrderInclude => actor.role === Role.FARMER ? { ...orderInclude, farmerOrders: { where: { farmer: { userId: actor.userId } }, include: orderInclude.farmerOrders.include } } : orderInclude;
 
 export class CommerceRepository extends BaseRepository {
@@ -162,4 +162,5 @@ export class CommerceRepository extends BaseRepository {
     const access: Prisma.OrderWhereInput = actor.role === Role.BUYER ? { buyerId: actor.userId } : actor.role === Role.FARMER ? { farmerOrders: { some: { farmer: { userId: actor.userId } } } } : {};
     return this.database.order.findFirst({ where: { id: orderId, ...access }, include: orderIncludeFor(actor) });
   }
+  public stockAlertsForOrder(orderId: string) { return this.database.orderItem.findMany({ where: { farmerOrder: { orderId } }, select: { product: { select: { id: true, name: true, farmer: { select: { userId: true } }, inventory: true } } } }); }
 }

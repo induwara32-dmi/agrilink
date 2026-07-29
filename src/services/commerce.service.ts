@@ -5,11 +5,13 @@ import type { CartItemInput, CartItemUpdate, CheckoutInput, CommerceActor, Order
 import { ApiError } from '../utils/api-error';
 import { createTokenId } from '../utils/token';
 import { BaseService } from './base.service';
+import type { DomainEventPublisher } from '../types/domain-events';
+import { logger } from '../config/logger';
 
 const pageMeta = (query: OrderQuery, total: number) => ({ ...query, total, totalPages: Math.ceil(total / query.pageSize) });
 
 export class CommerceService extends BaseService {
-  public constructor(private readonly repository: CommerceRepository) { super(); }
+  public constructor(private readonly repository: CommerceRepository, private readonly events: DomainEventPublisher) { super(); }
 
   public async getCart(actor: CommerceActor) { return this.groupCart(await this.repository.getOrCreateCart(actor.userId)); }
 
@@ -35,7 +37,7 @@ export class CommerceService extends BaseService {
   public async checkout(input: CheckoutInput, actor: CommerceActor) {
     const date = new Date().toISOString().slice(0, 10).replaceAll('-', '');
     const orderNumber = `AGR-${date}-${createTokenId().slice(0, 8).toUpperCase()}`;
-    try { return await this.repository.checkout(actor.userId, input, orderNumber, actor.requestId); } catch (error) { this.translate(error); }
+    try { const order = await this.repository.checkout(actor.userId, input, orderNumber, actor.requestId); await this.events.publish({ type: 'ORDER_CREATED', recipientIds: [order.buyerId, ...order.farmerOrders.map(group => group.farmer.userId)], data: { orderId: order.id, orderNumber: order.orderNumber, total: order.grandTotal.toString(), currency: order.currency } }); try { const products = await this.repository.stockAlertsForOrder(order.id); for (const { product } of products) { if (!product.inventory) continue; const available = product.inventory.quantityOnHand.sub(product.inventory.quantityReserved); if (available.isZero()) await this.events.publish({ type: 'PRODUCT_OUT_OF_STOCK', recipientIds: [product.farmer.userId], data: { productId: product.id, productName: product.name } }); else if (product.inventory.reorderLevel && available.lessThanOrEqualTo(product.inventory.reorderLevel)) await this.events.publish({ type: 'PRODUCT_LOW_STOCK', recipientIds: [product.farmer.userId], data: { productId: product.id, productName: product.name, available: available.toString() } }); } } catch (eventError) { logger.error({ err: eventError, orderId: order.id }, 'Post-checkout stock notification evaluation failed'); } return order; } catch (error) { this.translate(error); }
   }
 
   public async listOrders(query: OrderQuery, actor: CommerceActor) { const result = await this.repository.listOrders(actor, query); return { ...result, meta: pageMeta(query, result.total) }; }

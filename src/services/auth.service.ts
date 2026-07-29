@@ -9,6 +9,7 @@ import { jwtUtility } from '../utils/jwt';
 import { passwordUtility } from '../utils/password';
 import { createOpaqueToken, createTokenId, durationFromNow, hashToken } from '../utils/token';
 import { BaseService } from './base.service';
+import type { DomainEventPublisher } from '../types/domain-events';
 
 interface TokenPair {
   accessToken: string;
@@ -32,6 +33,7 @@ export class AuthService extends BaseService {
   public constructor(
     private readonly authRepository: AuthRepository,
     private readonly emailService: EmailService,
+    private readonly events: DomainEventPublisher,
   ) {
     super();
   }
@@ -58,6 +60,7 @@ export class AuthService extends BaseService {
         durationFromNow(env.EMAIL_VERIFICATION_EXPIRES_IN),
       );
       await this.emailService.sendEmailVerification(user.email, rawVerificationToken);
+      await this.events.publish({ type: 'AUTH_REGISTERED', recipientIds: [user.id] });
       return user;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -148,6 +151,7 @@ export class AuthService extends BaseService {
     if (!user) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'INVALID_VERIFICATION_TOKEN', 'The verification token is invalid or expired.');
     }
+    await this.events.publish({ type: 'AUTH_EMAIL_VERIFIED', recipientIds: [user.id] });
     return user;
   }
 
@@ -166,10 +170,11 @@ export class AuthService extends BaseService {
 
   public async resetPassword(token: string, password: string): Promise<void> {
     const passwordHash = await passwordUtility.hash(password);
-    const reset = await this.authRepository.resetPassword(hashToken(token), passwordHash);
-    if (!reset) {
+    const userId = await this.authRepository.resetPassword(hashToken(token), passwordHash);
+    if (!userId) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'INVALID_RESET_TOKEN', 'The reset token is invalid or expired.');
     }
+    await this.events.publish({ type: 'AUTH_PASSWORD_RESET', recipientIds: [userId] });
   }
 
   public async getCurrentUser(userId: string): Promise<SafeUser> {

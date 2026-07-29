@@ -44,11 +44,12 @@ The completed frontend establishes the approved architecture and visual design. 
 - [x] Implement order lifecycle rules and immutable order snapshots.
 - [x] Add delivery selection, automatic/manual transporter assignment, tracking events, cancellation, and proof metadata.
 
-### 6. Payments and notifications
+### 6. Payments and notifications — in progress
 
 - Integrate the approved payment provider with idempotent webhook handling.
 - Add payment status, refunds where required, and reconciliation.
-- Implement in-app and external notification delivery with background jobs and retry policies.
+- [x] Implement typed internal domain events, in-app notifications, and templated email delivery status tracking.
+- Add a durable queue/outbox and retry worker during deployment hardening.
 
 ### 7. Frontend integration
 

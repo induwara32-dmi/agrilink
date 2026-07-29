@@ -179,7 +179,7 @@ export class AuthRepository extends BaseRepository {
     ]);
   }
 
-  public async resetPassword(tokenHash: string, passwordHash: string): Promise<boolean> {
+  public async resetPassword(tokenHash: string, passwordHash: string): Promise<string | null> {
     return this.database.$transaction(async (transaction) => {
       const token = await transaction.passwordResetToken.findUnique({
         where: { tokenHash },
@@ -191,13 +191,13 @@ export class AuthRepository extends BaseRepository {
         token.expiresAt <= new Date() ||
         token.user.deletedAt ||
         token.user.status === AccountStatus.DISABLED
-      ) return false;
+      ) return null;
 
       const consumed = await transaction.passwordResetToken.updateMany({
         where: { id: token.id, consumedAt: null },
         data: { consumedAt: new Date() },
       });
-      if (consumed.count !== 1) return false;
+      if (consumed.count !== 1) return null;
 
       await transaction.user.update({ where: { id: token.userId }, data: { passwordHash } });
       await transaction.passwordResetToken.updateMany({
@@ -208,7 +208,7 @@ export class AuthRepository extends BaseRepository {
         where: { userId: token.userId, revokedAt: null },
         data: { revokedAt: new Date() },
       });
-      return true;
+      return token.userId;
     });
   }
 }

@@ -147,9 +147,19 @@ enum NotificationType {
 }
 
 enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum EmailDeliveryStatus {
   PENDING
   SENT
-  READ
   FAILED
 }
 
@@ -834,21 +844,29 @@ model Review {
 }
 
 model Notification {
-  id        String             @id @default(uuid()) @db.Uuid
-  userId    String             @db.Uuid
-  type      NotificationType
-  status    NotificationStatus @default(PENDING)
-  title     String             @db.VarChar(180)
-  body      String             @db.Text
-  data      Json?
-  readAt    DateTime?          @db.Timestamptz(6)
-  sentAt    DateTime?          @db.Timestamptz(6)
-  createdAt DateTime           @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime           @updatedAt @db.Timestamptz(6)
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String                @id @default(uuid()) @db.Uuid
+  eventId     String                @db.Uuid
+  userId      String                @db.Uuid
+  type        NotificationType
+  channels    NotificationChannel[]
+  status      NotificationStatus    @default(UNREAD)
+  emailStatus EmailDeliveryStatus?
+  title       String                @db.VarChar(180)
+  body        String                @db.Text
+  data        Json?
+  readAt      DateTime?             @db.Timestamptz(6)
+  archivedAt  DateTime?             @db.Timestamptz(6)
+  emailSentAt DateTime?             @db.Timestamptz(6)
+  emailError  String?               @db.VarChar(500)
+  createdAt   DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime              @updatedAt @db.Timestamptz(6)
+  deletedAt   DateTime?             @db.Timestamptz(6)
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([eventId, userId])
   @@index([userId, status, createdAt])
-  @@index([status, createdAt])
+  @@index([emailStatus, createdAt])
+  @@index([deletedAt])
 }
 
 model Conversation {

@@ -102,6 +102,10 @@
 5. Messages are soft-deleted or redacted; conversation integrity and audit requirements are retained.
 6. Attachments use protected object storage, validated file types/sizes, malware scanning, and expiring access URLs.
 7. System messages have no user sender and can be created only by trusted backend workflows.
+8. Business services publish typed events only after their transaction succeeds; they do not call notification repositories or SMTP directly.
+9. Notification handling is idempotent per event and recipient. In-app read/archive state is independent from email delivery success or failure.
+10. Email failures are recorded and logged without reversing the completed business operation. A durable outbox and retry worker are required before multi-instance production deployment.
+11. Users may read, archive, mark unread, or soft-delete only their own notifications. Manual notification creation is restricted to admins and audited.
 
 ## Analytics and audit rules
 

@@ -170,7 +170,7 @@ Verified-purchase review tied to a farmer group, author, and subject user. A buy
 
 ### Notification
 
-User notification with business type, delivery/read status, content, optional structured navigation data, and delivery timestamps.
+Idempotent event-derived or admin-created user notification. `channels` distinguishes in-app and email delivery; `status` tracks `UNREAD`, `READ`, or `ARCHIVED` independently from `emailStatus`. The event/user unique key prevents duplicate handling, optional structured data supports safe navigation context, and `deletedAt` provides user-owned soft deletion.
 
 ### Conversation
 

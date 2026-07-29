@@ -12,6 +12,7 @@ import { CatalogController } from './controllers/catalog.controller';
 import { InventoryController } from './controllers/inventory.controller';
 import { CommerceController } from './controllers/commerce.controller';
 import { LogisticsController } from './controllers/logistics.controller';
+import { NotificationController } from './controllers/notification.controller';
 import { createAuthenticate } from './middlewares/authentication.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/not-found.middleware';
@@ -22,6 +23,7 @@ import { CatalogRepository } from './repositories/catalog.repository';
 import { InventoryRepository } from './repositories/inventory.repository';
 import { CommerceRepository } from './repositories/commerce.repository';
 import { LogisticsRepository } from './repositories/logistics.repository';
+import { NotificationRepository } from './repositories/notification.repository';
 import { createApiRouter } from './routes';
 import { SystemService } from './services/system.service';
 import { AuthService } from './services/auth.service';
@@ -30,22 +32,30 @@ import { CatalogService } from './services/catalog.service';
 import { InventoryService } from './services/inventory.service';
 import { CommerceService } from './services/commerce.service';
 import { LogisticsService } from './services/logistics.service';
+import { NotificationService } from './services/notification.service';
 import { API_PREFIX } from './constants/application';
+import { EventBus } from './utils/event-bus';
+import { DOMAIN_EVENT_TYPES } from './types/domain-events';
 
 export function createApp(): Express {
   const app = express();
   const healthRepository = new HealthRepository(prisma);
   const systemService = new SystemService(healthRepository);
   const systemController = new SystemController(systemService);
+  const emailService = new EmailService();
+  const eventBus = new EventBus();
+  const notificationService = new NotificationService(new NotificationRepository(prisma), emailService);
+  eventBus.subscribe(DOMAIN_EVENT_TYPES, notificationService.handleEvent);
+  const notificationController = new NotificationController(notificationService);
   const authRepository = new AuthRepository(prisma);
-  const authService = new AuthService(authRepository, new EmailService());
+  const authService = new AuthService(authRepository, emailService, eventBus);
   const authController = new AuthController(authService);
   const authenticate = createAuthenticate(authRepository);
-  const catalogService = new CatalogService(new CatalogRepository(prisma));
+  const catalogService = new CatalogService(new CatalogRepository(prisma), eventBus);
   const catalogController = new CatalogController(catalogService);
-  const inventoryController = new InventoryController(new InventoryService(new InventoryRepository(prisma), catalogService));
-  const commerceController = new CommerceController(new CommerceService(new CommerceRepository(prisma)));
-  const logisticsController = new LogisticsController(new LogisticsService(new LogisticsRepository(prisma)));
+  const inventoryController = new InventoryController(new InventoryService(new InventoryRepository(prisma), catalogService, eventBus));
+  const commerceController = new CommerceController(new CommerceService(new CommerceRepository(prisma), eventBus));
+  const logisticsController = new LogisticsController(new LogisticsService(new LogisticsRepository(prisma), eventBus));
 
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -65,7 +75,7 @@ export function createApp(): Express {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
-  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController));
+  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController, notificationController));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
