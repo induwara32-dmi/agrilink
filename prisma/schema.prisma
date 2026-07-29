@@ -65,6 +65,9 @@ enum DeliveryStatus {
   PENDING
   AWAITING_ASSIGNMENT
   ASSIGNED
+  ACCEPTED
+  REJECTED
+  PICKUP_SCHEDULED
   READY_FOR_PICKUP
   PICKED_UP
   IN_TRANSIT
@@ -124,9 +127,12 @@ enum InventoryMovementType {
 
 enum TransportJobStatus {
   OPEN
+  ASSIGNED
   ACCEPTED
+  REJECTED
   IN_PROGRESS
   COMPLETED
+  FAILED
   CANCELLED
 }
 
@@ -199,6 +205,7 @@ model User {
   refreshTokens            RefreshToken[]
   emailVerificationTokens  EmailVerificationToken[]
   passwordResetTokens      PasswordResetToken[]
+  transportJobRejections   TransportJobRejection[]
 
   @@index([role, status])
   @@index([createdAt])
@@ -646,6 +653,8 @@ model Delivery {
   pickedUpAt          DateTime?               @db.Timestamptz(6)
   deliveredAt         DateTime?               @db.Timestamptz(6)
   proofStorageKey     String?                 @db.VarChar(500)
+  proofPhotoMetadata  Json?
+  receiverSignature   String?                 @db.Text
   recipientName       String?                 @db.VarChar(180)
   recipientNote       String?                 @db.Text
   createdAt           DateTime                @default(now()) @db.Timestamptz(6)
@@ -690,6 +699,7 @@ model Vehicle {
   capacity           Decimal?       @db.Decimal(18, 3)
   capacityUnit       String?        @db.VarChar(30)
   isActive           Boolean        @default(true)
+  isAvailable        Boolean        @default(true)
   createdAt          DateTime       @default(now()) @db.Timestamptz(6)
   updatedAt          DateTime       @updatedAt @db.Timestamptz(6)
   deletedAt          DateTime?      @db.Timestamptz(6)
@@ -697,33 +707,49 @@ model Vehicle {
   directDeliveries   Delivery[]     @relation("DirectDeliveryVehicle")
   transportJobs      TransportJob[]
 
-  @@index([ownerId, isActive])
+  @@index([ownerId, isActive, isAvailable])
   @@index([type, isActive])
   @@index([deletedAt])
 }
 
 model TransportJob {
-  id            String              @id @default(uuid()) @db.Uuid
-  deliveryId    String              @unique @db.Uuid
-  transporterId String?             @db.Uuid
-  acceptedById  String?             @db.Uuid
-  vehicleId     String?             @db.Uuid
-  status        TransportJobStatus  @default(OPEN)
-  offeredFee    Decimal             @db.Decimal(19, 4)
-  currency      String              @db.Char(3)
-  acceptedAt    DateTime?           @db.Timestamptz(6)
-  startedAt     DateTime?           @db.Timestamptz(6)
-  completedAt   DateTime?           @db.Timestamptz(6)
-  createdAt     DateTime            @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime            @updatedAt @db.Timestamptz(6)
-  delivery      Delivery            @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
-  transporter   TransporterProfile? @relation(fields: [transporterId], references: [id], onDelete: Restrict)
-  acceptedBy    User?               @relation("TransportJobAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
-  vehicle       Vehicle?            @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  id               String                  @id @default(uuid()) @db.Uuid
+  deliveryId       String                  @unique @db.Uuid
+  transporterId    String?                 @db.Uuid
+  acceptedById     String?                 @db.Uuid
+  vehicleId        String?                 @db.Uuid
+  status           TransportJobStatus      @default(OPEN)
+  offeredFee       Decimal                 @db.Decimal(19, 4)
+  currency         String                  @db.Char(3)
+  requiredCapacity Decimal?                @db.Decimal(18, 3)
+  capacityUnit     String?                 @db.VarChar(30)
+  acceptedAt       DateTime?               @db.Timestamptz(6)
+  startedAt        DateTime?               @db.Timestamptz(6)
+  completedAt      DateTime?               @db.Timestamptz(6)
+  createdAt        DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime                @updatedAt @db.Timestamptz(6)
+  delivery         Delivery                @relation(fields: [deliveryId], references: [id], onDelete: Restrict)
+  transporter      TransporterProfile?     @relation(fields: [transporterId], references: [id], onDelete: Restrict)
+  acceptedBy       User?                   @relation("TransportJobAcceptor", fields: [acceptedById], references: [id], onDelete: SetNull)
+  vehicle          Vehicle?                @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  rejections       TransportJobRejection[]
 
   @@index([status, createdAt])
   @@index([transporterId, status])
   @@index([vehicleId])
+}
+
+model TransportJobRejection {
+  id        String       @id @default(uuid()) @db.Uuid
+  jobId     String       @db.Uuid
+  userId    String       @db.Uuid
+  reason    String?      @db.VarChar(255)
+  createdAt DateTime     @default(now()) @db.Timestamptz(6)
+  job       TransportJob @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([jobId, createdAt])
+  @@index([userId, createdAt])
 }
 
 model RoutePlan {

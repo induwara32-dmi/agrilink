@@ -9,6 +9,8 @@ import { createCatalogRouter } from './catalog.routes';
 import { createSystemRouter } from './system.routes';
 import type { CommerceController } from '../controllers/commerce.controller';
 import { createCommerceRouter } from './commerce.routes';
+import type { LogisticsController } from '../controllers/logistics.controller';
+import { createLogisticsRouter } from './logistics.routes';
 
 export function createApiRouter(
   systemController: SystemController,
@@ -17,11 +19,13 @@ export function createApiRouter(
   catalogController: CatalogController,
   inventoryController: InventoryController,
   commerceController: CommerceController,
+  logisticsController: LogisticsController,
 ): Router {
   const router = Router();
   router.use(createSystemRouter(systemController));
   router.use('/auth', createAuthRouter(authController, authenticate));
   router.use(createCatalogRouter(catalogController, inventoryController, authenticate));
   router.use(createCommerceRouter(commerceController, authenticate));
+  router.use(createLogisticsRouter(logisticsController, authenticate));
   return router;
 }

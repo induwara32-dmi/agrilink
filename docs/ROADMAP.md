@@ -38,11 +38,11 @@ The completed frontend establishes the approved architecture and visual design. 
 - Add farmer ownership checks, publication workflows, search, filtering, wishlist, and recent views.
 - Define inventory reservation and concurrency behavior.
 
-### 5. Orders and logistics — in progress
+### 5. Orders and logistics — completed
 
 - [x] Implement cart and transactional multi-farmer checkout with inventory reservation.
-- Implement order lifecycle rules and immutable order snapshots.
-- Add delivery selection, transporter assignment, tracking events, cancellation, and proof of delivery.
+- [x] Implement order lifecycle rules and immutable order snapshots.
+- [x] Add delivery selection, automatic/manual transporter assignment, tracking events, cancellation, and proof metadata.
 
 ### 6. Payments and notifications
 

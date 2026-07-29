@@ -1,0 +1,50 @@
+import { DeliveryMethod, DeliveryStatus, Prisma, Role } from '@prisma/client';
+import { DELIVERY_TRANSITIONS } from '../constants/logistics';
+import { HTTP_STATUS } from '../constants/application';
+import type { LogisticsRepository } from '../repositories/logistics.repository';
+import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ProofInput, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
+import { ApiError } from '../utils/api-error';
+import { BaseService } from './base.service';
+
+const meta = (query: PageQuery, total: number) => ({ ...query, total, totalPages: Math.ceil(total / query.pageSize) });
+
+export class LogisticsService extends BaseService {
+  public constructor(private readonly repository: LogisticsRepository) { super(); }
+  public async listJobs(query: PageQuery, actor: LogisticsActor) { const result = await this.repository.listJobs(actor, query); return { ...result, meta: meta(query, result.total) }; }
+  public async getJob(id: string, actor: LogisticsActor) { const job = await this.repository.findJob(id); if (!job || (actor.role === Role.TRANSPORTER && job.status !== 'OPEN' && job.transporter?.userId !== actor.userId)) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'TRANSPORT_JOB_NOT_FOUND', 'Transport job not found.'); return job; }
+  public async automaticAssign(id: string, actor: LogisticsActor) { try { return await this.repository.assign(id, null, actor.userId, actor.requestId); } catch (error) { this.translate(error); } }
+  public async manualAssign(id: string, input: AssignmentInput, actor: LogisticsActor) { try { return await this.repository.assign(id, input, actor.userId, actor.requestId); } catch (error) { this.translate(error); } }
+  public async accept(id: string, vehicleId: string | undefined, actor: LogisticsActor) { try { return await this.repository.accept(id, actor.userId, vehicleId, actor.requestId); } catch (error) { this.translate(error); } }
+  public async reject(id: string, reason: string | undefined, actor: LogisticsActor) { try { return await this.repository.reject(id, actor.userId, reason, actor.requestId); } catch (error) { this.translate(error); } }
+  public async listDeliveries(query: PageQuery, actor: LogisticsActor) { const result = await this.repository.listDeliveries(actor, query); return { ...result, meta: meta(query, result.total) }; }
+  public getDelivery(id: string, actor: LogisticsActor) { return this.requireDeliveryAccess(id, actor); }
+
+  public async schedule(id: string, input: ScheduleInput, actor: LogisticsActor) {
+    const delivery = await this.requireDeliveryAccess(id, actor);
+    if (delivery.method === DeliveryMethod.PLATFORM_TRANSPORTER && delivery.status !== DeliveryStatus.ACCEPTED) throw new ApiError(HTTP_STATUS.CONFLICT, 'DELIVERY_NOT_ACCEPTED', 'The assigned driver must accept before scheduling pickup.');
+    if (delivery.method === DeliveryMethod.PLATFORM_TRANSPORTER && input.vehicleId) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'DIRECT_VEHICLE_NOT_ALLOWED', 'Platform delivery vehicles are selected through the transport assignment.');
+    if (!DELIVERY_TRANSITIONS[delivery.status].includes(DeliveryStatus.PICKUP_SCHEDULED)) throw new ApiError(HTTP_STATUS.CONFLICT, 'INVALID_DELIVERY_TRANSITION', 'Pickup cannot be scheduled from the current status.');
+    try { return await this.repository.schedule(id, input, input.vehicleId, actor); } catch (error) { this.translate(error); }
+  }
+
+  public async transition(id: string, input: DeliveryTransitionInput, actor: LogisticsActor) {
+    const delivery = await this.requireDeliveryAccess(id, actor);
+    if (input.status === DeliveryStatus.ASSIGNED || input.status === DeliveryStatus.ACCEPTED || input.status === DeliveryStatus.REJECTED || input.status === DeliveryStatus.PICKUP_SCHEDULED || input.status === DeliveryStatus.AWAITING_ASSIGNMENT || input.status === DeliveryStatus.PENDING) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'MANAGED_DELIVERY_TRANSITION', 'Use the assignment or scheduling workflow for this status.');
+    if (input.status === DeliveryStatus.CANCELLED && actor.role !== Role.ADMIN) throw new ApiError(HTTP_STATUS.FORBIDDEN, 'DELIVERY_CANCELLATION_FORBIDDEN', 'Only an admin can cancel a delivery.');
+    if (!DELIVERY_TRANSITIONS[delivery.status].includes(input.status)) throw new ApiError(HTTP_STATUS.CONFLICT, 'INVALID_DELIVERY_TRANSITION', `Cannot transition from ${delivery.status} to ${input.status}.`);
+    if (input.status === DeliveryStatus.DELIVERED && !delivery.proofStorageKey && !delivery.receiverSignature) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'PROOF_REQUIRED', 'Proof of delivery is required before completion.');
+    try { return await this.repository.transition(id, input, actor); } catch (error) { this.translate(error); }
+  }
+
+  public async addProof(id: string, input: ProofInput, actor: LogisticsActor) { const delivery = await this.requireDeliveryAccess(id, actor); if (delivery.status !== DeliveryStatus.PICKED_UP && delivery.status !== DeliveryStatus.IN_TRANSIT) throw new ApiError(HTTP_STATUS.CONFLICT, 'PROOF_NOT_ALLOWED', 'Proof can be recorded only after pickup.'); return this.repository.addProof(id, input, actor); }
+
+  public async listVehicles(query: PageQuery, actor: LogisticsActor) { const result = await this.repository.listVehicles(actor, query); return { ...result, meta: meta(query, result.total) }; }
+  public getVehicle(id: string, actor: LogisticsActor) { return this.requireVehicle(id, actor); }
+  public async createVehicle(input: VehicleInput, actor: LogisticsActor) { const ownerId = actor.role === Role.ADMIN ? input.ownerId : actor.userId; if (!ownerId) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'VEHICLE_OWNER_REQUIRED', 'An owner is required.'); const owner = await this.repository.findVehicleOwner(ownerId); if (!owner || owner.role === Role.ADMIN) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'VEHICLE_OWNER_INVALID', 'The vehicle owner must be a buyer, farmer, or transporter.'); try { return await this.repository.createVehicle(ownerId, { ...input, ...(input.capacityUnit ? { capacityUnit: input.capacityUnit.toLowerCase() } : {}) }, actor); } catch (error) { this.translate(error); } }
+  public async updateVehicle(id: string, input: VehicleUpdateInput, actor: LogisticsActor) { const vehicle = await this.requireVehicle(id, actor); if ((input.isActive === false || input.capacity !== undefined || input.capacityUnit !== undefined) && !vehicle.isAvailable) throw new ApiError(HTTP_STATUS.CONFLICT, 'VEHICLE_IN_USE', 'An assigned vehicle cannot be disabled or have its capacity changed.'); try { return await this.repository.updateVehicle(id, { ...input, ...(input.capacityUnit ? { capacityUnit: input.capacityUnit.toLowerCase() } : {}) }, actor); } catch (error) { this.translate(error); } }
+  public async deleteVehicle(id: string, actor: LogisticsActor): Promise<void> { const vehicle = await this.requireVehicle(id, actor); if (!vehicle.isAvailable) throw new ApiError(HTTP_STATUS.CONFLICT, 'VEHICLE_IN_USE', 'An assigned vehicle cannot be deleted.'); await this.repository.deleteVehicle(id, actor); }
+
+  private async requireVehicle(id: string, actor: LogisticsActor) { const vehicle = await this.repository.findVehicle(id); if (!vehicle || (actor.role !== Role.ADMIN && vehicle.ownerId !== actor.userId)) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'VEHICLE_NOT_FOUND', 'Vehicle not found.'); return vehicle; }
+  private async requireDeliveryAccess(id: string, actor: LogisticsActor) { const delivery = await this.repository.findDelivery(id); if (!delivery) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'DELIVERY_NOT_FOUND', 'Delivery not found.'); if (actor.role === Role.ADMIN) return delivery; const allowed = delivery.method === DeliveryMethod.PLATFORM_TRANSPORTER ? actor.role === Role.TRANSPORTER && delivery.transportJob?.transporter?.userId === actor.userId : delivery.method === DeliveryMethod.FARMER_DELIVERY ? actor.role === Role.FARMER && delivery.farmerOrder.farmer.userId === actor.userId : actor.role === Role.BUYER && delivery.farmerOrder.order.buyerId === actor.userId; if (!allowed) throw new ApiError(HTTP_STATUS.FORBIDDEN, 'DELIVERY_FORBIDDEN', 'You cannot manage this delivery.'); return delivery; }
+  private translate(error: unknown): never { if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === 'P2002' || error.code === 'P2034')) throw new ApiError(HTTP_STATUS.CONFLICT, 'LOGISTICS_CONFLICT', 'The assignment changed concurrently; retry.'); const code = error instanceof Error ? error.message : ''; const mapping: Record<string, [number, string]> = { JOB_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Transport job not found.'], JOB_NOT_ASSIGNABLE: [HTTP_STATUS.CONFLICT, 'Transport job cannot be assigned in its current state.'], NO_AVAILABLE_DRIVER: [HTTP_STATUS.CONFLICT, 'No eligible driver and vehicle are available.'], ASSIGNMENT_CONFLICT: [HTTP_STATUS.CONFLICT, 'The driver or vehicle already has an active assignment.'], JOB_NOT_ASSIGNED: [HTTP_STATUS.CONFLICT, 'This job is not assigned to the driver.'], DRIVER_UNAVAILABLE: [HTTP_STATUS.CONFLICT, 'The driver is unavailable or unverified.'], VEHICLE_REQUIRED: [HTTP_STATUS.BAD_REQUEST, 'A vehicle is required.'], VEHICLE_UNAVAILABLE: [HTTP_STATUS.CONFLICT, 'The vehicle is unavailable.'], VEHICLE_CAPACITY: [HTTP_STATUS.CONFLICT, 'The vehicle does not have the required capacity.'], DELIVERY_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Delivery not found.'], INVENTORY_RESERVATION_INVALID: [HTTP_STATUS.CONFLICT, 'The order inventory reservation is inconsistent.'] }; const mapped = mapping[code]; if (mapped) throw new ApiError(mapped[0], code, mapped[1]); throw error; }
+}

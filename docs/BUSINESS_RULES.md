@@ -64,6 +64,10 @@
 9. Delivery transitions must follow an approved state machine. Failed/cancelled/delivered states are terminal except through audited administration.
 10. Proof-of-delivery files live in protected object storage; the database stores only storage identity and safe metadata.
 11. Location data is collected only when necessary, access-controlled, retained for a defined period, and never exposed to unrelated users.
+12. Automatic assignment selects only active, available, approved transporters and compatible active vehicles; manual assignment applies the same eligibility and capacity checks.
+13. A driver or vehicle may have only one active transport assignment. Acceptance marks both unavailable, and terminal completion, failure, cancellation, or reassignment releases them.
+14. Driver rejection is recorded append-only and the rejected driver is excluded from subsequent automatic selection for that job.
+15. Delivery completion requires photo or signature proof metadata and atomically finalizes reserved inventory and fulfillment histories.
 
 ## Payment and coupon rules
 

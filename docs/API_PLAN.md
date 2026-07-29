@@ -14,7 +14,7 @@ AgriLink will use versioned REST resources for frontend integration. This plan d
 
 ## Planned resources
 
-Authentication, catalog, inventory, cart, checkout, and order-read resources listed below are implemented in the backend. Remaining resources are planned.
+Authentication, catalog, inventory, cart, checkout, orders, vehicles, transport assignment, and delivery resources listed below are implemented in the backend. Remaining resources are planned.
 
 ### Authentication and identity
 
@@ -49,9 +49,11 @@ Authentication, catalog, inventory, cart, checkout, and order-read resources lis
 ### Logistics
 
 - `/deliveries`, `/deliveries/{deliveryId}`
-- `/deliveries/{deliveryId}/assignments`
-- `/deliveries/{deliveryId}/tracking-events`
-- `/deliveries/{deliveryId}/proof-of-delivery`
+- `/deliveries/{deliveryId}/schedule`, `/deliveries/{deliveryId}/transitions`
+- `/deliveries/{deliveryId}/proof`
+- `/transport-jobs`, `/transport-jobs/{transportJobId}`
+- `/transport-jobs/{transportJobId}/assign/automatic`, `/transport-jobs/{transportJobId}/assign/manual`
+- `/transport-jobs/{transportJobId}/accept`, `/transport-jobs/{transportJobId}/reject`, `/transport-jobs/{transportJobId}/reassign`
 - `/vehicles`, `/vehicles/{vehicleId}`
 
 ### Payments and communications

@@ -122,7 +122,7 @@ Append-only farmer-group preparation/fulfillment transition with actor, reason, 
 
 ### Delivery
 
-One-to-one fulfillment record for a farmer group. It mirrors the group's delivery method, tracks lifecycle timestamps and proof metadata, and optionally references a direct farmer/buyer vehicle. Pickup codes are stored only as hashes.
+One-to-one fulfillment record for a farmer group. It mirrors the group's delivery method, tracks lifecycle and schedule timestamps, stores protected photo metadata, receiver name, signature placeholder, and notes, and optionally references a direct farmer/buyer vehicle. Pickup codes are stored only as hashes.
 
 ### DeliveryStatusHistory
 
@@ -130,11 +130,15 @@ Append-only tracking timeline with status transition, actor, note, occurrence ti
 
 ### Vehicle
 
-User-owned vehicle shared by farmer, buyer, and transporter use cases. It stores registration, type, optional physical details/capacity, active state, and soft deletion. Service authorization validates the owner's role and assignment.
+User-owned vehicle shared by farmer, buyer, and transporter use cases. It stores registration, type, optional physical details/capacity, active and system-managed availability states, and soft deletion. Service authorization validates ownership, capacity, and assignment conflicts.
 
 ### TransportJob
 
-One platform logistics offer for one delivery. It records offered fee, status, accepting transporter/profile, accepting user, and assigned platform vehicle. Nullable assignment fields allow an open job before acceptance.
+One platform logistics offer for one delivery. It records offered fee, required capacity where quantities share a unit, status, accepting transporter/profile, accepting user, and assigned platform vehicle. Nullable assignment fields allow an open job before automatic or manual assignment; rejection records preserve declined offers for reassignment.
+
+### TransportJobRejection
+
+Append-only record of a transporter declining an assigned job, including the actor, optional reason, and timestamp. Automatic reassignment excludes drivers who previously rejected that job.
 
 ### RoutePlan
 

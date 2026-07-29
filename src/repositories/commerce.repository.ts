@@ -126,7 +126,11 @@ export class CommerceRepository extends BaseRepository {
         const deliveryStatus = groupInput.deliveryMethod === DeliveryMethod.PLATFORM_TRANSPORTER ? DeliveryStatus.AWAITING_ASSIGNMENT : DeliveryStatus.PENDING;
         const delivery = await transaction.delivery.create({ data: { farmerOrderId: farmerOrder.id, method: groupInput.deliveryMethod, status: deliveryStatus, ...(address ? { recipientName: address.recipientName } : {}) } });
         await transaction.deliveryStatusHistory.create({ data: { deliveryId: delivery.id, actorId: buyerId, toStatus: deliveryStatus, note: 'Delivery created at checkout' } });
-        if (groupInput.deliveryMethod === DeliveryMethod.PLATFORM_TRANSPORTER) await transaction.transportJob.create({ data: { deliveryId: delivery.id, status: TransportJobStatus.OPEN, offeredFee: 0, currency } });
+        if (groupInput.deliveryMethod === DeliveryMethod.PLATFORM_TRANSPORTER) {
+          const capacityUnits = new Set(items.map(item => item.product.unit));
+          const requiredCapacity = capacityUnits.size === 1 ? items.reduce((sum, item) => sum.add(item.quantity), new Prisma.Decimal(0)) : null;
+          await transaction.transportJob.create({ data: { deliveryId: delivery.id, status: TransportJobStatus.OPEN, offeredFee: 0, currency, ...(requiredCapacity ? { requiredCapacity, capacityUnit: items[0]!.product.unit } : {}) } });
+        }
         for (const item of items) {
           const lineTotal = item.product.unitPrice.mul(item.quantity).toDecimalPlaces(4);
           await transaction.orderItem.create({ data: { farmerOrderId: farmerOrder.id, productId: item.productId, productName: item.product.name, sku: item.product.sku, unit: item.product.unit, quantity: item.quantity, unitPrice: item.product.unitPrice, lineTotal } });

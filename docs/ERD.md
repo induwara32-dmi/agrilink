@@ -56,6 +56,8 @@ erDiagram
     TransporterProfile o|--o{ TransportJob : accepts
     User o|--o{ TransportJob : accepted_by
     Vehicle o|--o{ TransportJob : assigned_vehicle
+    TransportJob ||--o{ TransportJobRejection : records
+    User ||--o{ TransportJobRejection : rejects
     Delivery ||--o| RoutePlan : follows
 
     Order ||--o| Payment : pays
@@ -96,7 +98,7 @@ A buyer can have historical carts but only one active cart, enforced later with 
 
 ### Delivery and transport jobs
 
-Each farmer group may have one `Delivery`. For farmer delivery or buyer pickup, `Delivery.vehicleId` can reference a vehicle owned by the relevant user. Platform delivery creates one `TransportJob`; a verified transporter accepts it and assigns one of their active vehicles. `RoutePlan` stores the chosen route snapshot, while `DeliveryStatusHistory` provides the ordered tracking timeline.
+Each farmer group may have one `Delivery`. For farmer delivery or buyer pickup, `Delivery.vehicleId` can reference a vehicle owned by the relevant user. Platform delivery creates one `TransportJob`; automatic or audited admin assignment selects an available verified transporter and compatible vehicle. Rejections are preserved in `TransportJobRejection` and excluded from automatic reassignment. `RoutePlan` stores the chosen route snapshot, while `DeliveryStatusHistory` provides the ordered tracking timeline.
 
 ### Payments and commercial records
 
