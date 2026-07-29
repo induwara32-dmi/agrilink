@@ -1,0 +1,16 @@
+import { InventoryMovementType, Prisma } from '@prisma/client';
+import { HTTP_STATUS } from '../constants/application';
+import type { InventoryRepository } from '../repositories/inventory.repository';
+import type { Actor, InventoryAdjustmentInput, PageQuery } from '../types/catalog';
+import { ApiError } from '../utils/api-error';
+import type { CatalogService } from './catalog.service';
+import { BaseService } from './base.service';
+
+export class InventoryService extends BaseService {
+  public constructor(private readonly repository: InventoryRepository, private readonly catalog: CatalogService) { super(); }
+  public async get(productId: string, actor: Actor) { await this.catalog.requireManagedProduct(productId, actor); const item = await this.repository.findByProduct(productId); if (!item) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'INVENTORY_NOT_FOUND', 'Inventory not found.'); return item; }
+  public async adjust(productId: string, input: InventoryAdjustmentInput, actor: Actor) { await this.catalog.requireManagedProduct(productId, actor); const quantity = new Prisma.Decimal(input.quantity); if (quantity.isZero() || ((input.type === InventoryMovementType.STOCK_IN || input.type === InventoryMovementType.RETURN) && quantity.isNegative())) throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'INVALID_INVENTORY_QUANTITY', 'Stock-in and return quantities must be greater than zero.'); try { return await this.repository.adjust(productId, input, actor.userId, actor.requestId); } catch (error) { if (error instanceof Error && error.message === 'INSUFFICIENT_INVENTORY') throw new ApiError(HTTP_STATUS.CONFLICT, 'INSUFFICIENT_INVENTORY', 'The adjustment would make available inventory negative.'); if (error instanceof Error && error.message === 'INVENTORY_CONFLICT') throw new ApiError(HTTP_STATUS.CONFLICT, 'INVENTORY_CONFLICT', 'Inventory changed concurrently; retry the request.'); throw error; } }
+  public async updateSettings(productId: string, reorderLevel: string | null, actor: Actor) { await this.catalog.requireManagedProduct(productId, actor); return this.repository.updateSettings(productId, reorderLevel, actor.userId, actor.requestId); }
+  public async history(productId: string, query: PageQuery, actor: Actor) { await this.catalog.requireManagedProduct(productId, actor); const result = await this.repository.history(productId, query); if (!result) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'INVENTORY_NOT_FOUND', 'Inventory not found.'); return { ...result, meta: { ...query, total: result.total, totalPages: Math.ceil(result.total / query.pageSize) } }; }
+  public async lowStock(query: PageQuery, actor: Actor) { const farmerId = await this.catalog.managedFarmerId(actor); const result = await this.repository.lowStock(farmerId, query); return { ...result, meta: { ...query, total: result.total, totalPages: Math.ceil(result.total / query.pageSize) } }; }
+}

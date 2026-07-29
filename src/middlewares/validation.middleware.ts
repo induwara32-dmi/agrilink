@@ -26,6 +26,8 @@ export function validateRequest(schema: ZodType<RequestInput>): RequestHandler {
     }
 
     request.body = result.data.body;
+    Object.assign(request.params, result.data.params);
+    Object.assign(request.query, result.data.query);
     next();
   };
 }

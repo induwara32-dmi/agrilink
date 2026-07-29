@@ -32,7 +32,7 @@ The completed frontend establishes the approved architecture and visual design. 
 - Add role and ownership authorization policies.
 - Implement farmer/transporter verification and auditable admin controls.
 
-### 4. Product and inventory APIs
+### 4. Product and inventory APIs — completed
 
 - Implement categories, product listings, media references, pricing, and inventory.
 - Add farmer ownership checks, publication workflows, search, filtering, wishlist, and recent views.
