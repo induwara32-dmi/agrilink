@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Heart, MessageCircle, Star, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,10 +11,15 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { getProduct } from '@/lib/api/catalog';
+import { addCartItem, cartQueryKeys } from '@/lib/api/commerce';
+import { ApiClientError } from '@/lib/api/client';
+import { useAuth } from '@/providers/auth-provider';
 
 export function ProductDetails() {
   const id = useSearchParams().get('id');
+  const { user } = useAuth();
   const product = useQuery({ queryKey: ['product', id], queryFn: () => getProduct(id!), enabled: Boolean(id) });
+  const addItem = useQueryClientMutation();
   if (!id) return <EmptyState title="Select a product" description="Open a product from the marketplace to view its details." />;
   if (product.isLoading) return <LoadingSkeleton />;
   if (product.isError) return <ErrorState title="Product unavailable" description="This product could not be loaded or is no longer available." actionHref="/marketplace/search" actionLabel="Browse products" />;
@@ -29,7 +35,8 @@ export function ProductDetails() {
         <p className="text-sm leading-7 text-slate-600">{item.description}</p>
         <p className="text-xl font-semibold text-slate-900">{price}/{item.unit}</p>
         <div className="flex items-center gap-2 text-sm text-slate-600"><Star className="h-4 w-4 text-primary" /> New marketplace listing</div>
-        <div className="flex flex-wrap gap-3"><Button>Buy now</Button><Button variant="outline">Add to cart</Button></div>
+        {addItem.error ? <p role="alert" className="text-sm text-danger">{addItem.error instanceof ApiClientError ? addItem.error.message : 'Unable to add this product.'}</p> : null}
+        <div className="flex flex-wrap gap-3"><Button disabled={addItem.isPending} onClick={() => addItem.mutate({ productId: item.id, quantity: item.minOrderQuantity, checkout: true, role: user?.role })}>Buy now</Button><Button variant="outline" disabled={addItem.isPending} onClick={() => addItem.mutate({ productId: item.id, quantity: item.minOrderQuantity, checkout: false, role: user?.role })}>{addItem.isPending ? 'Adding…' : 'Add to cart'}</Button></div>
       </div>
     </div></CardContent></Card>
     <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
@@ -37,4 +44,10 @@ export function ProductDetails() {
       <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Delivery options</CardTitle></CardHeader><CardContent className="space-y-3 text-sm text-slate-600"><div className="flex items-center gap-2 rounded-2xl border border-border bg-slate-50 p-3"><Truck className="h-4 w-4 text-primary" /> Farmer delivery</div><div className="rounded-2xl border border-border bg-slate-50 p-3">Buyer pickup</div><div className="rounded-2xl border border-border bg-slate-50 p-3">Platform transporter</div></CardContent></Card>
     </div>
   </div>;
+}
+
+function useQueryClientMutation() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  return useMutation({ mutationFn: async ({ productId, quantity, role }: { productId: string; quantity: string; checkout: boolean; role?: string }) => { if (!role) { router.push('/auth/sign-in'); throw new Error('Sign in as a buyer to add products.'); } if (role !== 'BUYER') throw new Error('Only buyer accounts can use the cart.'); return addCartItem(productId, quantity); }, onSuccess: async (_response, variables) => { await queryClient.invalidateQueries({ queryKey: cartQueryKeys.all }); router.push(variables.checkout ? '/checkout' : '/cart'); } });
 }

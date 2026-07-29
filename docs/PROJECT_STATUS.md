@@ -33,13 +33,14 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Transport assignment and delivery backend
 - [x] Notification and internal event system
 - [x] Role-based analytics backend
+- [x] Authentication and marketplace frontend API integration
+- [x] Cart and checkout frontend API integration
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
 ## Current limitations
 
-- Authentication APIs are implemented, but the frontend screens are not connected to them yet.
-- Marketplace, cart, checkout, and order screens still use mock data until frontend integration; their backend resources are implemented.
+- Order list, order details, wishlist, and recently viewed screens still use mock data until their frontend integration phases.
 - Dashboard actions do not yet call backend services.
 - Product search, filtering, sorting, pagination, category management, media references, inventory history, and low-stock APIs are implemented but not connected to the frontend.
 - Payments, object storage uploads, and live location streaming are not integrated. In-app and email notifications are implemented; a durable external queue/outbox remains a deployment hardening step.
@@ -48,3 +49,7 @@ The stabilization phase covered navigation validity, active navigation states, r
 ## Next milestone
 
 The next milestone is payments.
+
+## Phase 24 integration correction
+
+Cart and checkout integration required two narrow additions to the existing commerce API. `POST /checkout/preview` now validates current cart stock, farmer groups, and coupons while returning server-calculated group and order totals. Checkout groups may also submit validated inline delivery information because no address-management API exists yet; the checkout transaction stores the same immutable delivery snapshot and still accepts owned saved-address IDs for future clients. No inventory, coupon, order, or delivery business rule was relaxed.

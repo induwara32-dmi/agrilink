@@ -1,5 +1,5 @@
 import { CouponType, DeliveryMethod, DeliveryStatus, FarmerOrderStatus, InventoryMovementType, OrderStatus, Prisma, ProductStatus, Role, TransportJobStatus, VerificationStatus, type PrismaClient } from '@prisma/client';
-import type { CartItemInput, CartItemUpdate, CheckoutInput, CommerceActor, OrderQuery } from '../types/commerce';
+import type { CartItemInput, CartItemUpdate, CheckoutInput, CheckoutPreviewInput, CommerceActor, DeliveryAddressInput, OrderQuery } from '../types/commerce';
 import { BaseRepository } from './base.repository';
 
 const cartInclude = { items: { include: { product: { include: { farmer: { select: { id: true, farmName: true } }, images: { orderBy: { sortOrder: 'asc' as const }, take: 1 }, inventory: true } } }, orderBy: { createdAt: 'asc' as const } } } satisfies Prisma.CartInclude;
@@ -56,11 +56,59 @@ export class CommerceRepository extends BaseRepository {
     });
   }
 
+  public async previewCheckout(buyerId: string, input: CheckoutPreviewInput) {
+    const cart = await this.database.cart.findFirst({ where: { buyerId, isActive: true }, include: { items: { include: { product: { include: { inventory: true, farmer: true, category: true } } } } } });
+    const items = cart?.items.filter(item => !item.savedForLater) ?? [];
+    if (!cart || items.length === 0) throw new Error('CART_EMPTY');
+    if (cart.expiresAt && cart.expiresAt <= new Date()) throw new Error('CART_EXPIRED');
+    const groupInputs = new Map(input.groups.map(group => [group.farmerId, group]));
+    const currencies = new Set(items.map(item => item.product.currency));
+    if (currencies.size !== 1) throw new Error('MULTI_CURRENCY_CART');
+    const currency = items[0]!.product.currency;
+    const grouped = new Map<string, typeof items>();
+    for (const item of items) {
+      const product = item.product;
+      if (product.status !== ProductStatus.ACTIVE || product.deletedAt || !product.category.isActive || product.category.deletedAt || product.farmer.deletedAt || product.farmer.verificationStatus !== VerificationStatus.APPROVED) throw new Error('PRODUCT_UNAVAILABLE');
+      if (item.quantity.lessThan(product.minOrderQuantity)) throw new Error('MINIMUM_QUANTITY');
+      if (!product.inventory || product.inventory.quantityOnHand.sub(product.inventory.quantityReserved).lessThan(item.quantity)) throw new Error('INSUFFICIENT_STOCK');
+      const group = groupInputs.get(product.farmerId);
+      if (!group) throw new Error('DELIVERY_METHOD_REQUIRED');
+      if (item.deliveryMethod && item.deliveryMethod !== group.deliveryMethod) throw new Error('DELIVERY_METHOD_CONFLICT');
+      grouped.set(product.farmerId, [...(grouped.get(product.farmerId) ?? []), item]);
+    }
+    if (grouped.size !== input.groups.length) throw new Error('INVALID_FARMER_GROUP');
+    const subtotal = items.reduce((sum, item) => sum.add(item.product.unitPrice.mul(item.quantity)), new Prisma.Decimal(0)).toDecimalPlaces(4);
+    let discount = new Prisma.Decimal(0);
+    if (input.couponCode) {
+      const coupon = await this.database.coupon.findUnique({ where: { code: input.couponCode } });
+      const now = new Date();
+      if (!coupon || !coupon.isActive || coupon.deletedAt || coupon.startsAt > now || coupon.endsAt < now) throw new Error('COUPON_INVALID');
+      if (coupon.currency && coupon.currency !== currency) throw new Error('COUPON_CURRENCY');
+      if (coupon.minimumOrderAmount && subtotal.lessThan(coupon.minimumOrderAmount)) throw new Error('COUPON_MINIMUM');
+      const [globalUses, buyerUses] = await Promise.all([this.database.couponRedemption.count({ where: { couponId: coupon.id } }), this.database.couponRedemption.count({ where: { couponId: coupon.id, buyerId } })]);
+      if ((coupon.usageLimit !== null && globalUses >= coupon.usageLimit) || (coupon.perBuyerLimit !== null && buyerUses >= coupon.perBuyerLimit)) throw new Error('COUPON_LIMIT');
+      discount = coupon.type === CouponType.PERCENTAGE ? subtotal.mul(coupon.value).div(100) : coupon.value;
+      if (coupon.maximumDiscount && discount.greaterThan(coupon.maximumDiscount)) discount = coupon.maximumDiscount;
+      if (discount.greaterThan(subtotal)) discount = subtotal;
+      discount = discount.toDecimalPlaces(4);
+    }
+    let allocatedDiscount = new Prisma.Decimal(0);
+    const entries = [...grouped.entries()];
+    const groups = entries.map(([farmerId, groupItems], index) => {
+      const groupSubtotal = groupItems.reduce((sum, item) => sum.add(item.product.unitPrice.mul(item.quantity)), new Prisma.Decimal(0)).toDecimalPlaces(4);
+      const groupDiscount = index === entries.length - 1 ? discount.sub(allocatedDiscount) : discount.mul(groupSubtotal).div(subtotal).toDecimalPlaces(4);
+      allocatedDiscount = allocatedDiscount.add(groupDiscount);
+      return { farmerId, subtotal: groupSubtotal.toString(), discountTotal: groupDiscount.toString(), deliveryFee: '0', total: groupSubtotal.sub(groupDiscount).toString() };
+    });
+    return { currency, subtotal: subtotal.toString(), discountTotal: discount.toString(), deliveryFee: '0', grandTotal: subtotal.sub(discount).toString(), groups };
+  }
+
   public async checkout(buyerId: string, input: CheckoutInput, orderNumber: string, requestId: string) {
     return this.database.$transaction(async transaction => {
       const cart = await transaction.cart.findFirst({ where: { buyerId, isActive: true }, include: { items: { include: { product: { include: { inventory: true, farmer: true, category: true } } } } } });
       const checkoutItems = cart?.items.filter(item => !item.savedForLater) ?? [];
       if (!cart || checkoutItems.length === 0) throw new Error('CART_EMPTY');
+      if (cart.expiresAt && cart.expiresAt <= new Date()) throw new Error('CART_EXPIRED');
 
       const inventoryIds = checkoutItems.map(item => item.product.inventory?.id).filter((id): id is string => Boolean(id)).sort();
       if (inventoryIds.length !== checkoutItems.length) throw new Error('INVENTORY_UNAVAILABLE');
@@ -83,11 +131,12 @@ export class CommerceRepository extends BaseRepository {
       }
       if (grouped.size !== input.groups.length) throw new Error('INVALID_FARMER_GROUP');
 
-      const addresses = new Map<string, Awaited<ReturnType<typeof transaction.address.findFirst>>>();
+      const addresses = new Map<string, DeliveryAddressInput>();
       for (const group of input.groups) {
         if (group.deliveryMethod !== DeliveryMethod.BUYER_PICKUP) {
-          if (!group.deliveryAddressId) throw new Error('DELIVERY_ADDRESS_REQUIRED');
-          const address = await transaction.address.findFirst({ where: { id: group.deliveryAddressId, userId: buyerId, deletedAt: null } });
+          if (!group.deliveryAddressId && !group.deliveryAddress) throw new Error('DELIVERY_ADDRESS_REQUIRED');
+          const storedAddress = group.deliveryAddressId ? await transaction.address.findFirst({ where: { id: group.deliveryAddressId, userId: buyerId, deletedAt: null } }) : null;
+          const address = group.deliveryAddress ?? (storedAddress ? { recipientName: storedAddress.recipientName, recipientPhone: storedAddress.recipientPhone, line1: storedAddress.line1, ...(storedAddress.line2 ? { line2: storedAddress.line2 } : {}), city: storedAddress.city, ...(storedAddress.district ? { district: storedAddress.district } : {}), ...(storedAddress.region ? { region: storedAddress.region } : {}), countryCode: storedAddress.countryCode } : null);
           if (!address) throw new Error('DELIVERY_ADDRESS_INVALID');
           addresses.set(group.farmerId, address);
         }

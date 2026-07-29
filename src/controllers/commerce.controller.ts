@@ -1,8 +1,8 @@
 import type { Request, RequestHandler } from 'express';
 import { HTTP_STATUS } from '../constants/application';
 import type { CommerceService } from '../services/commerce.service';
-import type { CartItemInput, CartItemUpdate, CheckoutInput, CommerceActor } from '../types/commerce';
-import type { AddCartItemBody, CheckoutBody, UpdateCartItemBody } from '../validators/commerce.validators';
+import type { CartItemInput, CartItemUpdate, CheckoutInput, CheckoutPreviewInput, CommerceActor } from '../types/commerce';
+import type { AddCartItemBody, CheckoutBody, CheckoutPreviewBody, UpdateCartItemBody } from '../validators/commerce.validators';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess } from '../utils/response';
 import { BaseController } from './base.controller';
@@ -18,6 +18,7 @@ export class CommerceController extends BaseController {
   public readonly saveForLater: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.updateItem(parameter(request, 'itemId'), { savedForLater: true }, actorFrom(request))));
   public readonly removeItem: RequestHandler = asyncHandler(async (request, response) => { await this.service.removeItem(parameter(request, 'itemId'), actorFrom(request)); return sendSuccess(response, HTTP_STATUS.OK, { message: 'Cart item removed.' }); });
   public readonly clearCart: RequestHandler = asyncHandler(async (request, response) => { await this.service.clearCart(actorFrom(request)); return sendSuccess(response, HTTP_STATUS.OK, { message: 'Cart cleared.' }); });
+  public readonly previewCheckout: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.previewCheckout(request.body as CheckoutPreviewBody as CheckoutPreviewInput, actorFrom(request))));
   public readonly checkout: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.CREATED, await this.service.checkout(request.body as CheckoutBody as CheckoutInput, actorFrom(request))));
   public readonly listOrders: RequestHandler = asyncHandler(async (request, response) => { const query = { page: Number(request.query.page), pageSize: Number(request.query.pageSize) }; const result = await this.service.listOrders(query, actorFrom(request)); return sendSuccess(response, HTTP_STATUS.OK, result.items, result.meta); });
   public readonly getOrder: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.getOrder(parameter(request, 'orderId'), actorFrom(request))));

@@ -41,7 +41,7 @@ Authentication, catalog, inventory, cart, checkout, orders, logistics, notificat
 ### Cart and checkout
 
 - `/cart`, `/cart/items`, `/cart/items/{itemId}`, `/cart/items/{itemId}/save-for-later`
-- `/checkout`
+- `/checkout/preview`, `/checkout`
 - `/orders`, `/orders/{orderId}`
 - `/orders/{orderId}/cancel`
 - `/orders/{orderId}/status-history`
