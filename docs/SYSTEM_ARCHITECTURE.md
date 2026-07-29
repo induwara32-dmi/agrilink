@@ -16,6 +16,8 @@ The repository now includes a separate Express/TypeScript application under `src
 
 Backend domain services publish typed internal events after successful business operations. A notification subscriber renders centralized templates, creates idempotent user notifications, and records email delivery outcomes without coupling business services to SMTP or notification persistence. A durable outbox/queue is still required before multi-instance production deployment.
 
+The analytics module performs role-scoped Prisma aggregates and parameterized PostgreSQL date-bucket queries. Its service depends on a cache interface backed by a bounded in-memory implementation today, allowing Redis to replace it without changing controllers or report repositories.
+
 ## Major modules
 
 - Public landing and product discovery

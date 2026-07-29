@@ -13,6 +13,8 @@ import type { LogisticsController } from '../controllers/logistics.controller';
 import { createLogisticsRouter } from './logistics.routes';
 import type { NotificationController } from '../controllers/notification.controller';
 import { createNotificationRouter } from './notification.routes';
+import type { AnalyticsController } from '../controllers/analytics.controller';
+import { createAnalyticsRouter } from './analytics.routes';
 
 export function createApiRouter(
   systemController: SystemController,
@@ -23,6 +25,7 @@ export function createApiRouter(
   commerceController: CommerceController,
   logisticsController: LogisticsController,
   notificationController: NotificationController,
+  analyticsController: AnalyticsController,
 ): Router {
   const router = Router();
   router.use(createSystemRouter(systemController));
@@ -31,5 +34,6 @@ export function createApiRouter(
   router.use(createCommerceRouter(commerceController, authenticate));
   router.use(createLogisticsRouter(logisticsController, authenticate));
   router.use(createNotificationRouter(notificationController, authenticate));
+  router.use(createAnalyticsRouter(analyticsController, authenticate));
   return router;
 }

@@ -114,6 +114,11 @@
 3. Admin changes, verification decisions, authentication security events, financial actions, and manual state corrections create append-only audit logs.
 4. Audit JSON is redacted and must not contain passwords, tokens, payment credentials, plaintext pickup codes, or unnecessary personal data.
 5. Audit access is restricted, monitored, and governed by retention policy.
+6. Buyer, farmer, and transporter analytics are restricted to the authenticated user's owned records; platform-wide analytics require the admin role.
+7. Monetary analytics are grouped by currency and are never summed across currencies without an approved conversion source.
+8. Preset analytics ranges use UTC calendar boundaries. Custom ranges are ordered, bounded to five years, and compared with the immediately preceding equal-duration period.
+9. Inventory turnover is an operational estimate using period sales and current on-hand inventory because historical inventory snapshots do not yet exist; reports expose its inputs rather than presenting it as an audited accounting measure.
+10. Analytics cache entries are short-lived and role/user/range scoped. Analytics access is audit logged even when a cached report is returned.
 
 ## Delete behavior and retention
 

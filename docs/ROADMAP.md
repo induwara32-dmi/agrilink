@@ -50,6 +50,7 @@ The completed frontend establishes the approved architecture and visual design. 
 - Add payment status, refunds where required, and reconciliation.
 - [x] Implement typed internal domain events, in-app notifications, and templated email delivery status tracking.
 - Add a durable queue/outbox and retry worker during deployment hardening.
+- [x] Add role-scoped operational analytics with date ranges, previous-period comparisons, and a replaceable cache abstraction.
 
 ### 7. Frontend integration
 

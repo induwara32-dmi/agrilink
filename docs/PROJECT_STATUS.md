@@ -32,6 +32,7 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Cart and order backend
 - [x] Transport assignment and delivery backend
 - [x] Notification and internal event system
+- [x] Role-based analytics backend
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
@@ -42,6 +43,7 @@ The stabilization phase covered navigation validity, active navigation states, r
 - Dashboard actions do not yet call backend services.
 - Product search, filtering, sorting, pagination, category management, media references, inventory history, and low-stock APIs are implemented but not connected to the frontend.
 - Payments, object storage uploads, and live location streaming are not integrated. In-app and email notifications are implemented; a durable external queue/outbox remains a deployment hardening step.
+- Analytics use a bounded in-memory cache abstraction; Redis or another shared cache is required for multi-instance deployment.
 
 ## Next milestone
 

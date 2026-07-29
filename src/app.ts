@@ -13,6 +13,7 @@ import { InventoryController } from './controllers/inventory.controller';
 import { CommerceController } from './controllers/commerce.controller';
 import { LogisticsController } from './controllers/logistics.controller';
 import { NotificationController } from './controllers/notification.controller';
+import { AnalyticsController } from './controllers/analytics.controller';
 import { createAuthenticate } from './middlewares/authentication.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/not-found.middleware';
@@ -24,6 +25,7 @@ import { InventoryRepository } from './repositories/inventory.repository';
 import { CommerceRepository } from './repositories/commerce.repository';
 import { LogisticsRepository } from './repositories/logistics.repository';
 import { NotificationRepository } from './repositories/notification.repository';
+import { AnalyticsRepository } from './repositories/analytics.repository';
 import { createApiRouter } from './routes';
 import { SystemService } from './services/system.service';
 import { AuthService } from './services/auth.service';
@@ -33,6 +35,8 @@ import { InventoryService } from './services/inventory.service';
 import { CommerceService } from './services/commerce.service';
 import { LogisticsService } from './services/logistics.service';
 import { NotificationService } from './services/notification.service';
+import { AnalyticsService } from './services/analytics.service';
+import { MemoryAnalyticsCacheService } from './services/analytics-cache.service';
 import { API_PREFIX } from './constants/application';
 import { EventBus } from './utils/event-bus';
 import { DOMAIN_EVENT_TYPES } from './types/domain-events';
@@ -47,6 +51,7 @@ export function createApp(): Express {
   const notificationService = new NotificationService(new NotificationRepository(prisma), emailService);
   eventBus.subscribe(DOMAIN_EVENT_TYPES, notificationService.handleEvent);
   const notificationController = new NotificationController(notificationService);
+  const analyticsController = new AnalyticsController(new AnalyticsService(new AnalyticsRepository(prisma), new MemoryAnalyticsCacheService()));
   const authRepository = new AuthRepository(prisma);
   const authService = new AuthService(authRepository, emailService, eventBus);
   const authController = new AuthController(authService);
@@ -75,7 +80,7 @@ export function createApp(): Express {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
-  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController, notificationController));
+  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController, notificationController, analyticsController));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 
