@@ -7,6 +7,7 @@ import { Bell, ChevronRight, Menu, Search, ShoppingBag, Sparkles, UserCircle2, X
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { dashboardNavItems } from '@/components/layout/navigation-data';
+import { useAuth } from '@/providers/auth-provider';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -40,6 +41,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const breadcrumbs = getBreadcrumbs(pathname);
+  const { user, logout } = useAuth();
+  const displayName = user?.profile?.displayName || [user?.profile?.firstName, user?.profile?.lastName].filter(Boolean).join(' ') || user?.email;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -109,8 +112,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
                   </Button>
                   {isProfileOpen ? (
                     <div className="absolute right-0 z-10 mt-2 w-48 rounded-2xl border border-border bg-white p-3 shadow-lg">
-                      <p className="text-sm font-semibold text-slate-900">Amina Yusuf</p>
-                      <p className="mt-1 text-sm text-slate-600">Buyer account</p>
+                      <p className="text-sm font-semibold text-slate-900">{displayName}</p>
+                      <p className="mt-1 text-sm capitalize text-slate-600">{user?.role.toLowerCase()} account</p>
+                      <Button variant="ghost" className="mt-2 w-full justify-start" onClick={() => void logout().then(() => window.location.assign('/auth/sign-in'))}>
+                        Sign out
+                      </Button>
                     </div>
                   ) : null}
                 </div>

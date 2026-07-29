@@ -119,7 +119,7 @@ export default function CartPage() {
             </CardHeader>
             <CardContent className="grid gap-4">
               {featuredProducts.slice(0, 2).map((product) => (
-                <ProductCard key={product.id} title={product.title} price={product.price} farmer={product.farmer} location={product.location} rating={product.rating} badge={product.badge} />
+                <ProductCard key={product.id} id={product.id} title={product.title} price={product.price} farmer={product.farmer} location={product.location} rating={product.rating} badge={product.badge} />
               ))}
             </CardContent>
           </Card>

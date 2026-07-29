@@ -1,4 +1,8 @@
+'use client';
+
 import Link from 'next/link';
+import { useState, type FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { Filter, Search, SlidersHorizontal } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +16,14 @@ interface MarketplaceShellProps {
 }
 
 export function MarketplaceShell({ title, description, children }: MarketplaceShellProps) {
+  const router = useRouter();
+  const [search, setSearch] = useState('');
+
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    router.push(search.trim() ? `/marketplace/search?search=${encodeURIComponent(search.trim())}` : '/marketplace/search');
+  }
+
   return (
     <div className="space-y-6">
       <section className="rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-sm">
@@ -30,16 +42,20 @@ export function MarketplaceShell({ title, description, children }: MarketplaceSh
 
       <section className="rounded-[2rem] border border-border bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-1 items-center gap-3 rounded-2xl border border-border bg-slate-50 px-3 py-2">
+          <form onSubmit={submitSearch} className="flex flex-1 items-center gap-3 rounded-2xl border border-border bg-slate-50 px-3 py-2">
             <Search className="h-4 w-4 text-slate-400" />
-            <Input aria-label="Search marketplace" placeholder="Search products, farmers, or categories" className="border-0 bg-transparent shadow-none focus:ring-0" />
-          </div>
+            <Input aria-label="Search marketplace" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search products, farmers, or categories" className="border-0 bg-transparent shadow-none focus:ring-0" />
+          </form>
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" className="gap-2">
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/marketplace/search">
               <Filter className="h-4 w-4" /> Filters
+              </Link>
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button asChild variant="outline" className="gap-2">
+              <Link href="/marketplace/search?sort=priceAsc">
               <SlidersHorizontal className="h-4 w-4" /> Sort
+              </Link>
             </Button>
           </div>
         </div>
