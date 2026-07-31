@@ -11,6 +11,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { useQuery } from '@tanstack/react-query';
 import { NotificationPanel } from '@/components/features/notifications/notification-panel';
 import { getUnreadCount, notificationQueryKeys } from '@/lib/api/notifications';
+import { ProfileImageControl } from '@/components/features/media/profile-image-control';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -113,9 +114,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
                     Profile
                   </Button>
                   {isProfileOpen ? (
-                    <div className="absolute right-0 z-10 mt-2 w-48 rounded-2xl border border-border bg-white p-3 shadow-lg">
+                    <div className="absolute right-0 z-10 mt-2 w-72 rounded-2xl border border-border bg-white p-3 shadow-lg">
                       <p className="text-sm font-semibold text-slate-900">{displayName}</p>
                       <p className="mt-1 text-sm capitalize text-slate-600">{user?.role.toLowerCase()} account</p>
+                      <ProfileImageControl />
                       <Button variant="ghost" className="mt-2 w-full justify-start" onClick={() => void logout().then(() => window.location.assign('/auth/sign-in'))}>
                         Sign out
                       </Button>

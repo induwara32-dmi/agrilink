@@ -25,9 +25,6 @@ export const updateProductSchema = request(createProductSchema.shape.body.omit({
 export const categoryListSchema = request(empty, empty, z.object({ includeInactive: z.stringbool().default(false) }));
 export const createCategorySchema = request(z.object({ parentId: uuid.nullable().optional(), name: z.string().trim().min(2).max(120), slug: z.string().trim().min(2).max(140).optional(), description: z.string().trim().max(5000).optional(), isActive: z.boolean().optional(), sortOrder: z.number().int().min(0).optional() }), empty, empty);
 export const updateCategorySchema = request(createCategorySchema.shape.body.partial().refine(v => Object.keys(v).length > 0), idParams, empty);
-export const imageParamsSchema = request(empty, z.object({ id: uuid, imageId: uuid }), empty);
-export const createImageSchema = request(z.object({ storageKey: z.string().trim().min(1).max(500), url: z.string().url(), altText: z.string().trim().max(255).optional(), sortOrder: z.number().int().min(0) }), idParams, empty);
-export const updateImageSchema = request(z.object({ altText: z.string().trim().max(255).optional(), sortOrder: z.number().int().min(0).optional() }).refine(v => Object.keys(v).length > 0), z.object({ id: uuid, imageId: uuid }), empty);
 export const inventoryAdjustmentSchema = request(z.object({ type: z.enum([InventoryMovementType.STOCK_IN, InventoryMovementType.RETURN, InventoryMovementType.ADJUSTMENT, InventoryMovementType.DAMAGE, InventoryMovementType.EXPIRY]), quantity, reason: z.string().trim().min(2).max(255).optional() }), idParams, empty);
 export const inventorySettingsSchema = request(z.object({ reorderLevel: decimal.nullable() }), idParams, empty);
 export const inventoryHistorySchema = request(empty, idParams, z.object({ page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(100).default(20) }));
@@ -38,6 +35,4 @@ export type CreateProductBody = z.infer<typeof createProductSchema>['body'];
 export type UpdateProductBody = z.infer<typeof updateProductSchema>['body'];
 export type CreateCategoryBody = z.infer<typeof createCategorySchema>['body'];
 export type UpdateCategoryBody = z.infer<typeof updateCategorySchema>['body'];
-export type CreateImageBody = z.infer<typeof createImageSchema>['body'];
-export type UpdateImageBody = z.infer<typeof updateImageSchema>['body'];
 export type InventoryAdjustmentBody = z.infer<typeof inventoryAdjustmentSchema>['body'];

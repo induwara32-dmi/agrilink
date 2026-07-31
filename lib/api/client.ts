@@ -75,3 +75,26 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
   return payload;
 }
+
+export function apiUpload<T>(path: string, method: 'POST' | 'PUT', body: FormData, onProgress?: (percent: number) => void, retryOnUnauthorized = true): Promise<ApiSuccess<T>> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open(method, `${API_URL}${path}`);
+    request.setRequestHeader('Accept', 'application/json');
+    const session = getSession();
+    if (session?.accessToken) request.setRequestHeader('Authorization', `Bearer ${session.accessToken}`);
+    request.upload.addEventListener('progress', event => { if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100)); });
+    request.addEventListener('load', async () => {
+      if (request.status === 401 && retryOnUnauthorized && await refreshSession()) {
+        apiUpload<T>(path, method, body, onProgress, false).then(resolve, reject);
+        return;
+      }
+      let payload: ApiSuccess<T> | ApiFailure | null = null;
+      try { payload = JSON.parse(request.responseText) as ApiSuccess<T> | ApiFailure; } catch { /* handled below */ }
+      if (request.status < 200 || request.status >= 300 || !payload || !payload.success) { const failure = payload && !payload.success ? payload.error : null; reject(new ApiClientError(failure?.message ?? 'Unable to upload the image.', request.status, failure?.code ?? 'UPLOAD_FAILED', failure?.details)); return; }
+      resolve(payload);
+    });
+    request.addEventListener('error', () => reject(new ApiClientError('The upload connection failed.', 0, 'NETWORK_ERROR')));
+    request.send(body);
+  });
+}

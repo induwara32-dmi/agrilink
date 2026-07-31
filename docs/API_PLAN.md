@@ -29,6 +29,9 @@ Authentication, catalog, inventory, cart, checkout, orders, logistics, notificat
 - `/categories`, `/categories/{categoryId}`
 - `/products`, `/products/{productId}`
 - `/products/{productId}/images`
+- `PUT /products/{productId}/images/reorder`
+- `PATCH /products/{productId}/images/{imageId}/primary`
+- `DELETE /products/{productId}/images/{imageId}`
 - `/products/{productId}/inventory`
 - `/products/{productId}/inventory/adjustments`
 - `/products/{productId}/inventory/history`
@@ -51,6 +54,13 @@ Authentication, catalog, inventory, cart, checkout, orders, logistics, notificat
 - `/deliveries`, `/deliveries/{deliveryId}`
 - `/deliveries/{deliveryId}/schedule`, `/deliveries/{deliveryId}/transitions`
 - `/deliveries/{deliveryId}/proof`
+- `PUT /me/avatar`, `DELETE /me/avatar`
+
+### Media uploads
+
+Media endpoints accept `multipart/form-data` and stream validated image buffers from memory to Cloudinary. Product uploads accept up to five files per request and eight images per product, with a 5 MiB limit per image. Profile images allow one 3 MiB image. Proof-of-delivery uploads allow one 8 MiB image. Supported formats are JPEG, PNG, and WebP.
+
+The API stores Cloudinary public IDs, secure URLs, dimensions, byte size, format, and safe provider metadata. Product mutations require product ownership or admin access. Profile mutations are owner-only. Delivery proof requires either the assigned platform transporter or the owner of a farmer-delivery fulfillment in a valid lifecycle state.
 - `/transport-jobs`, `/transport-jobs/{transportJobId}`
 - `/transport-jobs/{transportJobId}/assign/automatic`, `/transport-jobs/{transportJobId}/assign/manual`
 - `/transport-jobs/{transportJobId}/accept`, `/transport-jobs/{transportJobId}/reject`, `/transport-jobs/{transportJobId}/reassign`

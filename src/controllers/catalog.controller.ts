@@ -1,8 +1,8 @@
 import type { Request, RequestHandler } from 'express';
 import { HTTP_STATUS } from '../constants/application';
 import type { CatalogService } from '../services/catalog.service';
-import type { Actor, CategoryInput, CategoryUpdateInput, ImageInput, ImageUpdateInput, ProductInput, ProductQuery, ProductUpdateInput } from '../types/catalog';
-import type { CreateCategoryBody, CreateImageBody, CreateProductBody, ProductListQuery, UpdateCategoryBody, UpdateImageBody, UpdateProductBody } from '../validators/catalog.validators';
+import type { Actor, CategoryInput, CategoryUpdateInput, ProductInput, ProductQuery, ProductUpdateInput } from '../types/catalog';
+import type { CreateCategoryBody, CreateProductBody, ProductListQuery, UpdateCategoryBody, UpdateProductBody } from '../validators/catalog.validators';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess } from '../utils/response';
 import { BaseController } from './base.controller';
@@ -28,7 +28,4 @@ export class CatalogController extends BaseController {
   public readonly createCategory: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.CREATED, await this.service.createCategory(request.body as CreateCategoryBody as CategoryInput, actorFrom(request))));
   public readonly updateCategory: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.updateCategory(pathParameter(request, 'id'), request.body as UpdateCategoryBody as CategoryUpdateInput, actorFrom(request))));
   public readonly deleteCategory: RequestHandler = asyncHandler(async (request, response) => { await this.service.deleteCategory(pathParameter(request, 'id'), actorFrom(request)); return sendSuccess(response, HTTP_STATUS.OK, { message: 'Category archived.' }); });
-  public readonly addImage: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.CREATED, await this.service.addImage(pathParameter(request, 'id'), request.body as CreateImageBody as ImageInput, actorFrom(request))));
-  public readonly updateImage: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.updateImage(pathParameter(request, 'id'), pathParameter(request, 'imageId'), request.body as UpdateImageBody as ImageUpdateInput, actorFrom(request))));
-  public readonly deleteImage: RequestHandler = asyncHandler(async (request, response) => { await this.service.deleteImage(pathParameter(request, 'id'), pathParameter(request, 'imageId'), actorFrom(request)); return sendSuccess(response, HTTP_STATUS.OK, { message: 'Product image deleted.' }); });
 }

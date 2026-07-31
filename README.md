@@ -16,6 +16,12 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Media configuration
+
+Image uploads use Cloudinary. Copy `.env.example` to a local environment file and provide `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`. Only the example placeholders belong in source control; never expose the API secret through a `NEXT_PUBLIC_` variable.
+
+Accepted images are JPEG, PNG, and WebP. Product images are limited to 5 MiB each, profile images to 3 MiB, and proof-of-delivery images to 8 MiB.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

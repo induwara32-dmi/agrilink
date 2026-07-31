@@ -4,10 +4,13 @@ import { logger } from '../config/logger';
 import { HTTP_STATUS } from '../constants/application';
 import { ApiError } from '../utils/api-error';
 import { sendError } from '../utils/response';
+import multer from 'multer';
 
 export const errorMiddleware: ErrorRequestHandler = (error: unknown, request, response, _next) => {
   void _next;
-  const apiError =
+  const apiError = error instanceof multer.MulterError
+    ? new ApiError(error.code === 'LIMIT_FILE_SIZE' ? HTTP_STATUS.PAYLOAD_TOO_LARGE : HTTP_STATUS.UNPROCESSABLE_ENTITY, 'UPLOAD_VALIDATION_ERROR', error.code === 'LIMIT_FILE_SIZE' ? 'The selected image exceeds the upload size limit.' : 'The image upload is invalid.', { field: error.field, reason: error.code })
+    :
     error instanceof ApiError
       ? error
       : new ApiError(

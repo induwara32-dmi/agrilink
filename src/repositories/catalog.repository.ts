@@ -1,5 +1,5 @@
 import { InventoryMovementType, Prisma, ProductStatus, type PrismaClient } from '@prisma/client';
-import type { CategoryInput, CategoryUpdateInput, ImageInput, ImageUpdateInput, ProductInput, ProductQuery, ProductUpdateInput } from '../types/catalog';
+import type { CategoryInput, CategoryUpdateInput, ProductInput, ProductQuery, ProductUpdateInput } from '../types/catalog';
 import { BaseRepository } from './base.repository';
 
 const productInclude = {
@@ -8,6 +8,7 @@ const productInclude = {
     include: {
       user: {
         select: {
+          id: true,
           profile: { select: { displayName: true, avatarUrl: true } },
         },
       },
@@ -60,8 +61,4 @@ export class CatalogRepository extends BaseRepository {
   public async createCategory(input: CategoryInput, actorId: string, requestId: string) { return this.database.$transaction(async tx => { const item = await tx.category.create({ data: { ...input, slug: input.slug! } }); await tx.auditLog.create({ data: audit(actorId, 'CATEGORY_CREATED', 'Category', item.id, requestId, undefined, { name: item.name }) }); return item; }); }
   public async updateCategory(id: string, input: CategoryUpdateInput, actorId: string, requestId: string) { return this.database.$transaction(async tx => { const before = await tx.category.findUniqueOrThrow({ where: { id } }); const item = await tx.category.update({ where: { id }, data: input }); await tx.auditLog.create({ data: audit(actorId, 'CATEGORY_UPDATED', 'Category', id, requestId, { name: before.name }, { name: item.name }) }); return item; }); }
   public async deleteCategory(id: string, actorId: string, requestId: string): Promise<void> { await this.database.$transaction([this.database.category.update({ where: { id }, data: { deletedAt: new Date(), isActive: false } }), this.database.auditLog.create({ data: audit(actorId, 'CATEGORY_DELETED', 'Category', id, requestId) })]); }
-  public async addImage(productId: string, input: ImageInput, actorId: string, requestId: string) { return this.database.$transaction(async tx => { const item = await tx.productImage.create({ data: { productId, ...input } }); await tx.auditLog.create({ data: audit(actorId, 'PRODUCT_IMAGE_CREATED', 'ProductImage', item.id, requestId) }); return item; }); }
-  public async updateImage(id: string, input: ImageUpdateInput, actorId: string, requestId: string) { return this.database.$transaction(async tx => { const item = await tx.productImage.update({ where: { id }, data: input }); await tx.auditLog.create({ data: audit(actorId, 'PRODUCT_IMAGE_UPDATED', 'ProductImage', id, requestId) }); return item; }); }
-  public async deleteImage(id: string, actorId: string, requestId: string): Promise<void> { await this.database.$transaction([this.database.productImage.delete({ where: { id } }), this.database.auditLog.create({ data: audit(actorId, 'PRODUCT_IMAGE_DELETED', 'ProductImage', id, requestId) })]); }
-  public findImage(id: string) { return this.database.productImage.findUnique({ where: { id }, include: { product: true } }); }
 }

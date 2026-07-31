@@ -58,6 +58,9 @@ export type ProductImage = {
   url: string;
   altText: string | null;
   sortOrder: number;
+  isPrimary: boolean;
+  width: number;
+  height: number;
 };
 
 export type Product = {
@@ -76,6 +79,7 @@ export type Product = {
     id: string;
     farmName: string;
     user: {
+      id: string;
       profile: {
         displayName: string | null;
         avatarUrl: string | null;

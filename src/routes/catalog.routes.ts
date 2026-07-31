@@ -4,7 +4,7 @@ import type { CatalogController } from '../controllers/catalog.controller';
 import type { InventoryController } from '../controllers/inventory.controller';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validateRequest } from '../middlewares/validation.middleware';
-import { categoryListSchema, createCategorySchema, createImageSchema, createProductSchema, imageParamsSchema, inventoryAdjustmentSchema, inventoryHistorySchema, inventorySettingsSchema, lowStockSchema, productIdSchema, productListSchema, updateCategorySchema, updateImageSchema, updateProductSchema } from '../validators/catalog.validators';
+import { categoryListSchema, createCategorySchema, createProductSchema, inventoryAdjustmentSchema, inventoryHistorySchema, inventorySettingsSchema, lowStockSchema, productIdSchema, productListSchema, updateCategorySchema, updateProductSchema } from '../validators/catalog.validators';
 
 export function createCatalogRouter(catalog: CatalogController, inventory: InventoryController, authenticate: RequestHandler): Router {
   const router = Router();
@@ -17,9 +17,6 @@ export function createCatalogRouter(catalog: CatalogController, inventory: Inven
   router.post('/products', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(createProductSchema), catalog.createProduct);
   router.patch('/products/:id', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(updateProductSchema), catalog.updateProduct);
   router.delete('/products/:id', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(productIdSchema), catalog.deleteProduct);
-  router.post('/products/:id/images', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(createImageSchema), catalog.addImage);
-  router.patch('/products/:id/images/:imageId', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(updateImageSchema), catalog.updateImage);
-  router.delete('/products/:id/images/:imageId', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(imageParamsSchema), catalog.deleteImage);
   router.get('/products/:id/inventory', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(productIdSchema), inventory.get);
   router.patch('/products/:id/inventory', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(inventorySettingsSchema), inventory.updateSettings);
   router.post('/products/:id/inventory/adjustments', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(inventoryAdjustmentSchema), inventory.adjust);

@@ -2,7 +2,7 @@ import { DeliveryMethod, DeliveryStatus, Prisma, Role } from '@prisma/client';
 import { DELIVERY_TRANSITIONS } from '../constants/logistics';
 import { HTTP_STATUS } from '../constants/application';
 import type { LogisticsRepository } from '../repositories/logistics.repository';
-import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ProofInput, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
+import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
 import { ApiError } from '../utils/api-error';
 import { BaseService } from './base.service';
 import type { DomainEventPublisher, DomainEventType } from '../types/domain-events';
@@ -37,7 +37,6 @@ export class LogisticsService extends BaseService {
     try { const delivery = await this.repository.transition(id, input, actor); const eventType: Partial<Record<DeliveryStatus, DomainEventType>> = { PICKED_UP: 'DELIVERY_PICKED_UP', IN_TRANSIT: 'DELIVERY_IN_TRANSIT', DELIVERED: 'DELIVERY_DELIVERED', FAILED: 'DELIVERY_FAILED' }; const type = eventType[input.status]; if (type) await this.events.publish({ type, recipientIds: this.deliveryRecipients(delivery), data: { deliveryId: delivery.id, orderNumber: delivery.farmerOrder.order.orderNumber } }); if (input.status === DeliveryStatus.CANCELLED && delivery.farmerOrder.order.status === 'CANCELLED') await this.events.publish({ type: 'ORDER_CANCELLED', recipientIds: this.deliveryRecipients(delivery), data: { orderId: delivery.farmerOrder.order.id, orderNumber: delivery.farmerOrder.order.orderNumber } }); return delivery; } catch (error) { this.translate(error); }
   }
 
-  public async addProof(id: string, input: ProofInput, actor: LogisticsActor) { const delivery = await this.requireDeliveryAccess(id, actor); if (delivery.status !== DeliveryStatus.PICKED_UP && delivery.status !== DeliveryStatus.IN_TRANSIT) throw new ApiError(HTTP_STATUS.CONFLICT, 'PROOF_NOT_ALLOWED', 'Proof can be recorded only after pickup.'); return this.repository.addProof(id, input, actor); }
 
   public async listVehicles(query: PageQuery, actor: LogisticsActor) { const result = await this.repository.listVehicles(actor, query); return { ...result, meta: meta(query, result.total) }; }
   public getVehicle(id: string, actor: LogisticsActor) { return this.requireVehicle(id, actor); }

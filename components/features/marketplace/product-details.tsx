@@ -14,6 +14,7 @@ import { getProduct } from '@/lib/api/catalog';
 import { addCartItem, cartQueryKeys } from '@/lib/api/commerce';
 import { ApiClientError } from '@/lib/api/client';
 import { useAuth } from '@/providers/auth-provider';
+import { ProductImageManager } from '@/components/features/media/product-image-manager';
 
 export function ProductDetails() {
   const id = useSearchParams().get('id');
@@ -43,6 +44,7 @@ export function ProductDetails() {
       <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Farmer information</CardTitle></CardHeader><CardContent className="space-y-3 text-sm text-slate-600"><p className="font-semibold text-slate-900">{item.farmer.farmName}</p><p>{item.farmer.user.profile?.displayName ?? 'Verified AgriLink farmer'}</p><div className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-primary" /> Contact seller</div></CardContent></Card>
       <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Delivery options</CardTitle></CardHeader><CardContent className="space-y-3 text-sm text-slate-600"><div className="flex items-center gap-2 rounded-2xl border border-border bg-slate-50 p-3"><Truck className="h-4 w-4 text-primary" /> Farmer delivery</div><div className="rounded-2xl border border-border bg-slate-50 p-3">Buyer pickup</div><div className="rounded-2xl border border-border bg-slate-50 p-3">Platform transporter</div></CardContent></Card>
     </div>
+    {(user?.role === 'ADMIN' || (user?.role === 'FARMER' && item.farmer.user.id === user.id)) ? <Card className="border-border/80 bg-white"><CardContent className="p-6"><ProductImageManager productId={item.id} images={item.images} /></CardContent></Card> : null}
   </div>;
 }
 

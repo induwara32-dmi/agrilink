@@ -15,6 +15,8 @@ import type { NotificationController } from '../controllers/notification.control
 import { createNotificationRouter } from './notification.routes';
 import type { AnalyticsController } from '../controllers/analytics.controller';
 import { createAnalyticsRouter } from './analytics.routes';
+import type { MediaController } from '../controllers/media.controller';
+import { createMediaRouter } from './media.routes';
 
 export function createApiRouter(
   systemController: SystemController,
@@ -26,6 +28,7 @@ export function createApiRouter(
   logisticsController: LogisticsController,
   notificationController: NotificationController,
   analyticsController: AnalyticsController,
+  mediaController: MediaController,
 ): Router {
   const router = Router();
   router.use(createSystemRouter(systemController));
@@ -35,5 +38,6 @@ export function createApiRouter(
   router.use(createLogisticsRouter(logisticsController, authenticate));
   router.use(createNotificationRouter(notificationController, authenticate));
   router.use(createAnalyticsRouter(analyticsController, authenticate));
+  router.use(createMediaRouter(mediaController, authenticate));
   return router;
 }

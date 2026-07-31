@@ -10,9 +10,12 @@ import { ErrorState } from '@/components/ui/error-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { getOrder } from '@/lib/api/commerce';
 import { getDelivery, type DeliveryTracking } from '@/lib/api/logistics';
+import { DeliveryProofUpload } from '@/components/features/media/delivery-proof-upload';
+import { useAuth } from '@/providers/auth-provider';
 
 const terminal = new Set(['DELIVERED', 'CANCELLED', 'FAILED']);
 export function OrderTracking({ orderId }: { orderId: string }) {
+  const { user } = useAuth();
   const tracking = useQuery({
     queryKey: ['order-tracking', orderId],
     queryFn: async () => { const order = (await getOrder(orderId)).data; const deliveries = await Promise.all(order.farmerOrders.flatMap(group => group.delivery ? [getDelivery(group.delivery.id).then(response => response.data)] : [])); return { order, deliveries }; },
@@ -22,7 +25,8 @@ export function OrderTracking({ orderId }: { orderId: string }) {
   if (tracking.isError) return <ErrorState title="Tracking unavailable" description="We could not load the delivery timeline." onRetry={() => void tracking.refetch()} />;
   const data = tracking.data;
   if (!data?.deliveries.length) return <EmptyState title="Tracking not available" description="Delivery records have not been created for this order." />;
-  return <div className="space-y-6">{data.deliveries.map(delivery => <DeliveryPanel key={delivery.id} delivery={delivery} />)}</div>;
+  const canUploadProof = user?.role === 'FARMER' || user?.role === 'TRANSPORTER';
+  return <div className="space-y-6">{data.deliveries.map(delivery => <DeliveryPanel key={delivery.id} delivery={delivery} />)}{canUploadProof ? data.deliveries.filter(delivery => ['PICKED_UP', 'IN_TRANSIT', 'DELIVERED'].includes(delivery.status)).map(delivery => <Card key={`proof-${delivery.id}`} className="border-border/80 bg-white"><CardHeader><CardTitle>Proof of delivery · {delivery.farmerOrder.farmerOrderNumber}</CardTitle></CardHeader><CardContent><DeliveryProofUpload deliveryId={delivery.id} proofUrl={delivery.proofUrl} onUploaded={() => void tracking.refetch()} /></CardContent></Card>) : null}</div>;
 }
 
 function DeliveryPanel({ delivery }: { delivery: DeliveryTracking }) {

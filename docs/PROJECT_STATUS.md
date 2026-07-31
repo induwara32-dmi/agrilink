@@ -37,6 +37,7 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Cart and checkout frontend API integration
 - [x] Orders, tracking, and notifications frontend API integration
 - [x] Dashboard analytics frontend API integration
+- [x] Cloudinary media upload and asset management
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
@@ -45,7 +46,11 @@ The stabilization phase covered navigation validity, active navigation states, r
 - Wishlist and recently viewed screens still use mock data until their frontend integration phases.
 - Dashboard actions not represented by existing backend endpoints remain unavailable.
 - Product search, filtering, sorting, pagination, category management, media references, inventory history, and low-stock APIs are implemented but not connected to the frontend.
-- Payments, object storage uploads, and live location streaming are not integrated. In-app and email notifications are implemented; a durable external queue/outbox remains a deployment hardening step.
+- Payments and live location streaming are not integrated. Cloudinary image storage, in-app notifications, and email notifications are implemented; a durable external queue/outbox remains a deployment hardening step.
+
+## Phase 27 media management
+
+Product galleries, user avatars, and proof-of-delivery photos use authenticated multipart upload APIs backed by Cloudinary. Images are limited to JPEG, PNG, or WebP. Limits are five product files per request, eight files per product, 5 MiB per product image, 3 MiB per avatar, and 8 MiB per delivery proof. The database stores the Cloudinary public ID, secure URL, dimensions, byte count, format, safe metadata, and proof uploader identity.
 - Analytics use a bounded in-memory cache abstraction; Redis or another shared cache is required for multi-instance deployment.
 
 ## Next milestone

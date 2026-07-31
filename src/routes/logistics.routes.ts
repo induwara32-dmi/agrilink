@@ -3,7 +3,7 @@ import { Router, type RequestHandler } from 'express';
 import type { LogisticsController } from '../controllers/logistics.controller';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validateRequest } from '../middlewares/validation.middleware';
-import { acceptJobSchema, createVehicleSchema, deliverySchema, jobSchema, listJobsSchema, listVehiclesSchema, manualAssignmentSchema, proofSchema, rejectJobSchema, scheduleDeliverySchema, transitionDeliverySchema, updateVehicleSchema, vehicleSchema } from '../validators/logistics.validators';
+import { acceptJobSchema, createVehicleSchema, deliverySchema, jobSchema, listJobsSchema, listVehiclesSchema, manualAssignmentSchema, rejectJobSchema, scheduleDeliverySchema, transitionDeliverySchema, updateVehicleSchema, vehicleSchema } from '../validators/logistics.validators';
 
 export function createLogisticsRouter(controller: LogisticsController, authenticate: RequestHandler): Router {
   const router = Router();
@@ -18,7 +18,6 @@ export function createLogisticsRouter(controller: LogisticsController, authentic
   router.get('/deliveries/:deliveryId', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.TRANSPORTER, Role.ADMIN), validateRequest(deliverySchema), controller.getDelivery);
   router.post('/deliveries/:deliveryId/schedule', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.TRANSPORTER, Role.ADMIN), validateRequest(scheduleDeliverySchema), controller.schedule);
   router.post('/deliveries/:deliveryId/transitions', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.TRANSPORTER, Role.ADMIN), validateRequest(transitionDeliverySchema), controller.transition);
-  router.post('/deliveries/:deliveryId/proof', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.TRANSPORTER, Role.ADMIN), validateRequest(proofSchema), controller.addProof);
   router.get('/vehicles', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.TRANSPORTER, Role.ADMIN), validateRequest(listVehiclesSchema), controller.listVehicles);
   router.get('/vehicles/:vehicleId', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.TRANSPORTER, Role.ADMIN), validateRequest(vehicleSchema), controller.getVehicle);
   router.post('/vehicles', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.TRANSPORTER, Role.ADMIN), validateRequest(createVehicleSchema), controller.createVehicle);

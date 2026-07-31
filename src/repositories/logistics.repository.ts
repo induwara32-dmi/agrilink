@@ -1,6 +1,6 @@
 import { AccountStatus, DeliveryMethod, DeliveryStatus, FarmerOrderStatus, InventoryMovementType, OrderStatus, Prisma, Role, TransportJobStatus, VerificationStatus, type PrismaClient } from '@prisma/client';
 import { ACTIVE_DELIVERY_STATUSES, DEFAULT_DELIVERY_MINUTES } from '../constants/logistics';
-import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ProofInput, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
+import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
 import { BaseRepository } from './base.repository';
 
 const jobInclude = { delivery: { include: { farmerOrder: { include: { items: true, farmer: true, order: { select: { buyerId: true, orderNumber: true } } } }, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } }, transporter: { include: { user: { select: { id: true, profile: true } } } }, vehicle: true, rejections: { orderBy: { createdAt: 'desc' as const } } } satisfies Prisma.TransportJobInclude;
@@ -120,16 +120,6 @@ export class LogisticsRepository extends BaseRepository {
       await transaction.auditLog.create({ data: { actorId: actor.userId, action: `DELIVERY_${input.status}`, entityType: 'Delivery', entityId: delivery.id, requestId: actor.requestId } });
       return transaction.delivery.findUniqueOrThrow({ where: { id: delivery.id }, include: deliveryInclude });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
-  }
-
-  public async addProof(deliveryId: string, input: ProofInput, actor: LogisticsActor) {
-    return this.database.$transaction(async transaction => {
-      const delivery = await transaction.delivery.findUnique({ where: { id: deliveryId } });
-      if (!delivery) throw new Error('DELIVERY_NOT_FOUND');
-      const updated = await transaction.delivery.update({ where: { id: deliveryId }, data: { recipientName: input.receiverName, ...(input.proofStorageKey ? { proofStorageKey: input.proofStorageKey } : {}), ...(input.photoMetadata ? { proofPhotoMetadata: input.photoMetadata } : {}), ...(input.receiverSignature ? { receiverSignature: input.receiverSignature } : {}), ...(input.notes ? { recipientNote: input.notes } : {}) } });
-      await transaction.auditLog.create({ data: { actorId: actor.userId, action: 'PROOF_OF_DELIVERY_RECORDED', entityType: 'Delivery', entityId: deliveryId, requestId: actor.requestId } });
-      return updated;
-    });
   }
 
   public async listVehicles(actor: LogisticsActor, query: PageQuery) {

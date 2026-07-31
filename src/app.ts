@@ -14,6 +14,7 @@ import { CommerceController } from './controllers/commerce.controller';
 import { LogisticsController } from './controllers/logistics.controller';
 import { NotificationController } from './controllers/notification.controller';
 import { AnalyticsController } from './controllers/analytics.controller';
+import { MediaController } from './controllers/media.controller';
 import { createAuthenticate } from './middlewares/authentication.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/not-found.middleware';
@@ -26,6 +27,7 @@ import { CommerceRepository } from './repositories/commerce.repository';
 import { LogisticsRepository } from './repositories/logistics.repository';
 import { NotificationRepository } from './repositories/notification.repository';
 import { AnalyticsRepository } from './repositories/analytics.repository';
+import { MediaRepository } from './repositories/media.repository';
 import { createApiRouter } from './routes';
 import { SystemService } from './services/system.service';
 import { AuthService } from './services/auth.service';
@@ -37,6 +39,7 @@ import { LogisticsService } from './services/logistics.service';
 import { NotificationService } from './services/notification.service';
 import { AnalyticsService } from './services/analytics.service';
 import { MemoryAnalyticsCacheService } from './services/analytics-cache.service';
+import { MediaService } from './services/media.service';
 import { API_PREFIX } from './constants/application';
 import { EventBus } from './utils/event-bus';
 import { DOMAIN_EVENT_TYPES } from './types/domain-events';
@@ -61,6 +64,7 @@ export function createApp(): Express {
   const inventoryController = new InventoryController(new InventoryService(new InventoryRepository(prisma), catalogService, eventBus));
   const commerceController = new CommerceController(new CommerceService(new CommerceRepository(prisma), eventBus));
   const logisticsController = new LogisticsController(new LogisticsService(new LogisticsRepository(prisma), eventBus));
+  const mediaController = new MediaController(new MediaService(new MediaRepository(prisma)));
 
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
@@ -80,7 +84,7 @@ export function createApp(): Express {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
-  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController, notificationController, analyticsController));
+  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController, notificationController, analyticsController, mediaController));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 

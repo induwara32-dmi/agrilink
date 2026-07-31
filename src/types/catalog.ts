@@ -29,6 +29,4 @@ export interface ProductInput {
 export type ProductUpdateInput = Partial<Omit<ProductInput, 'farmerId' | 'initialQuantity' | 'reorderLevel'>>;
 export interface CategoryInput { parentId?: string | null; name: string; slug?: string; description?: string; isActive?: boolean; sortOrder?: number }
 export type CategoryUpdateInput = Partial<CategoryInput>;
-export interface ImageInput { storageKey: string; url: string; altText?: string; sortOrder: number }
-export type ImageUpdateInput = Partial<Pick<ImageInput, 'altText' | 'sortOrder'>>;
 export interface InventoryAdjustmentInput { type: InventoryMovementType; quantity: string; reason?: string }

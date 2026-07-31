@@ -21,6 +21,9 @@ const environmentSchema = z.object({
   SMTP_FROM: z.string().min(3),
   EMAIL_VERIFICATION_EXPIRES_IN: z.string().min(1).default('24h'),
   PASSWORD_RESET_EXPIRES_IN: z.string().min(1).default('1h'),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
 });
 
 const parsedEnvironment = environmentSchema.safeParse(process.env);
