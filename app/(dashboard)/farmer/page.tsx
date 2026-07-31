@@ -1,210 +1,36 @@
-import { CheckCircle2, Leaf, Package, PlusCircle, ShoppingCart, TrendingUp, Truck, Users, Wallet } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Leaf, Package, ShoppingCart, Wallet } from 'lucide-react';
 import { AnalyticsChart } from '@/components/features/dashboard/analytics-chart';
+import { AnalyticsControls, comparisonLabel, moneyLabel, trendData } from '@/components/features/dashboard/analytics-controls';
 import { DataTable } from '@/components/features/dashboard/data-table';
 import { KPICard } from '@/components/features/dashboard/kpi-card';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-
-const recentOrders = [
-  { order: '#F102', item: 'Tomatoes', date: 'Today', status: 'Pending' },
-  { order: '#F099', item: 'Maize', date: 'Today', status: 'Packed' },
-  { order: '#F089', item: 'Cocoa', date: 'Yesterday', status: 'In Transit' },
-];
-
-const topProducts = [
-  { name: 'Organic Tomatoes', stock: '180 kg', revenue: '$576' },
-  { name: 'Fresh Maize', stock: '95 kg', revenue: '$171' },
-  { name: 'Cocoa Beans', stock: '60 kg', revenue: '$306' },
-];
-
-const lowStock = [
-  { item: 'Plantains', stock: '12 kg' },
-  { item: 'Yam', stock: '8 kg' },
-];
-
-const deliveries = [
-  { route: 'Tamale -> Accra', eta: '2h', status: 'Confirmed' },
-  { route: 'Kumasi -> Sunyani', eta: '5h', status: 'Pending' },
-];
-
-const messages = [
-  { buyer: 'Amina Yusuf', text: 'Can you reserve 50kg for Friday?' },
-  { buyer: 'Daniel Osei', text: 'Need an update on the maize delivery.' },
-];
-
-const salesData = [
-  { name: 'Mon', value: 24 },
-  { name: 'Tue', value: 38 },
-  { name: 'Wed', value: 31 },
-  { name: 'Thu', value: 44 },
-  { name: 'Fri', value: 53 },
-  { name: 'Sat', value: 48 },
-];
-
-const revenueData = [
-  { name: 'Jan', value: 2400 },
-  { name: 'Feb', value: 2800 },
-  { name: 'Mar', value: 3200 },
-  { name: 'Apr', value: 3600 },
-  { name: 'May', value: 4100 },
-  { name: 'Jun', value: 4300 },
-];
-
-const inventoryData = [
-  { name: 'Tomatoes', value: 180 },
-  { name: 'Maize', value: 95 },
-  { name: 'Cocoa', value: 60 },
-  { name: 'Yam', value: 20 },
-];
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { analyticsQueryKeys, getFarmerAnalytics, type AnalyticsQuery } from '@/lib/api/analytics';
+import { listOrders } from '@/lib/api/commerce';
+import { listDeliveries } from '@/lib/api/logistics';
+import { useAuth } from '@/providers/auth-provider';
 
 export default function FarmerDashboardPage() {
-  return (
-    <div className="space-y-6">
-      <section className="rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Good morning</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back, Kwame</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85">Your farm operations look healthy today, with strong demand and a few high-priority orders to fulfill.</p>
-          </div>
-          <Button className="bg-white text-primary hover:bg-slate-50">View marketplace</Button>
-        </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KPICard title="Total Products" value="18" change="6 active listings" icon={<Package className="h-5 w-5" />} />
-        <KPICard title="Available Stock" value="420 kg" change="+12% this week" icon={<Leaf className="h-5 w-5" />} />
-        <KPICard title="Pending Orders" value="7" change="2 need confirmation" icon={<ShoppingCart className="h-5 w-5" />} />
-        <KPICard title="Monthly Revenue" value="$8.2k" change="+18% vs last month" icon={<Wallet className="h-5 w-5" />} />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {[
-              { label: 'Add Product', icon: <PlusCircle className="h-4 w-4" /> },
-              { label: 'Update Stock', icon: <Truck className="h-4 w-4" /> },
-              { label: 'Accept Order', icon: <CheckCircle2 className="h-4 w-4" /> },
-              { label: 'Request Transport', icon: <Truck className="h-4 w-4" /> },
-              { label: 'View Analytics', icon: <TrendingUp className="h-4 w-4" /> },
-            ].map(({ label, icon }) => (
-              <Button key={label} variant="outline" className="justify-start">
-                {icon}
-                {label}
-              </Button>
-            ))}
-          </div>
-
-          <DataTable title="Recent Orders" columns={['Order', 'Item', 'Date', 'Status']} rows={recentOrders} />
-          <DataTable title="Top Selling Products" columns={['Product', 'Stock', 'Revenue']} rows={topProducts} />
-        </div>
-
-        <div className="space-y-6">
-          <Card className="border-border/80 bg-white">
-            <CardHeader>
-              <CardTitle>Low Stock Alert</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {lowStock.map((item) => (
-                <div key={item.item} className="rounded-2xl border border-border bg-slate-50 p-3 text-sm text-slate-600">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-900">{item.item}</span>
-                    <Badge variant="outline">{item.stock}</Badge>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/80 bg-white">
-            <CardHeader>
-              <CardTitle>Upcoming Deliveries</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {deliveries.map((item) => (
-                <div key={item.route} className="rounded-2xl border border-border bg-slate-50 p-3 text-sm text-slate-600">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-900">{item.route}</span>
-                    <Badge variant="success">{item.status}</Badge>
-                  </div>
-                  <p className="mt-2">ETA {item.eta}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/80 bg-white">
-            <CardHeader>
-              <CardTitle>Buyer Messages</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {messages.map((message) => (
-                <div key={message.buyer} className="rounded-2xl border border-border bg-slate-50 p-3 text-sm text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-slate-900">{message.buyer}</span>
-                  </div>
-                  <p className="mt-2">{message.text}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <AnalyticsChart title="Sales" data={salesData} dataKey="value" color="#2E7D32" />
-        <AnalyticsChart title="Revenue" data={revenueData} dataKey="value" color="#4F46E5" />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="border-border/80 bg-white">
-          <CardHeader>
-            <CardTitle>Inventory Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {inventoryData.map((item) => (
-                <div key={item.name} className="flex items-center justify-between rounded-2xl border border-border bg-slate-50 p-3 text-sm">
-                  <span className="font-semibold text-slate-900">{item.name}</span>
-                  <span className="text-slate-600">{item.value} kg</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <AnalyticsChart title="Inventory" data={inventoryData} dataKey="value" color="#F59E0B" type="bar" />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <Card className="border-border/80 bg-white">
-          <CardHeader>
-            <CardTitle>Weather Widget</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-600">
-            <div className="flex items-center justify-between rounded-2xl border border-border bg-slate-50 p-3">
-              <span className="font-semibold text-slate-900">Tamale</span>
-              <span>28°C • Sunny</span>
-            </div>
-            <div className="rounded-2xl border border-border bg-slate-50 p-3">
-              Ideal conditions for harvest and post-harvest handling.
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/80 bg-white">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <Button className="justify-start">Add Product</Button>
-            <Button variant="outline" className="justify-start">Update Stock</Button>
-            <Button variant="outline" className="justify-start">Request Transport</Button>
-          </CardContent>
-        </Card>
-      </section>
-    </div>
-  );
+  const { user } = useAuth();
+  const [period, setPeriod] = useState<AnalyticsQuery>({ period: 'month' });
+  const enabled = period.period !== 'custom' || Boolean(period.from && period.to);
+  const analytics = useQuery({ queryKey: analyticsQueryKeys.role('farmer', period), queryFn: () => getFarmerAnalytics(period), enabled });
+  const orders = useQuery({ queryKey: ['orders', 'farmer-recent'], queryFn: () => listOrders({ page: 1, pageSize: 5 }) });
+  const deliveries = useQuery({ queryKey: ['deliveries', 'farmer-recent'], queryFn: () => listDeliveries(1, 5) });
+  const report = analytics.data?.data;
+  const activeOrders = report?.current.orderStatusDistribution.filter(item => !['DELIVERED', 'REJECTED', 'CANCELLED'].includes(item.status)).reduce((sum, item) => sum + item.count, 0) ?? 0;
+  return <div className="space-y-6"><section className="rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-sm"><p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Farmer analytics</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back, {user?.profile?.firstName ?? 'Farmer'}</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-white/85">Monitor products, inventory, sales, revenue, orders, and deliveries.</p></section><AnalyticsControls query={period} onChange={setPeriod} />
+  {!enabled ? <EmptyState title="Select a custom range" description="Choose both dates to load analytics." /> : analytics.isLoading ? <LoadingSkeleton /> : analytics.isError ? <ErrorState title="Farmer analytics unavailable" description="We could not load farm performance." onRetry={() => void analytics.refetch()} /> : report ? <>
+    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><KPICard title="Total Products" value={String(report.snapshot.productSummary.total)} change={`${report.snapshot.productSummary.active} active listings`} icon={<Package className="h-5 w-5" />} /><KPICard title="Active Orders" value={String(activeOrders)} change="Selected period" icon={<ShoppingCart className="h-5 w-5" />} /><KPICard title="Monthly Revenue" value={moneyLabel(report.current.revenue)} change={report.comparison.revenue.map(item => `${item.currency}: ${comparisonLabel(item.percentChange)}`).join(' · ') || 'No previous revenue'} icon={<Wallet className="h-5 w-5" />} /><KPICard title="Inventory Stock" value={report.snapshot.inventoryStock.map(item => `${item.quantity} ${item.unit}`).join(' · ') || '—'} change="Available, grouped by unit" icon={<Leaf className="h-5 w-5" />} /></section>
+    <section className="grid gap-6 xl:grid-cols-2">{report.current.revenue.map(total => <AnalyticsChart key={total.currency} title={`Revenue trend (${total.currency})`} data={trendData(report.current.salesTrends, total.currency)} dataKey="value" color="#4F46E5" />)}<AnalyticsChart title="Sales trend (orders)" data={report.current.salesTrends.map(point => ({ name: new Date(point.bucket).toLocaleDateString(), value: point.count }))} dataKey="value" color="#2E7D32" /></section>
+    <section className="grid gap-6 xl:grid-cols-2"><DataTable title="Top Products" columns={['Product', 'Quantity', 'Orders', 'Revenue']} rows={report.current.topProducts.map(item => ({ Product: item.productName, Quantity: `${item.quantity} ${item.unit}`, Orders: item.orders, Revenue: new Intl.NumberFormat(undefined, { style: 'currency', currency: item.currency }).format(Number(item.revenue)) }))} /><DataTable title="Order Status Distribution" columns={['Status', 'Count']} rows={report.current.orderStatusDistribution.map(item => ({ Status: item.status.replaceAll('_', ' '), Count: item.count }))} /></section>
+    <section className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]"><Card className="border-border/80 bg-white"><CardHeader><CardTitle>Low Stock Summary</CardTitle></CardHeader><CardContent className="space-y-3">{report.snapshot.lowStockSummary.products.length ? report.snapshot.lowStockSummary.products.map(item => <div key={item.productId} className="rounded-2xl border border-border bg-slate-50 p-3 text-sm"><p className="font-semibold text-slate-900">{item.productName}</p><p className="text-slate-600">{item.available} available · reorder at {item.reorderLevel}</p></div>) : <EmptyState title="No low-stock products" description="Inventory is above configured reorder levels." />}</CardContent></Card><DataTable title="Inventory Turnover" columns={['Product', 'Sold', 'Average Inventory', 'Turnover']} rows={report.current.inventoryTurnover.map(item => ({ Product: item.productName, Sold: `${item.soldQuantity} ${item.unit}`, 'Average Inventory': item.averageInventory, Turnover: item.turnover }))} /></section>
+    <section className="grid gap-6 xl:grid-cols-2"><DataTable title="Recent Orders" columns={['Order', 'Created', 'Status', 'Groups']} rows={(orders.data?.data ?? []).map(item => ({ Order: item.orderNumber, Created: new Date(item.createdAt).toLocaleDateString(), Status: item.status.replaceAll('_', ' '), Groups: item.farmerOrders.length }))} /><DataTable title="Recent Deliveries" columns={['Order', 'Method', 'Status', 'ETA']} rows={(deliveries.data?.data ?? []).map(item => ({ Order: item.farmerOrder.order.orderNumber, Method: item.method.replaceAll('_', ' '), Status: item.status.replaceAll('_', ' '), ETA: item.estimatedDeliveryAt ? new Date(item.estimatedDeliveryAt).toLocaleString() : 'Pending' }))} /></section>
+  </> : null}</div>;
 }

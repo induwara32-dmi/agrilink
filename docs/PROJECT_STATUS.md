@@ -36,13 +36,14 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Authentication and marketplace frontend API integration
 - [x] Cart and checkout frontend API integration
 - [x] Orders, tracking, and notifications frontend API integration
+- [x] Dashboard analytics frontend API integration
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
 ## Current limitations
 
 - Wishlist and recently viewed screens still use mock data until their frontend integration phases.
-- Dashboard actions do not yet call backend services.
+- Dashboard actions not represented by existing backend endpoints remain unavailable.
 - Product search, filtering, sorting, pagination, category management, media references, inventory history, and low-stock APIs are implemented but not connected to the frontend.
 - Payments, object storage uploads, and live location streaming are not integrated. In-app and email notifications are implemented; a durable external queue/outbox remains a deployment hardening step.
 - Analytics use a bounded in-memory cache abstraction; Redis or another shared cache is required for multi-instance deployment.
@@ -50,6 +51,10 @@ The stabilization phase covered navigation validity, active navigation states, r
 ## Next milestone
 
 The next milestone is payments.
+
+## Phase 26 integration corrections
+
+Dashboard integration exposed missing read-only summary fields in the analytics contract. Farmer analytics now returns active product and unit-separated inventory snapshots, transporter analytics returns current open-job and accepted-delivery counts, and admin analytics returns active partner counts, pending approvals, recent registrations, order trends, and currency-separated category performance. Top-product revenue is also grouped by currency. No operational business rules were changed.
 
 ## Phase 24 integration correction
 

@@ -23,6 +23,11 @@ export function DataTable({ title, columns, rows }: DataTableProps) {
               </tr>
             </thead>
             <tbody>
+              {rows.length === 0 ? (
+                <tr>
+                  <td className="px-4 py-8 text-center text-slate-500" colSpan={columns.length}>No data is available for this period.</td>
+                </tr>
+              ) : null}
               {rows.map((row, index) => (
                 <tr key={index} className="border-t border-border/60">
                   {columns.map((column) => (

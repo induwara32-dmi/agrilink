@@ -1,132 +1,40 @@
-import { Heart, Package } from 'lucide-react';
-import { KPICard } from '@/components/features/dashboard/kpi-card';
+'use client';
+
+import Link from 'next/link';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Bell, CheckCircle2, ShoppingCart, Wallet } from 'lucide-react';
+import { AnalyticsChart } from '@/components/features/dashboard/analytics-chart';
+import { AnalyticsControls, comparisonLabel, moneyLabel, trendData } from '@/components/features/dashboard/analytics-controls';
 import { DataTable } from '@/components/features/dashboard/data-table';
-import { MarketTrendChart } from '@/components/features/dashboard/market-trend-chart';
-import { Badge } from '@/components/ui/badge';
+import { KPICard } from '@/components/features/dashboard/kpi-card';
+import { BuyerRecentOrders } from '@/components/features/orders/buyer-order-widgets';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { NotificationPanel } from '@/components/features/notifications/notification-panel';
-import { BuyerOrderStats, BuyerOrderTrackingShortcut, BuyerRecentOrders } from '@/components/features/orders/buyer-order-widgets';
-
-const featuredProducts = [
-  { name: 'Organic Tomatoes', farmer: 'Green Valley Farms', price: '$3.20/kg', status: 'In Stock' },
-  { name: 'Fresh Maize', farmer: 'North Ridge Co-op', price: '$1.80/kg', status: 'Limited' },
-  { name: 'Cocoa Beans', farmer: 'Riverland Collective', price: '$5.10/kg', status: 'Popular' },
-];
-
-const farmers = [
-  { name: 'Green Valley Farms', location: 'Tamale', rating: '4.9' },
-  { name: 'North Ridge Co-op', location: 'Kumasi', rating: '4.8' },
-  { name: 'Riverland Collective', location: 'Takoradi', rating: '4.7' },
-];
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { analyticsQueryKeys, getBuyerAnalytics, type AnalyticsQuery } from '@/lib/api/analytics';
+import { listDeliveries } from '@/lib/api/logistics';
+import { getUnreadCount, notificationQueryKeys } from '@/lib/api/notifications';
+import { useAuth } from '@/providers/auth-provider';
 
 export function BuyerDashboardPage() {
-  return (
-    <div className="space-y-6">
-        <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <Card className="border-border/80 bg-gradient-to-br from-primary to-secondary p-0 text-white">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Good morning</p>
-                  <h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back, Amina</h1>
-                  <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85">Today’s marketplace summary shows strong demand for fresh produce and reliable transport options.</p>
-                </div>
-                <Button className="bg-white text-primary hover:bg-slate-50">Quick search</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/80 bg-white">
-            <CardHeader>
-              <CardTitle>Today’s focus</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-border bg-slate-50 p-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">3 new offers</p>
-                  <p className="text-sm text-slate-600">From preferred farmers</p>
-                </div>
-                <Badge variant="success">Hot</Badge>
-              </div>
-              <div className="rounded-2xl border border-border bg-slate-50 p-4 text-sm text-slate-600">
-                Delivery window is open until 6:00 PM.
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KPICard title="Available Products" value="84" change="+12% vs last week" icon={<Package className="h-5 w-5" />} />
-          <BuyerOrderStats />
-          <KPICard title="Favorite Farmers" value="9" change="2 new follows" icon={<Heart className="h-5 w-5" />} />
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-6">
-            <DataTable title="Featured Products" columns={['Product', 'Farmer', 'Price', 'Status']} rows={featuredProducts} />
-            <BuyerRecentOrders />
-            <MarketTrendChart />
-          </div>
-
-          <div className="space-y-6">
-            <Card className="border-border/80 bg-white">
-              <CardHeader>
-                <CardTitle>Recommended Farmers</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {farmers.map((farmer) => (
-                  <div key={farmer.name} className="rounded-2xl border border-border bg-slate-50 p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-slate-900">{farmer.name}</p>
-                        <p className="mt-1 text-sm text-slate-600">{farmer.location}</p>
-                      </div>
-                      <Badge variant="outline">★ {farmer.rating}</Badge>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/80 bg-white">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <Button className="justify-start">Browse marketplace</Button>
-                <Button variant="outline" className="justify-start">View wishlist</Button>
-                <Button variant="outline" className="justify-start">Open messages</Button>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/80 bg-white">
-              <CardHeader>
-                <CardTitle>Recent Notifications</CardTitle>
-              </CardHeader>
-              <CardContent><NotificationPanel compact /></CardContent>
-            </Card>
-          </div>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-          <BuyerOrderTrackingShortcut />
-
-          <Card className="border-border/80 bg-white">
-            <CardHeader>
-              <CardTitle>Marketplace Categories</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              {['Vegetables', 'Cereals', 'Fruits', 'Livestock'].map((category) => (
-                <div key={category} className="rounded-2xl border border-border bg-slate-50 p-4 text-sm font-semibold text-slate-700">
-                  {category}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </section>
-      </div>
-  );
+  const { user } = useAuth();
+  const [period, setPeriod] = useState<AnalyticsQuery>({ period: 'month' });
+  const enabled = period.period !== 'custom' || Boolean(period.from && period.to);
+  const analytics = useQuery({ queryKey: analyticsQueryKeys.role('buyer', period), queryFn: () => getBuyerAnalytics(period), enabled });
+  const deliveries = useQuery({ queryKey: ['deliveries', 'buyer-upcoming'], queryFn: () => listDeliveries(1, 5) });
+  const unread = useQuery({ queryKey: notificationQueryKeys.unread(), queryFn: getUnreadCount });
+  const report = analytics.data?.data;
+  const statusCount = (status: string) => report?.current.orderHistorySummary.find(item => item.status === status)?.count ?? 0;
+  return <div className="space-y-6"><section className="rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-sm"><p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Buyer analytics</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back, {user?.profile?.firstName ?? 'Buyer'}</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-white/85">Review your orders, spending, deliveries, and marketplace preferences.</p></section><AnalyticsControls query={period} onChange={setPeriod} />
+  {!enabled ? <EmptyState title="Select a custom range" description="Choose both a start and end date to load analytics." /> : analytics.isLoading ? <LoadingSkeleton /> : analytics.isError ? <ErrorState title="Buyer analytics unavailable" description="We could not load your dashboard summary." onRetry={() => void analytics.refetch()} /> : report ? <>
+    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><KPICard title="Total Orders" value={String(report.current.dashboardSummary.orders)} change={comparisonLabel(report.comparison.orders.percentChange)} icon={<ShoppingCart className="h-5 w-5" />} /><KPICard title="Pending Orders" value={String(statusCount('PENDING'))} change="Current selected period" icon={<ShoppingCart className="h-5 w-5" />} /><KPICard title="Completed Orders" value={String(statusCount('FULFILLED'))} change="Current selected period" icon={<CheckCircle2 className="h-5 w-5" />} /><KPICard title="Total Spending" value={moneyLabel(report.current.dashboardSummary.spending)} change={report.comparison.spending.map(item => `${item.currency}: ${comparisonLabel(item.percentChange)}`).join(' · ') || 'No previous spending'} icon={<Wallet className="h-5 w-5" />} /></section>
+    <section className="grid gap-6 xl:grid-cols-2">{report.current.dashboardSummary.spending.map(total => <AnalyticsChart key={total.currency} title={`Spending trend (${total.currency})`} data={trendData(report.current.spendingTrends, total.currency)} dataKey="value" color="#2E7D32" />)}{!report.current.dashboardSummary.spending.length ? <EmptyState title="No spending data" description="Spending trends will appear after completed checkouts." /> : null}<DataTable title="Favourite Categories" columns={['Category', 'Orders', 'Spending']} rows={report.current.favouriteCategories.map(item => ({ Category: item.categoryName, Orders: item.orders, Spending: item.spending }))} /></section>
+    <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]"><BuyerRecentOrders /><Card className="border-border/80 bg-white"><CardHeader><CardTitle>Upcoming Deliveries</CardTitle></CardHeader><CardContent className="space-y-3">{deliveries.isLoading ? <LoadingSkeleton /> : deliveries.isError ? <ErrorState title="Deliveries unavailable" description="Upcoming deliveries could not be loaded." onRetry={() => void deliveries.refetch()} /> : deliveries.data?.data.filter(item => !['DELIVERED', 'CANCELLED', 'FAILED'].includes(item.status)).length ? deliveries.data.data.filter(item => !['DELIVERED', 'CANCELLED', 'FAILED'].includes(item.status)).map(item => <div key={item.id} className="rounded-2xl border border-border bg-slate-50 p-3 text-sm"><p className="font-semibold text-slate-900">{item.farmerOrder.farmer.farmName}</p><p className="mt-1 text-slate-600">{item.status.replaceAll('_', ' ')} · {item.estimatedDeliveryAt ? new Date(item.estimatedDeliveryAt).toLocaleString() : 'Scheduling pending'}</p></div>) : <EmptyState title="No upcoming deliveries" description="Active deliveries will appear here." />}</CardContent></Card></section>
+    <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Notifications</CardTitle></CardHeader><CardContent className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2 text-slate-700"><Bell className="h-5 w-5 text-primary" /><span>{unread.data?.data.count ?? 0} unread notifications</span></div><Button asChild variant="outline"><Link href="/notifications">Open notification center</Link></Button></CardContent></Card>
+  </> : null}</div>;
 }
 
 export default BuyerDashboardPage;

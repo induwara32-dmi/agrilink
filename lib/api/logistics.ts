@@ -11,3 +11,8 @@ export type DeliveryTracking = {
 };
 export const trackingQueryKeys = { delivery: (id: string) => ['deliveries', id] as const };
 export const getDelivery = (deliveryId: string) => apiRequest<DeliveryTracking>(`/deliveries/${encodeURIComponent(deliveryId)}`, { authenticated: true });
+export type TransportJob = { id: string; status: string; offeredFee: string; currency: string; requiredCapacity: string | null; capacityUnit: string | null; delivery: { id: string; status: DeliveryStatusCode; farmerOrder: { farmerOrderNumber: string; items: Array<{ productName: string; quantity: string; unit: string }>; farmer: { farmName: string }; order: { orderNumber: string } }; routePlan: { originLabel: string; destinationLabel: string; estimatedMinutes: number | null } | null } };
+export type VehicleRecord = { id: string; type: string; registrationNumber: string; make: string | null; model: string | null; capacity: string | null; capacityUnit: string | null; isActive: boolean; isAvailable: boolean };
+export const listDeliveries = (page = 1, pageSize = 10) => apiRequest<DeliveryTracking[]>(`/deliveries?page=${page}&pageSize=${pageSize}`, { authenticated: true });
+export const listTransportJobs = (page = 1, pageSize = 10) => apiRequest<TransportJob[]>(`/transport-jobs?page=${page}&pageSize=${pageSize}`, { authenticated: true });
+export const listVehicles = (page = 1, pageSize = 20) => apiRequest<VehicleRecord[]>(`/vehicles?page=${page}&pageSize=${pageSize}`, { authenticated: true });
