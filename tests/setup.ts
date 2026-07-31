@@ -1,0 +1,10 @@
+Object.assign(process.env, { NODE_ENV: 'test' });
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? 'postgresql://agrilink_test:agrilink_test@localhost:5432/agrilink_test?schema=public';
+process.env.CORS_ORIGIN = 'http://localhost:3000';
+process.env.JWT_ACCESS_SECRET = 'test-access-secret-with-at-least-32-characters';
+process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-with-at-least-32-characters';
+process.env.SMTP_HOST = 'localhost';
+process.env.SMTP_FROM = 'AgriLink Test <test@agrilink.local>';
+process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
+process.env.CLOUDINARY_API_KEY = 'test-key';
+process.env.CLOUDINARY_API_SECRET = 'test-secret';

@@ -1,0 +1,18 @@
+import { DeliveryMethod, DeliveryStatus, Role } from '@prisma/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { MediaRepository } from '../../src/repositories/media.repository';
+import { MediaService } from '../../src/services/media.service';
+
+const { uploadImage, deleteImage } = vi.hoisted(() => ({ uploadImage: vi.fn(), deleteImage: vi.fn() }));
+vi.mock('../../src/utils/cloudinary-media', () => ({ uploadImage, deleteImage }));
+const actor = { userId: '11111111-1111-4111-8111-111111111111', role: Role.FARMER, requestId: 'request-1' };
+const jpeg = { buffer: Buffer.from([0xff, 0xd8, 0xff, 0x00]), originalname: 'proof.jpg', mimetype: 'image/jpeg' } as Express.Multer.File;
+
+describe('media authorization and deletion', () => {
+  beforeEach(() => { vi.clearAllMocks(); uploadImage.mockResolvedValue({ publicId: 'asset-1', secureUrl: 'https://example.test/image.jpg', width: 100, height: 100, bytes: 4, format: 'jpg', metadata: {} }); deleteImage.mockResolvedValue(undefined); });
+  it('rejects spoofed image content before upload', async () => { const repository = { findProfile: vi.fn() }; const service = new MediaService(repository as unknown as MediaRepository); await expect(service.uploadProfileImage({ ...jpeg, buffer: Buffer.from('not-image') }, actor)).rejects.toMatchObject({ code: 'INVALID_IMAGE_CONTENT' }); expect(uploadImage).not.toHaveBeenCalled(); });
+  it('rejects product uploads by non-owners', async () => { const repository = { findProduct: vi.fn().mockResolvedValue({ farmer: { userId: 'someone-else' }, images: [] }) }; const service = new MediaService(repository as unknown as MediaRepository); await expect(service.uploadProductImages('product-1', [jpeg], {}, actor)).rejects.toMatchObject({ code: 'PRODUCT_FORBIDDEN' }); });
+  it('deletes the Cloudinary image before removing its reference', async () => { const repository = { findProduct: vi.fn().mockResolvedValue({ farmer: { userId: actor.userId }, images: [] }), findImage: vi.fn().mockResolvedValue({ id: 'image-1', productId: 'product-1', storageKey: 'asset-1' }), deleteProductImage: vi.fn().mockResolvedValue({}) }; const service = new MediaService(repository as unknown as MediaRepository); await service.deleteProductImage('product-1', 'image-1', actor); expect(deleteImage).toHaveBeenCalledWith('asset-1'); expect(repository.deleteProductImage).toHaveBeenCalledOnce(); });
+  it('rejects proof uploads from an unassigned transporter', async () => { const repository = { findDelivery: vi.fn().mockResolvedValue({ method: DeliveryMethod.PLATFORM_TRANSPORTER, status: DeliveryStatus.IN_TRANSIT, transportJob: { acceptedById: 'different-user' }, farmerOrder: { farmer: { userId: 'farmer' } } }) }; const service = new MediaService(repository as unknown as MediaRepository); await expect(service.uploadDeliveryProof('delivery-1', jpeg, { receiverName: 'Receiver' }, { ...actor, role: Role.TRANSPORTER })).rejects.toMatchObject({ code: 'PROOF_UPLOAD_FORBIDDEN' }); });
+  it('cleans up a new proof image when persistence fails', async () => { const repository = { findDelivery: vi.fn().mockResolvedValue({ method: DeliveryMethod.FARMER_DELIVERY, status: DeliveryStatus.IN_TRANSIT, proofStorageKey: null, transportJob: null, farmerOrder: { farmer: { userId: actor.userId } } }), updateProof: vi.fn().mockRejectedValue(new Error('database failure')) }; const service = new MediaService(repository as unknown as MediaRepository); await expect(service.uploadDeliveryProof('delivery-1', jpeg, { receiverName: 'Receiver' }, actor)).rejects.toThrow('database failure'); expect(deleteImage).toHaveBeenCalledWith('asset-1'); });
+});

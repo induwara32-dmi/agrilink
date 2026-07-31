@@ -38,6 +38,7 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Orders, tracking, and notifications frontend API integration
 - [x] Dashboard analytics frontend API integration
 - [x] Cloudinary media upload and asset management
+- [x] Automated testing foundation
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
@@ -51,6 +52,10 @@ The stabilization phase covered navigation validity, active navigation states, r
 ## Phase 27 media management
 
 Product galleries, user avatars, and proof-of-delivery photos use authenticated multipart upload APIs backed by Cloudinary. Images are limited to JPEG, PNG, or WebP. Limits are five product files per request, eight files per product, 5 MiB per product image, 3 MiB per avatar, and 8 MiB per delivery proof. The database stores the Cloudinary public ID, secure URL, dimensions, byte count, format, safe metadata, and proof uploader identity.
+
+## Phase 28 automated testing
+
+Vitest provides backend and frontend test execution with V8 coverage, Supertest validates HTTP middleware behavior, and Testing Library provides JSDOM frontend utilities. Test factories, guarded Prisma test-database reset and seed helpers, JWT helpers, and Cloudinary/SMTP/event mocks are available under `tests/utils`.
 - Analytics use a bounded in-memory cache abstraction; Redis or another shared cache is required for multi-instance deployment.
 
 ## Next milestone

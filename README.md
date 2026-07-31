@@ -22,6 +22,10 @@ Image uploads use Cloudinary. Copy `.env.example` to a local environment file an
 
 Accepted images are JPEG, PNG, and WebP. Product images are limited to 5 MiB each, profile images to 3 MiB, and proof-of-delivery images to 8 MiB.
 
+## Automated tests
+
+Run `npm test` for the Vitest suite and `npm run test:coverage` for text, JSON-summary, and HTML coverage reports. Database-backed integration helpers require a dedicated `TEST_DATABASE_URL`; destructive reset utilities refuse URLs without `test` or `localhost` in the connection string. External Cloudinary and SMTP calls are mocked in automated tests.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

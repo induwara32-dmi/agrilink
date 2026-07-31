@@ -20,8 +20,9 @@ export const scheduleDeliverySchema = request(z.object({ scheduledPickupAt: z.co
 export const transitionDeliverySchema = request(z.object({ status: z.nativeEnum(DeliveryStatus), note: z.string().trim().min(2).max(255).optional(), latitude: z.string().regex(/^-?\d+(\.\d{1,7})?$/).optional(), longitude: z.string().regex(/^-?\d+(\.\d{1,7})?$/).optional() }), deliveryParams, empty);
 export const listVehiclesSchema = request(empty, empty, pages);
 export const vehicleSchema = request(empty, vehicleParams, empty);
-export const createVehicleSchema = request(z.object({ ownerId: uuid.optional(), type: z.nativeEnum(VehicleType), registrationNumber: z.string().trim().min(2).max(64).transform(value => value.toUpperCase()), make: z.string().trim().max(80).optional(), model: z.string().trim().max(80).optional(), color: z.string().trim().max(50).optional(), capacity: decimal.optional(), capacityUnit: z.string().trim().min(1).max(30).optional(), isActive: z.boolean().optional() }).refine(value => Boolean(value.capacity) === Boolean(value.capacityUnit), 'Capacity and capacity unit must be provided together.'), empty, empty);
-export const updateVehicleSchema = request(createVehicleSchema.shape.body.omit({ ownerId: true, registrationNumber: true }).partial().refine(value => Object.keys(value).length > 0), vehicleParams, empty);
+const vehicleBody = z.object({ ownerId: uuid.optional(), type: z.nativeEnum(VehicleType), registrationNumber: z.string().trim().min(2).max(64).transform(value => value.toUpperCase()), make: z.string().trim().max(80).optional(), model: z.string().trim().max(80).optional(), color: z.string().trim().max(50).optional(), capacity: decimal.optional(), capacityUnit: z.string().trim().min(1).max(30).optional(), isActive: z.boolean().optional() });
+export const createVehicleSchema = request(vehicleBody.refine(value => Boolean(value.capacity) === Boolean(value.capacityUnit), 'Capacity and capacity unit must be provided together.'), empty, empty);
+export const updateVehicleSchema = request(vehicleBody.omit({ ownerId: true, registrationNumber: true }).partial().refine(value => Object.keys(value).length > 0), vehicleParams, empty);
 
 export type ManualAssignmentBody = z.infer<typeof manualAssignmentSchema>['body'];
 export type AcceptJobBody = z.infer<typeof acceptJobSchema>['body'];
