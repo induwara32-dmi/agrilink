@@ -117,13 +117,14 @@ Ownership, assignment, account state, and lifecycle state must be checked in add
 - Authentication, authorization, missing-resource, conflict, rate-limit, and server failures use consistent status codes and machine-readable error codes.
 - Responses never expose stack traces, secrets, credential material, or unnecessary personal data.
 
-## Open decisions
+## Implemented contract
 
-- Backend language and framework
-- Session versus token strategy
-- API documentation format and code generation
-- Real-time tracking transport, if needed beyond REST polling
-- Search engine requirements
-- Rate limits and abuse controls
-- Media upload flow
-- Payment and messaging providers
+The current Express/TypeScript implementation, JWT session strategy, request validation, rate limits, and Cloudinary media flow are documented in [API Reference](API_REFERENCE.md). The complete implemented HTTP surface is available as [OpenAPI 3.1](openapi.yaml) and an [AgriLink Postman collection](AgriLink.postman_collection.json).
+
+## Remaining decisions
+
+- Payment and messaging providers and their webhook/idempotency contracts
+- Durable event outbox, queue, retries, and worker topology
+- Real-time tracking transport, if REST polling becomes insufficient
+- Search engine requirements beyond PostgreSQL-backed discovery
+- Public/admin APIs for wishlist, recently viewed, verification, payments, and conversations

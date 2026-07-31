@@ -52,22 +52,24 @@ The completed frontend establishes the approved architecture and visual design. 
 - Add a durable queue/outbox and retry worker during deployment hardening.
 - [x] Add role-scoped operational analytics with date ranges, previous-period comparisons, and a replaceable cache abstraction.
 
-### 7. Frontend integration
+### 7. Frontend integration — substantially completed
 
-- Replace mock datasets with typed API clients and server-state caching.
-- Connect authentication, role permissions, forms, mutations, and state feedback.
+- [x] Replace authentication, marketplace, cart, checkout, order, tracking, notification, dashboard analytics, and media mock paths with typed API clients and server-state caching.
+- [x] Connect authentication, role permissions, primary forms, mutations, and state feedback.
+- [ ] Integrate wishlist, recently viewed, and remaining secondary operational controls.
 - Preserve completed layouts and design tokens while adding real loading, error, empty, and optimistic states.
 
-### 8. Testing
+### 8. Testing — foundation completed
 
-- Add unit tests for domain rules and validation.
-- Add integration tests for database transactions and APIs.
+- [x] Add Vitest, Supertest, Testing Library, factories, guarded test database helpers, provider mocks, and coverage reporting.
+- [ ] Expand integration tests for database transactions and APIs.
 - Add end-to-end tests for critical buyer, farmer, transporter, and admin workflows.
 - Run accessibility, responsive, security, performance, and recovery testing.
 
-### 9. Deployment
+### 9. Deployment — preparation completed
 
-- Establish development, staging, and production environments.
-- Automate lint, type checking, tests, builds, migrations, and controlled releases.
-- Configure secrets, TLS, backups, monitoring, alerts, and error reporting.
+- [x] Add production configuration validation, health/readiness endpoints, graceful shutdown, security middleware, Docker images, Compose templates, and deployment documentation.
+- [ ] Establish hosted staging and production environments.
+- [ ] Automate lint, type checking, tests, builds, migrations, and controlled releases in CI/CD.
+- [ ] Configure live secrets, TLS, backups, monitoring, alerts, and error reporting.
 - Complete staging acceptance and a production readiness review before launch.

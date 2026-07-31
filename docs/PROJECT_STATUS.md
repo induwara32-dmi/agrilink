@@ -2,7 +2,7 @@
 
 ## Current state
 
-The frontend UI phase is complete. The repository now also contains the Express/TypeScript backend foundation, a validated Prisma/PostgreSQL domain model, and the authentication API. Marketplace and commerce screens still use frontend mock data until later integration phases.
+The frontend UI phase and primary API integration phases are complete. The repository contains a Next.js frontend, an Express/TypeScript modular backend, a validated Prisma/PostgreSQL domain model, role-scoped operational APIs, Cloudinary media workflows, automated testing infrastructure, deployment templates, and portfolio-ready documentation.
 
 Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 
@@ -40,6 +40,7 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Cloudinary media upload and asset management
 - [x] Automated testing foundation
 - [x] Production deployment preparation
+- [x] Documentation and portfolio polish
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
@@ -47,7 +48,7 @@ The stabilization phase covered navigation validity, active navigation states, r
 
 - Wishlist and recently viewed screens still use mock data until their frontend integration phases.
 - Dashboard actions not represented by existing backend endpoints remain unavailable.
-- Product search, filtering, sorting, pagination, category management, media references, inventory history, and low-stock APIs are implemented but not connected to the frontend.
+- Some operational product/category/inventory management controls are not yet connected to every frontend view despite their APIs being implemented.
 - Payments and live location streaming are not integrated. Cloudinary image storage, in-app notifications, and email notifications are implemented; a durable external queue/outbox remains a deployment hardening step.
 
 ## Phase 27 media management
@@ -62,6 +63,10 @@ Vitest provides backend and frontend test execution with V8 coverage, Supertest 
 ## Next milestone
 
 The next milestone is payments.
+
+## Phase 30 documentation
+
+The project now includes a professional README, current architecture/security/testing/troubleshooting guides, an OpenAPI 3.1 contract for all implemented REST operations, and an importable Postman collection. `npm run docs:api` regenerates the machine-readable artifacts from one checked-in endpoint inventory.
 
 ## Phase 26 integration corrections
 

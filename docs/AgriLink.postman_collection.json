@@ -1,0 +1,2487 @@
+{
+  "info": {
+    "_postman_id": "8e71ac5c-1d17-4a70-a286-bf953a19aa00",
+    "name": "AgriLink REST API",
+    "description": "Generated from the checked-in AgriLink endpoint inventory. Set baseUrl and accessToken before running protected requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "id",
+      "value": ""
+    },
+    {
+      "key": "imageId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "itemId",
+      "value": ""
+    },
+    {
+      "key": "farmerId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "jobId",
+      "value": ""
+    },
+    {
+      "key": "transporterId",
+      "value": ""
+    },
+    {
+      "key": "vehicleId",
+      "value": ""
+    },
+    {
+      "key": "deliveryId",
+      "value": ""
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    },
+    {
+      "key": "recipientId",
+      "value": ""
+    },
+    {
+      "key": "verificationToken",
+      "value": ""
+    },
+    {
+      "key": "resetToken",
+      "value": ""
+    },
+    {
+      "key": "page",
+      "value": "1"
+    },
+    {
+      "key": "pageSize",
+      "value": "20"
+    },
+    {
+      "key": "period",
+      "value": "month"
+    }
+  ],
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Check API liveness",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Check database readiness",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/readiness",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "readiness"
+              ]
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Get application version",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/version",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "version"
+              ]
+            },
+            "description": "No access token is required."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register a buyer, farmer, or transporter",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"buyer@example.com\",\n  \"password\": \"StrongPass!123\",\n  \"firstName\": \"Asha\",\n  \"lastName\": \"Perera\",\n  \"role\": \"BUYER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Log in",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"buyer@example.com\",\n  \"password\": \"StrongPass!123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Revoke a refresh session",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Rotate a refresh token",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Verify an email address",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{verificationToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Request a password reset",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"buyer@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Reset a password",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"NewStrongPass!123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Get the authenticated user",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "List public products",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products?page={{page}}&pageSize={{pageSize}}&search={{search}}&categoryId={{categoryId}}&farmerId={{farmerId}}&status={{status}}&minPrice={{minPrice}}&maxPrice={{maxPrice}}&sort={{sort}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "{{search}}",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "farmerId",
+                  "value": "{{farmerId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "{{status}}",
+                  "disabled": true
+                },
+                {
+                  "key": "minPrice",
+                  "value": "{{minPrice}}",
+                  "disabled": true
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "{{maxPrice}}",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "{{sort}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Search public products",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search?page={{page}}&pageSize={{pageSize}}&search={{search}}&categoryId={{categoryId}}&farmerId={{farmerId}}&status={{status}}&minPrice={{minPrice}}&maxPrice={{maxPrice}}&sort={{sort}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "{{search}}",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "farmerId",
+                  "value": "{{farmerId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "{{status}}",
+                  "disabled": true
+                },
+                {
+                  "key": "minPrice",
+                  "value": "{{minPrice}}",
+                  "disabled": true
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "{{maxPrice}}",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "{{sort}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Get a public product",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}"
+              ]
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "List active categories",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories?includeInactive={{includeInactive}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "includeInactive",
+                  "value": "{{includeInactive}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "Get a category",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                "{{id}}"
+              ]
+            },
+            "description": "No access token is required."
+          }
+        },
+        {
+          "name": "List managed products",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/management/products?page={{page}}&pageSize={{pageSize}}&search={{search}}&categoryId={{categoryId}}&farmerId={{farmerId}}&status={{status}}&minPrice={{minPrice}}&maxPrice={{maxPrice}}&sort={{sort}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "management",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "{{search}}",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "farmerId",
+                  "value": "{{farmerId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "{{status}}",
+                  "disabled": true
+                },
+                {
+                  "key": "minPrice",
+                  "value": "{{minPrice}}",
+                  "disabled": true
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "{{maxPrice}}",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "{{sort}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Create a product",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"{{categoryId}}\",\n  \"name\": \"Organic Tomatoes\",\n  \"description\": \"Freshly harvested organic tomatoes.\",\n  \"unit\": \"kg\",\n  \"unitPrice\": \"4.50\",\n  \"currency\": \"USD\",\n  \"initialQuantity\": \"100\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Update a product",
+          "request": {
+            "method": "PATCH",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Organic Tomatoes\",\n  \"unitPrice\": \"4.75\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Soft-delete a product",
+          "request": {
+            "method": "DELETE",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}"
+              ]
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "List categories for administration",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/categories?includeInactive={{includeInactive}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "includeInactive",
+                  "value": "{{includeInactive}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Create a category",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vegetables\",\n  \"description\": \"Fresh vegetables\",\n  \"sortOrder\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Update a category",
+          "request": {
+            "method": "PATCH",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                "{{id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Leafy Vegetables\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Soft-delete a category",
+          "request": {
+            "method": "DELETE",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                "{{id}}"
+              ]
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "name": "Get product inventory",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}/inventory",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}",
+                "inventory"
+              ]
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Update reorder level",
+          "request": {
+            "method": "PATCH",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}/inventory",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}",
+                "inventory"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reorderLevel\": \"10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Adjust product inventory",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}/inventory/adjustments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}",
+                "inventory",
+                "adjustments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"STOCK_IN\",\n  \"quantity\": \"25\",\n  \"reason\": \"Harvest received\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "List inventory movements",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}/inventory/history?page={{page}}&pageSize={{pageSize}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}",
+                "inventory",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "List low-stock products",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/inventory/low-stock?page={{page}}&pageSize={{pageSize}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "inventory",
+                "low-stock"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart and checkout",
+      "item": [
+        {
+          "name": "Get the buyer cart",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart"
+              ]
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Add a cart item",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart",
+                "items"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": \"2\",\n  \"deliveryMethod\": \"PLATFORM_TRANSPORTER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Update a cart item",
+          "request": {
+            "method": "PATCH",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items/{{itemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart",
+                "items",
+                "{{itemId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": \"3\",\n  \"savedForLater\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Save a cart item for later",
+          "request": {
+            "method": "POST",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items/{{itemId}}/save-for-later",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart",
+                "items",
+                "{{itemId}}",
+                "save-for-later"
+              ]
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Remove a cart item",
+          "request": {
+            "method": "DELETE",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart/items/{{itemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart",
+                "items",
+                "{{itemId}}"
+              ]
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Clear the cart",
+          "request": {
+            "method": "DELETE",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cart"
+              ]
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Preview server-calculated checkout totals",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/checkout/preview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "checkout",
+                "preview"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"groups\": [\n    {\n      \"farmerId\": \"{{farmerId}}\",\n      \"deliveryMethod\": \"PLATFORM_TRANSPORTER\",\n      \"deliveryAddress\": {\n        \"recipientName\": \"Asha Perera\",\n        \"recipientPhone\": \"+94111234567\",\n        \"line1\": \"10 Farm Road\",\n        \"city\": \"Colombo\",\n        \"countryCode\": \"LK\"\n      }\n    }\n  ],\n  \"couponCode\": \"WELCOME10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Create a transactional multi-farmer order",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/checkout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "checkout"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"groups\": [\n    {\n      \"farmerId\": \"{{farmerId}}\",\n      \"deliveryMethod\": \"BUYER_PICKUP\"\n    }\n  ],\n  \"paymentProvider\": \"placeholder\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List role-scoped orders",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders?page={{page}}&pageSize={{pageSize}}&search={{search}}&status={{status}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "{{search}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "{{status}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Allowed roles: BUYER, FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get an order",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}"
+              ]
+            },
+            "description": "Allowed roles: BUYER, FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Cancel an eligible pending buyer order",
+          "request": {
+            "method": "POST",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/{{orderId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "{{orderId}}",
+                "cancel"
+              ]
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logistics",
+      "item": [
+        {
+          "name": "List transport jobs",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transport-jobs?page={{page}}&pageSize={{pageSize}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transport-jobs"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Allowed roles: TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get a transport job",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transport-jobs/{{jobId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transport-jobs",
+                "{{jobId}}"
+              ]
+            },
+            "description": "Allowed roles: TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Automatically assign a transport job",
+          "request": {
+            "method": "POST",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transport-jobs/{{jobId}}/assign/automatic",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transport-jobs",
+                "{{jobId}}",
+                "assign",
+                "automatic"
+              ]
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Manually assign a transport job",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transport-jobs/{{jobId}}/assign/manual",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transport-jobs",
+                "{{jobId}}",
+                "assign",
+                "manual"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transporterId\": \"{{transporterId}}\",\n  \"vehicleId\": \"{{vehicleId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Reassign a transport job",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transport-jobs/{{jobId}}/reassign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transport-jobs",
+                "{{jobId}}",
+                "reassign"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transporterId\": \"{{transporterId}}\",\n  \"vehicleId\": \"{{vehicleId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Accept an assigned transport job",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transport-jobs/{{jobId}}/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transport-jobs",
+                "{{jobId}}",
+                "accept"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleId\": \"{{vehicleId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: TRANSPORTER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Reject an assigned transport job",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transport-jobs/{{jobId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transport-jobs",
+                "{{jobId}}",
+                "reject"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Schedule conflict\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: TRANSPORTER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "List role-scoped deliveries",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deliveries?page={{page}}&pageSize={{pageSize}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deliveries"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get a delivery and tracking history",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deliveries",
+                "{{deliveryId}}"
+              ]
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Schedule delivery pickup",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deliveries",
+                "{{deliveryId}}",
+                "schedule"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduledPickupAt\": \"2030-01-15T09:00:00.000Z\",\n  \"vehicleId\": \"{{vehicleId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Transition a delivery",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/transitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deliveries",
+                "{{deliveryId}}",
+                "transitions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_TRANSIT\",\n  \"note\": \"Departed pickup location\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vehicles",
+      "item": [
+        {
+          "name": "List vehicles",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles?page={{page}}&pageSize={{pageSize}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get a vehicle",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicleId}}"
+              ]
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Register a vehicle",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"PICKUP_TRUCK\",\n  \"registrationNumber\": \"WP-ABC-1234\",\n  \"capacity\": \"1000\",\n  \"capacityUnit\": \"kg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Update a vehicle",
+          "request": {
+            "method": "PATCH",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicleId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true,\n  \"capacity\": \"1200\",\n  \"capacityUnit\": \"kg\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Soft-delete a vehicle",
+          "request": {
+            "method": "DELETE",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "vehicles",
+                "{{vehicleId}}"
+              ]
+            },
+            "description": "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications?page={{page}}&pageSize={{pageSize}}&status={{status}}&type={{type}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "disabled": false
+                },
+                {
+                  "key": "pageSize",
+                  "value": "{{pageSize}}",
+                  "disabled": false
+                },
+                {
+                  "key": "status",
+                  "value": "{{status}}",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "{{type}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Create an administrative notification",
+          "request": {
+            "method": "POST",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": \"{{recipientId}}\",\n  \"type\": \"SYSTEM\",\n  \"channels\": [\n    \"IN_APP\"\n  ],\n  \"title\": \"Platform update\",\n  \"body\": \"A platform update is available.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get unread notification count",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/unread-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "unread-count"
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Mark all notifications read",
+          "request": {
+            "method": "POST",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/mark-all-read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "mark-all-read"
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get a notification",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notificationId}}"
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Update notification status",
+          "request": {
+            "method": "PATCH",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notificationId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ARCHIVED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Mark a notification read",
+          "request": {
+            "method": "POST",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Soft-delete a notification",
+          "request": {
+            "method": "DELETE",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notificationId}}"
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get buyer analytics",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/buyer?period={{period}}&from={{from}}&to={{to}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "buyer"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "{{period}}",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "{{from}}",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "{{to}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Allowed roles: BUYER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get farmer analytics",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/farmer?period={{period}}&from={{from}}&to={{to}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "farmer"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "{{period}}",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "{{from}}",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "{{to}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Allowed roles: FARMER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get transporter analytics",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/transporter?period={{period}}&from={{from}}&to={{to}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "transporter"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "{{period}}",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "{{from}}",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "{{to}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Allowed roles: TRANSPORTER. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Get platform analytics",
+          "request": {
+            "method": "GET",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/analytics/admin?period={{period}}&from={{from}}&to={{to}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "analytics",
+                "admin"
+              ],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "{{period}}",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "{{from}}",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "{{to}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Allowed roles: ADMIN. Requires a bearer access token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "item": [
+        {
+          "name": "Upload product images",
+          "request": {
+            "method": "POST",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}/images",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}",
+                "images"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "altText",
+                  "type": "text",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Reorder product images",
+          "request": {
+            "method": "PUT",
+            "headers": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}/images/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}",
+                "images",
+                "reorder"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageIds\": [\n    \"{{imageId}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Set the primary product image",
+          "request": {
+            "method": "PATCH",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}/images/{{imageId}}/primary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}",
+                "images",
+                "{{imageId}}",
+                "primary"
+              ]
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Delete a product image",
+          "request": {
+            "method": "DELETE",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/products/{{id}}/images/{{imageId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "{{id}}",
+                "images",
+                "{{imageId}}"
+              ]
+            },
+            "description": "Allowed roles: FARMER, ADMIN. Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Upload or replace the current profile image",
+          "request": {
+            "method": "PUT",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "avatar"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Delete the current profile image",
+          "request": {
+            "method": "DELETE",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "avatar"
+              ]
+            },
+            "description": "Requires a bearer access token."
+          }
+        },
+        {
+          "name": "Upload proof of delivery",
+          "request": {
+            "method": "POST",
+            "headers": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/proof",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deliveries",
+                "{{deliveryId}}",
+                "proof"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "receiverName",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "key": "receiverSignature",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "key": "notes",
+                  "type": "text",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Allowed roles: FARMER, TRANSPORTER. Requires a bearer access token."
+          }
+        }
+      ]
+    }
+  ]
+}

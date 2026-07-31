@@ -35,7 +35,7 @@ The analytics module performs role-scoped Prisma aggregates and parameterized Po
 - **Transporter:** accepts delivery assignments and updates logistics progress.
 - **Admin:** manages platform oversight, users, categories, approvals, and reporting.
 
-Authorization must be enforced by the future backend. Hiding frontend controls is not a security boundary.
+Authorization is enforced by backend role middleware and service-level ownership, assignment, account, and lifecycle checks. Hiding frontend controls is not a security boundary.
 
 ## Current data flow
 
@@ -44,23 +44,23 @@ Authorization must be enforced by the future backend. Hiding frontend controls i
 3. Client Components manage temporary browser state for interactive demonstrations.
 4. Shared components render consistent state, navigation, and design tokens.
 
-## Future backend architecture
+## Current backend architecture
 
-The planned backend should begin as a modular monolith to keep transactions, deployment, and domain evolution manageable. It should expose versioned REST resources to the Next.js application and separate modules for identity, catalog, inventory, orders, logistics, payments, and notifications.
+The backend is an Express/TypeScript modular monolith that keeps transactions, deployment, and domain evolution manageable. It exposes versioned REST resources to the Next.js application and separates identity, catalog, inventory, orders, logistics, notifications, analytics, and media responsibilities through routes, controllers, services, repositories, validators, and middleware.
 
-Suggested boundaries:
+Implemented boundaries and infrastructure:
 
-- A relational database as the transactional source of truth
+- PostgreSQL as the transactional source of truth through Prisma ORM
 - A backend service layer containing authorization and business rules
-- A repository/data-access layer with migrations
-- Object storage for product media and delivery evidence
-- A background job mechanism for email, notifications, payment webhooks, and time-based workflows
+- A repository/data-access layer with reviewed Prisma migrations
+- Cloudinary object storage for product media and delivery evidence
+- An in-process typed event bus for notifications and email; a durable outbox/queue remains planned
 - External adapters for payment, messaging, mapping, and delivery providers
 - Structured logs, health checks, metrics, and audit events
 
-The exact language, framework, database engine, hosting provider, and vendor integrations remain architecture decisions for the backend foundation phase.
+Payment processing, a durable worker/outbox, shared analytics caching, and optional real-time tracking remain future architecture decisions.
 
-## Future data flow
+## Backend data flow
 
 1. A user authenticates and receives a secure server-managed session.
 2. The Next.js frontend requests a versioned API resource.

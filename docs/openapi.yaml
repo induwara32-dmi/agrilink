@@ -1,0 +1,3390 @@
+openapi: 3.1.0
+info:
+  title: AgriLink REST API
+  version: 1.0.0
+  description: Versioned REST API for AgriLink. Monetary and quantity values are serialized as decimal strings. All
+    timestamps are UTC ISO 8601 values.
+servers:
+  - url: http://localhost:4000/api/v1
+    description: Local development
+  - url: https://api.example.com/api/v1
+    description: Production template
+tags:
+  - name: System
+  - name: Authentication
+  - name: Catalog
+  - name: Inventory
+  - name: Cart and checkout
+  - name: Orders
+  - name: Logistics
+  - name: Vehicles
+  - name: Notifications
+  - name: Analytics
+  - name: Media
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      summary: Check API liveness
+      operationId: getHealth
+      security: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": &a1
+          $ref: "#/components/responses/BadRequest"
+        "401": &a2
+          $ref: "#/components/responses/Unauthorized"
+        "403": &a3
+          $ref: "#/components/responses/Forbidden"
+        "404": &a4
+          $ref: "#/components/responses/NotFound"
+        "409": &a5
+          $ref: "#/components/responses/Conflict"
+        "429": &a6
+          $ref: "#/components/responses/RateLimited"
+        "500": &a7
+          $ref: "#/components/responses/ServerError"
+  /readiness:
+    get:
+      tags:
+        - System
+      summary: Check database readiness
+      operationId: getReadiness
+      security: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /version:
+    get:
+      tags:
+        - System
+      summary: Get application version
+      operationId: getVersion
+      security: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a buyer, farmer, or transporter
+      operationId: postAuthRegister
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            example:
+              email: buyer@example.com
+              password: StrongPass!123
+              firstName: Asha
+              lastName: Perera
+              role: BUYER
+      responses:
+        "201":
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in
+      operationId: postAuthLogin
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: buyer@example.com
+              password: StrongPass!123
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Revoke a refresh session
+      operationId: postAuthLogout
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+            example:
+              refreshToken: "{{refreshToken}}"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Rotate a refresh token
+      operationId: postAuthRefresh
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+            example:
+              refreshToken: "{{refreshToken}}"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /auth/verify-email:
+    post:
+      tags:
+        - Authentication
+      summary: Verify an email address
+      operationId: postAuthVerifyemail
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenRequest"
+            example:
+              token: "{{verificationToken}}"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /auth/forgot-password:
+    post:
+      tags:
+        - Authentication
+      summary: Request a password reset
+      operationId: postAuthForgotpassword
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmailRequest"
+            example:
+              email: buyer@example.com
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /auth/reset-password:
+    post:
+      tags:
+        - Authentication
+      summary: Reset a password
+      operationId: postAuthResetpassword
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+            example:
+              token: "{{resetToken}}"
+              password: NewStrongPass!123
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get the authenticated user
+      operationId: getAuthMe
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products:
+    get:
+      tags:
+        - Catalog
+      summary: List public products
+      operationId: getProducts
+      security: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          description: Case-insensitive search text
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          required: false
+          description: Category UUID
+          schema:
+            type: string
+            format: uuid
+        - name: farmerId
+          in: query
+          required: false
+          description: Farmer profile UUID
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          description: Resource status filter
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          required: false
+          description: Minimum decimal price
+          schema:
+            type: string
+        - name: maxPrice
+          in: query
+          required: false
+          description: Maximum decimal price
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          description: "Sort: newest, oldest, priceAsc, priceDesc, nameAsc, or nameDesc"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    post:
+      tags:
+        - Catalog
+      summary: Create a product
+      operationId: postProducts
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductRequest"
+            example:
+              categoryId: "{{categoryId}}"
+              name: Organic Tomatoes
+              description: Freshly harvested organic tomatoes.
+              unit: kg
+              unitPrice: "4.50"
+              currency: USD
+              initialQuantity: "100"
+      responses:
+        "201":
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /search:
+    get:
+      tags:
+        - Catalog
+      summary: Search public products
+      operationId: getSearch
+      security: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          description: Case-insensitive search text
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          required: false
+          description: Category UUID
+          schema:
+            type: string
+            format: uuid
+        - name: farmerId
+          in: query
+          required: false
+          description: Farmer profile UUID
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          description: Resource status filter
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          required: false
+          description: Minimum decimal price
+          schema:
+            type: string
+        - name: maxPrice
+          in: query
+          required: false
+          description: Maximum decimal price
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          description: "Sort: newest, oldest, priceAsc, priceDesc, nameAsc, or nameDesc"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products/{id}:
+    get:
+      tags:
+        - Catalog
+      summary: Get a public product
+      operationId: getProductsId
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    patch:
+      tags:
+        - Catalog
+      summary: Update a product
+      operationId: patchProductsId
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdateRequest"
+            example:
+              name: Premium Organic Tomatoes
+              unitPrice: "4.75"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    delete:
+      tags:
+        - Catalog
+      summary: Soft-delete a product
+      operationId: deleteProductsId
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /categories:
+    get:
+      tags:
+        - Catalog
+      summary: List active categories
+      operationId: getCategories
+      security: []
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          description: Include inactive records
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    post:
+      tags:
+        - Catalog
+      summary: Create a category
+      operationId: postCategories
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryRequest"
+            example:
+              name: Vegetables
+              description: Fresh vegetables
+              sortOrder: 10
+      responses:
+        "201":
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /categories/{id}:
+    get:
+      tags:
+        - Catalog
+      summary: Get a category
+      operationId: getCategoriesId
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    patch:
+      tags:
+        - Catalog
+      summary: Update a category
+      operationId: patchCategoriesId
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdateRequest"
+            example:
+              name: Leafy Vegetables
+              isActive: true
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    delete:
+      tags:
+        - Catalog
+      summary: Soft-delete a category
+      operationId: deleteCategoriesId
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /management/products:
+    get:
+      tags:
+        - Catalog
+      summary: List managed products
+      operationId: getManagementProducts
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          description: Case-insensitive search text
+          schema:
+            type: string
+        - name: categoryId
+          in: query
+          required: false
+          description: Category UUID
+          schema:
+            type: string
+            format: uuid
+        - name: farmerId
+          in: query
+          required: false
+          description: Farmer profile UUID
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          description: Resource status filter
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          required: false
+          description: Minimum decimal price
+          schema:
+            type: string
+        - name: maxPrice
+          in: query
+          required: false
+          description: Maximum decimal price
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          description: "Sort: newest, oldest, priceAsc, priceDesc, nameAsc, or nameDesc"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products/{id}/inventory:
+    get:
+      tags:
+        - Inventory
+      summary: Get product inventory
+      operationId: getProductsIdInventory
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    patch:
+      tags:
+        - Inventory
+      summary: Update reorder level
+      operationId: patchProductsIdInventory
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventorySettingsRequest"
+            example:
+              reorderLevel: "10"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products/{id}/inventory/adjustments:
+    post:
+      tags:
+        - Inventory
+      summary: Adjust product inventory
+      operationId: postProductsIdInventoryAdjustments
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryAdjustmentRequest"
+            example:
+              type: STOCK_IN
+              quantity: "25"
+              reason: Harvest received
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products/{id}/inventory/history:
+    get:
+      tags:
+        - Inventory
+      summary: List inventory movements
+      operationId: getProductsIdInventoryHistory
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /inventory/low-stock:
+    get:
+      tags:
+        - Inventory
+      summary: List low-stock products
+      operationId: getInventoryLowstock
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /admin/categories:
+    get:
+      tags:
+        - Catalog
+      summary: List categories for administration
+      operationId: getAdminCategories
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          description: Include inactive records
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /cart:
+    get:
+      tags:
+        - Cart and checkout
+      summary: Get the buyer cart
+      operationId: getCart
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    delete:
+      tags:
+        - Cart and checkout
+      summary: Clear the cart
+      operationId: deleteCart
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /cart/items:
+    post:
+      tags:
+        - Cart and checkout
+      summary: Add a cart item
+      operationId: postCartItems
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemRequest"
+            example:
+              productId: "{{productId}}"
+              quantity: "2"
+              deliveryMethod: PLATFORM_TRANSPORTER
+      responses:
+        "201":
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /cart/items/{itemId}:
+    patch:
+      tags:
+        - Cart and checkout
+      summary: Update a cart item
+      operationId: patchCartItemsItemId
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: itemId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemUpdateRequest"
+            example:
+              quantity: "3"
+              savedForLater: false
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    delete:
+      tags:
+        - Cart and checkout
+      summary: Remove a cart item
+      operationId: deleteCartItemsItemId
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: itemId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /cart/items/{itemId}/save-for-later:
+    post:
+      tags:
+        - Cart and checkout
+      summary: Save a cart item for later
+      operationId: postCartItemsItemIdSaveforlater
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          description: itemId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /checkout/preview:
+    post:
+      tags:
+        - Cart and checkout
+      summary: Preview server-calculated checkout totals
+      operationId: postCheckoutPreview
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutPreviewRequest"
+            example:
+              groups:
+                - farmerId: "{{farmerId}}"
+                  deliveryMethod: PLATFORM_TRANSPORTER
+                  deliveryAddress:
+                    recipientName: Asha Perera
+                    recipientPhone: "+94111234567"
+                    line1: 10 Farm Road
+                    city: Colombo
+                    countryCode: LK
+              couponCode: WELCOME10
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /checkout:
+    post:
+      tags:
+        - Cart and checkout
+      summary: Create a transactional multi-farmer order
+      operationId: postCheckout
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutRequest"
+            example:
+              groups:
+                - farmerId: "{{farmerId}}"
+                  deliveryMethod: BUYER_PICKUP
+              paymentProvider: placeholder
+      responses:
+        "201":
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: List role-scoped orders
+      operationId: getOrders
+      description: "Allowed roles: BUYER, FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          description: Case-insensitive search text
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Resource status filter
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get an order
+      operationId: getOrdersOrderId
+      description: "Allowed roles: BUYER, FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: orderId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /orders/{orderId}/cancel:
+    post:
+      tags:
+        - Orders
+      summary: Cancel an eligible pending buyer order
+      operationId: postOrdersOrderIdCancel
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: orderId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /transport-jobs:
+    get:
+      tags:
+        - Logistics
+      summary: List transport jobs
+      operationId: getTransportjobs
+      description: "Allowed roles: TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /transport-jobs/{jobId}:
+    get:
+      tags:
+        - Logistics
+      summary: Get a transport job
+      operationId: getTransportjobsJobId
+      description: "Allowed roles: TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: jobId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /transport-jobs/{jobId}/assign/automatic:
+    post:
+      tags:
+        - Logistics
+      summary: Automatically assign a transport job
+      operationId: postTransportjobsJobIdAssignAutomatic
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: jobId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /transport-jobs/{jobId}/assign/manual:
+    post:
+      tags:
+        - Logistics
+      summary: Manually assign a transport job
+      operationId: postTransportjobsJobIdAssignManual
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: jobId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRequest"
+            example:
+              transporterId: "{{transporterId}}"
+              vehicleId: "{{vehicleId}}"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /transport-jobs/{jobId}/reassign:
+    post:
+      tags:
+        - Logistics
+      summary: Reassign a transport job
+      operationId: postTransportjobsJobIdReassign
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: jobId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignmentRequest"
+            example:
+              transporterId: "{{transporterId}}"
+              vehicleId: "{{vehicleId}}"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /transport-jobs/{jobId}/accept:
+    post:
+      tags:
+        - Logistics
+      summary: Accept an assigned transport job
+      operationId: postTransportjobsJobIdAccept
+      description: "Allowed roles: TRANSPORTER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: jobId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobAcceptanceRequest"
+            example:
+              vehicleId: "{{vehicleId}}"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /transport-jobs/{jobId}/reject:
+    post:
+      tags:
+        - Logistics
+      summary: Reject an assigned transport job
+      operationId: postTransportjobsJobIdReject
+      description: "Allowed roles: TRANSPORTER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: jobId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobRejectionRequest"
+            example:
+              reason: Schedule conflict
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /deliveries:
+    get:
+      tags:
+        - Logistics
+      summary: List role-scoped deliveries
+      operationId: getDeliveries
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /deliveries/{deliveryId}:
+    get:
+      tags:
+        - Logistics
+      summary: Get a delivery and tracking history
+      operationId: getDeliveriesDeliveryId
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deliveryId
+          in: path
+          required: true
+          description: deliveryId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /deliveries/{deliveryId}/schedule:
+    post:
+      tags:
+        - Logistics
+      summary: Schedule delivery pickup
+      operationId: postDeliveriesDeliveryIdSchedule
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deliveryId
+          in: path
+          required: true
+          description: deliveryId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryScheduleRequest"
+            example:
+              scheduledPickupAt: 2030-01-15T09:00:00.000Z
+              vehicleId: "{{vehicleId}}"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /deliveries/{deliveryId}/transitions:
+    post:
+      tags:
+        - Logistics
+      summary: Transition a delivery
+      operationId: postDeliveriesDeliveryIdTransitions
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deliveryId
+          in: path
+          required: true
+          description: deliveryId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliveryTransitionRequest"
+            example:
+              status: IN_TRANSIT
+              note: Departed pickup location
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /vehicles:
+    get:
+      tags:
+        - Vehicles
+      summary: List vehicles
+      operationId: getVehicles
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    post:
+      tags:
+        - Vehicles
+      summary: Register a vehicle
+      operationId: postVehicles
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleRequest"
+            example:
+              type: PICKUP_TRUCK
+              registrationNumber: WP-ABC-1234
+              capacity: "1000"
+              capacityUnit: kg
+      responses:
+        "201":
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /vehicles/{vehicleId}:
+    get:
+      tags:
+        - Vehicles
+      summary: Get a vehicle
+      operationId: getVehiclesVehicleId
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          description: vehicleId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    patch:
+      tags:
+        - Vehicles
+      summary: Update a vehicle
+      operationId: patchVehiclesVehicleId
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          description: vehicleId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleUpdateRequest"
+            example:
+              isActive: true
+              capacity: "1200"
+              capacityUnit: kg
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    delete:
+      tags:
+        - Vehicles
+      summary: Soft-delete a vehicle
+      operationId: deleteVehiclesVehicleId
+      description: "Allowed roles: BUYER, FARMER, TRANSPORTER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          description: vehicleId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: List notifications
+      operationId: getNotifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number, starting at 1
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Items per page (maximum 100)
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          description: Resource status filter
+          schema:
+            type: string
+        - name: type
+          in: query
+          required: false
+          description: Resource type filter
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    post:
+      tags:
+        - Notifications
+      summary: Create an administrative notification
+      operationId: postNotifications
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationRequest"
+            example:
+              recipientId: "{{recipientId}}"
+              type: SYSTEM
+              channels:
+                - IN_APP
+              title: Platform update
+              body: A platform update is available.
+      responses:
+        "201":
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /notifications/unread-count:
+    get:
+      tags:
+        - Notifications
+      summary: Get unread notification count
+      operationId: getNotificationsUnreadcount
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /notifications/mark-all-read:
+    post:
+      tags:
+        - Notifications
+      summary: Mark all notifications read
+      operationId: postNotificationsMarkallread
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /notifications/{notificationId}:
+    get:
+      tags:
+        - Notifications
+      summary: Get a notification
+      operationId: getNotificationsNotificationId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          description: notificationId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    patch:
+      tags:
+        - Notifications
+      summary: Update notification status
+      operationId: patchNotificationsNotificationId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          description: notificationId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationUpdateRequest"
+            example:
+              status: ARCHIVED
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    delete:
+      tags:
+        - Notifications
+      summary: Soft-delete a notification
+      operationId: deleteNotificationsNotificationId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          description: notificationId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /notifications/{notificationId}/read:
+    post:
+      tags:
+        - Notifications
+      summary: Mark a notification read
+      operationId: postNotificationsNotificationIdRead
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          description: notificationId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /analytics/buyer:
+    get:
+      tags:
+        - Analytics
+      summary: Get buyer analytics
+      operationId: getAnalyticsBuyer
+      description: "Allowed roles: BUYER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          description: day, week, month, year, or custom
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          description: Custom range start (ISO 8601)
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          description: Custom range end (ISO 8601)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /analytics/farmer:
+    get:
+      tags:
+        - Analytics
+      summary: Get farmer analytics
+      operationId: getAnalyticsFarmer
+      description: "Allowed roles: FARMER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          description: day, week, month, year, or custom
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          description: Custom range start (ISO 8601)
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          description: Custom range end (ISO 8601)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /analytics/transporter:
+    get:
+      tags:
+        - Analytics
+      summary: Get transporter analytics
+      operationId: getAnalyticsTransporter
+      description: "Allowed roles: TRANSPORTER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          description: day, week, month, year, or custom
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          description: Custom range start (ISO 8601)
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          description: Custom range end (ISO 8601)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /analytics/admin:
+    get:
+      tags:
+        - Analytics
+      summary: Get platform analytics
+      operationId: getAnalyticsAdmin
+      description: "Allowed roles: ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          description: day, week, month, year, or custom
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          description: Custom range start (ISO 8601)
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          description: Custom range end (ISO 8601)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products/{id}/images:
+    post:
+      tags:
+        - Media
+      summary: Upload product images
+      operationId: postProductsIdImages
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                images:
+                  type: array
+                  maxItems: 5
+                  items:
+                    type: string
+                    format: binary
+                altText:
+                  type: string
+                  maxLength: 255
+              required:
+                - images
+      responses:
+        "201":
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products/{id}/images/reorder:
+    put:
+      tags:
+        - Media
+      summary: Reorder product images
+      operationId: putProductsIdImagesReorder
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImageOrderRequest"
+            example:
+              imageIds:
+                - "{{imageId}}"
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products/{id}/images/{imageId}/primary:
+    patch:
+      tags:
+        - Media
+      summary: Set the primary product image
+      operationId: patchProductsIdImagesImageIdPrimary
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+        - name: imageId
+          in: path
+          required: true
+          description: imageId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /products/{id}/images/{imageId}:
+    delete:
+      tags:
+        - Media
+      summary: Delete a product image
+      operationId: deleteProductsIdImagesImageId
+      description: "Allowed roles: FARMER, ADMIN. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id UUID
+          schema:
+            type: string
+            format: uuid
+        - name: imageId
+          in: path
+          required: true
+          description: imageId UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /me/avatar:
+    put:
+      tags:
+        - Media
+      summary: Upload or replace the current profile image
+      operationId: putMeAvatar
+      security:
+        - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+              required:
+                - image
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+    delete:
+      tags:
+        - Media
+      summary: Delete the current profile image
+      operationId: deleteMeAvatar
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+  /deliveries/{deliveryId}/proof:
+    post:
+      tags:
+        - Media
+      summary: Upload proof of delivery
+      operationId: postDeliveriesDeliveryIdProof
+      description: "Allowed roles: FARMER, TRANSPORTER. Ownership and lifecycle checks may further restrict access."
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deliveryId
+          in: path
+          required: true
+          description: deliveryId UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                receiverName:
+                  type: string
+                  maxLength: 180
+                receiverSignature:
+                  type: string
+                  maxLength: 20000
+                notes:
+                  type: string
+                  maxLength: 2000
+              required:
+                - image
+                - receiverName
+      responses:
+        "200":
+          description: Request succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400": *a1
+        "401": *a2
+        "403": *a3
+        "404": *a4
+        "409": *a5
+        "429": *a6
+        "500": *a7
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SuccessResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          const: true
+        data: {}
+        meta:
+          type: object
+          additionalProperties: true
+      required:
+        - success
+        - data
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          type: object
+          additionalProperties: false
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details: {}
+          required:
+            - code
+            - message
+      required:
+        - success
+        - error
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 320
+        password:
+          type: string
+          minLength: 12
+          maxLength: 128
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        phone:
+          type: string
+          minLength: 7
+          maxLength: 32
+        role:
+          type: string
+          enum:
+            - BUYER
+            - FARMER
+            - TRANSPORTER
+        farmName:
+          type: string
+          minLength: 2
+          maxLength: 180
+        businessName:
+          type: string
+          minLength: 2
+          maxLength: 180
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+        - role
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+    RefreshTokenRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        refreshToken:
+          type: string
+      required:
+        - refreshToken
+    TokenRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          minLength: 64
+          maxLength: 64
+      required:
+        - token
+    EmailRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+        - email
+    ResetPasswordRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          minLength: 64
+          maxLength: 64
+        password:
+          type: string
+          minLength: 12
+          maxLength: 128
+      required:
+        - token
+        - password
+    ProductRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        farmerId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 2
+          maxLength: 180
+        slug:
+          type: string
+        description:
+          type: string
+          minLength: 10
+          maxLength: 10000
+        sku:
+          type: string
+        unit:
+          type: string
+          maxLength: 40
+        unitPrice:
+          type: string
+          pattern: ^\d+(\.\d{1,4})?$
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        minOrderQuantity:
+          type: string
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - ACTIVE
+            - OUT_OF_STOCK
+            - ARCHIVED
+        initialQuantity:
+          type: string
+        reorderLevel:
+          type: string
+      required:
+        - categoryId
+        - name
+        - description
+        - unit
+        - unitPrice
+        - currency
+    ProductUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 2
+          maxLength: 180
+        slug:
+          type: string
+        description:
+          type: string
+          minLength: 10
+          maxLength: 10000
+        sku:
+          type: string
+        unit:
+          type: string
+          maxLength: 40
+        unitPrice:
+          type: string
+          pattern: ^\d+(\.\d{1,4})?$
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        minOrderQuantity:
+          type: string
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - ACTIVE
+            - OUT_OF_STOCK
+            - ARCHIVED
+    CategoryRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        parentId:
+          type:
+            - string
+            - "null"
+          format: uuid
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        slug:
+          type: string
+        description:
+          type: string
+          maxLength: 5000
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+          minimum: 0
+      required:
+        - name
+    CategoryUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        parentId:
+          type:
+            - string
+            - "null"
+          format: uuid
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        slug:
+          type: string
+        description:
+          type: string
+          maxLength: 5000
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+          minimum: 0
+    InventorySettingsRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reorderLevel:
+          type:
+            - string
+            - "null"
+      required:
+        - reorderLevel
+    InventoryAdjustmentRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+            - STOCK_IN
+            - RETURN
+            - ADJUSTMENT
+            - DAMAGE
+            - EXPIRY
+        quantity:
+          type: string
+        reason:
+          type: string
+          maxLength: 255
+      required:
+        - type
+        - quantity
+    CartItemRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: string
+        deliveryMethod:
+          type: string
+          enum:
+            - FARMER_DELIVERY
+            - BUYER_PICKUP
+            - PLATFORM_TRANSPORTER
+      required:
+        - productId
+        - quantity
+    CartItemUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        quantity:
+          type: string
+        deliveryMethod:
+          type:
+            - string
+            - "null"
+          enum:
+            - FARMER_DELIVERY
+            - BUYER_PICKUP
+            - PLATFORM_TRANSPORTER
+            - null
+        savedForLater:
+          type: boolean
+    DeliveryAddress:
+      type: object
+      additionalProperties: false
+      properties:
+        recipientName:
+          type: string
+        recipientPhone:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: string
+        city:
+          type: string
+        district:
+          type: string
+        region:
+          type: string
+        countryCode:
+          type: string
+          minLength: 2
+          maxLength: 2
+      required:
+        - recipientName
+        - recipientPhone
+        - line1
+        - city
+        - countryCode
+    CheckoutGroup:
+      type: object
+      additionalProperties: false
+      properties:
+        farmerId:
+          type: string
+          format: uuid
+        deliveryMethod:
+          type: string
+          enum:
+            - FARMER_DELIVERY
+            - BUYER_PICKUP
+            - PLATFORM_TRANSPORTER
+        deliveryAddressId:
+          type: string
+          format: uuid
+        deliveryAddress:
+          $ref: "#/components/schemas/DeliveryAddress"
+        buyerNotes:
+          type: string
+          maxLength: 2000
+      required:
+        - farmerId
+        - deliveryMethod
+    CheckoutPreviewRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        groups:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/CheckoutGroup"
+        couponCode:
+          type: string
+          maxLength: 64
+      required:
+        - groups
+    CheckoutRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        groups:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/CheckoutGroup"
+        couponCode:
+          type: string
+          maxLength: 64
+        paymentProvider:
+          type: string
+          minLength: 2
+          maxLength: 80
+      required:
+        - groups
+        - paymentProvider
+    AssignmentRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        transporterId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: string
+          format: uuid
+      required:
+        - transporterId
+        - vehicleId
+    JobAcceptanceRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        vehicleId:
+          type: string
+          format: uuid
+    JobRejectionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+    DeliveryScheduleRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        scheduledPickupAt:
+          type: string
+          format: date-time
+        vehicleId:
+          type: string
+          format: uuid
+      required:
+        - scheduledPickupAt
+    DeliveryTransitionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+            - PENDING
+            - AWAITING_ASSIGNMENT
+            - ASSIGNED
+            - ACCEPTED
+            - REJECTED
+            - PICKUP_SCHEDULED
+            - READY_FOR_PICKUP
+            - PICKED_UP
+            - IN_TRANSIT
+            - DELIVERED
+            - FAILED
+            - CANCELLED
+        note:
+          type: string
+          maxLength: 255
+        latitude:
+          type: string
+        longitude:
+          type: string
+      required:
+        - status
+    VehicleRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        ownerId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - BICYCLE
+            - MOTORCYCLE
+            - TRICYCLE
+            - CAR
+            - PICKUP_TRUCK
+            - VAN
+            - REFRIGERATED_VAN
+            - TRUCK
+            - OTHER
+        registrationNumber:
+          type: string
+        make:
+          type: string
+        model:
+          type: string
+        color:
+          type: string
+        capacity:
+          type: string
+        capacityUnit:
+          type: string
+        isActive:
+          type: boolean
+      required:
+        - type
+        - registrationNumber
+    VehicleUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+        make:
+          type: string
+        model:
+          type: string
+        color:
+          type: string
+        capacity:
+          type: string
+        capacityUnit:
+          type: string
+        isActive:
+          type: boolean
+    NotificationRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        recipientId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - ACCOUNT
+            - ORDER
+            - DELIVERY
+            - PAYMENT
+            - MESSAGE
+            - REVIEW
+            - SYSTEM
+        channels:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - IN_APP
+              - EMAIL
+        title:
+          type: string
+          maxLength: 180
+        body:
+          type: string
+          maxLength: 10000
+        data:
+          type: object
+          additionalProperties:
+            type:
+              - string
+              - number
+              - boolean
+              - "null"
+      required:
+        - recipientId
+        - type
+        - channels
+        - title
+        - body
+    NotificationUpdateRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        status:
+          type: string
+          enum:
+            - UNREAD
+            - READ
+            - ARCHIVED
+      required:
+        - status
+    ImageOrderRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        imageIds:
+          type: array
+          minItems: 1
+          maxItems: 8
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+      required:
+        - imageIds
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Insufficient role, ownership, or lifecycle permission
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Resource state conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
