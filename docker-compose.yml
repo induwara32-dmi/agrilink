@@ -1,0 +1,53 @@
+services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: agrilink
+      POSTGRES_USER: agrilink
+      POSTGRES_PASSWORD: agrilink
+    ports:
+      - "5432:5432"
+    volumes:
+      - agrilink-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agrilink -d agrilink"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: development
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://agrilink:agrilink@database:5432/agrilink?schema=public
+    command: sh -c "npx prisma migrate deploy && npm run backend:dev"
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+      - backend-node-modules:/app/node_modules
+    depends_on:
+      database:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      target: development
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - frontend-node-modules:/app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  agrilink-postgres:
+  backend-node-modules:
+  frontend-node-modules:

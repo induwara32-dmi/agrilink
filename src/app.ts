@@ -43,6 +43,8 @@ import { MediaService } from './services/media.service';
 import { API_PREFIX } from './constants/application';
 import { EventBus } from './utils/event-bus';
 import { DOMAIN_EVENT_TYPES } from './types/domain-events';
+import { corsOrigins, secureCookieOptions, trustProxy } from './config/security';
+import { apiRateLimit, authRateLimit } from './middlewares/rate-limit.middleware';
 
 export function createApp(): Express {
   const app = express();
@@ -67,7 +69,8 @@ export function createApp(): Express {
   const mediaController = new MediaController(new MediaService(new MediaRepository(prisma)));
 
   app.disable('x-powered-by');
-  app.set('trust proxy', 1);
+  app.set('trust proxy', trustProxy);
+  app.set('cookie options', secureCookieOptions);
   app.use(requestContextMiddleware);
   app.use(
     pinoHttp({
@@ -78,11 +81,13 @@ export function createApp(): Express {
       }),
     }),
   );
-  app.use(helmet());
-  app.use(cors({ origin: env.CORS_ORIGIN.split(',').map((origin) => origin.trim()), credentials: true }));
+  app.use(helmet({ hsts: env.NODE_ENV === 'production' ? { maxAge: 31_536_000, includeSubDomains: true, preload: true } : false }));
+  app.use(cors({ origin: (origin, callback) => callback(null, !origin || corsOrigins.includes(origin)), credentials: true, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], allowedHeaders: ['Authorization', 'Content-Type', 'X-Request-Id'], maxAge: 86400 }));
   app.use(compression());
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: false, limit: '1mb' }));
+  app.use(API_PREFIX, apiRateLimit);
+  app.use(`${API_PREFIX}/auth`, authRateLimit);
 
   app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController, notificationController, analyticsController, mediaController));
   app.use(notFoundMiddleware);

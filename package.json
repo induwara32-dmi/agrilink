@@ -11,12 +11,15 @@
     "backend:typecheck": "tsc -p tsconfig.backend.json --noEmit",
     "backend:build": "tsc -p tsconfig.backend.json",
     "backend:start": "node dist/backend/server.js",
+    "backend:start:production": "node dist/backend/server.js",
     "prisma:format": "prisma format",
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
+    "prisma:deploy": "prisma migrate deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "docker:validate": "node scripts/validate-docker.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",
@@ -31,6 +34,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.6.1",
     "framer-motion": "^12.42.2",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
@@ -70,6 +74,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "yaml": "^2.9.0"
   }
 }

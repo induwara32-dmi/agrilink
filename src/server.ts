@@ -3,6 +3,7 @@ import { createApp } from './app';
 import { connectDatabase, disconnectDatabase } from './config/database';
 import { env } from './config/env';
 import { logger } from './config/logger';
+import { createGracefulShutdown } from './utils/graceful-shutdown';
 
 async function bootstrap(): Promise<void> {
   await connectDatabase();
@@ -12,19 +13,7 @@ async function bootstrap(): Promise<void> {
     logger.info({ port: env.PORT }, 'AgriLink API listening');
   });
 
-  let isShuttingDown = false;
-
-  const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
-    if (isShuttingDown) return;
-    isShuttingDown = true;
-    logger.info({ signal }, 'Graceful shutdown started');
-
-    server.close(async (error) => {
-      if (error) logger.error({ error }, 'HTTP server failed to close cleanly');
-      await disconnectDatabase();
-      process.exitCode = error ? 1 : 0;
-    });
-  };
+  const shutdown = createGracefulShutdown(server, disconnectDatabase, env.SHUTDOWN_TIMEOUT_MS, logger);
 
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
   process.on('SIGINT', () => void shutdown('SIGINT'));

@@ -6,6 +6,14 @@ const environmentSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(4000),
   DATABASE_URL: z.string().min(1),
   CORS_ORIGIN: z.string().min(1).default('http://localhost:3000'),
+  TRUST_PROXY: z.string().min(1).default('1'),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().min(1000).default(900000),
+  RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(300),
+  AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(20),
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(10000),
+  COOKIE_SECURE: z.stringbool().default(false),
+  COOKIE_SAME_SITE: z.enum(['strict', 'lax', 'none']).default('lax'),
+  COOKIE_DOMAIN: z.preprocess(value => value === '' ? undefined : value, z.string().trim().min(1).optional()),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
@@ -24,6 +32,15 @@ const environmentSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().min(1),
   CLOUDINARY_API_KEY: z.string().min(1),
   CLOUDINARY_API_SECRET: z.string().min(1),
+}).superRefine((value, context) => {
+  const origins = value.CORS_ORIGIN.split(',').map(origin => origin.trim());
+  for (const origin of origins) if (origin === '*' || !z.url().safeParse(origin).success) context.addIssue({ code: 'custom', path: ['CORS_ORIGIN'], message: 'CORS origins must be explicit absolute URLs.' });
+  if (value.NODE_ENV === 'production') {
+    if (!value.FRONTEND_URL.startsWith('https://')) context.addIssue({ code: 'custom', path: ['FRONTEND_URL'], message: 'Production frontend URL must use HTTPS.' });
+    if (origins.some(origin => !origin.startsWith('https://'))) context.addIssue({ code: 'custom', path: ['CORS_ORIGIN'], message: 'Production CORS origins must use HTTPS.' });
+    if (!value.COOKIE_SECURE) context.addIssue({ code: 'custom', path: ['COOKIE_SECURE'], message: 'Production cookies must be secure.' });
+    if (value.JWT_ACCESS_SECRET.includes('replace-') || value.JWT_REFRESH_SECRET.includes('replace-')) context.addIssue({ code: 'custom', path: ['JWT_ACCESS_SECRET'], message: 'Production JWT secrets must not use example values.' });
+  }
 });
 
 const parsedEnvironment = environmentSchema.safeParse(process.env);
