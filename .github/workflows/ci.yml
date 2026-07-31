@@ -1,0 +1,155 @@
+name: Continuous Integration
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  DATABASE_URL: postgresql://agrilink_test:agrilink_test@localhost:5432/agrilink_test?schema=public
+  TEST_DATABASE_URL: postgresql://agrilink_test:agrilink_test@localhost:5432/agrilink_test?schema=public
+  NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+  CORS_ORIGIN: http://localhost:3000
+  FRONTEND_URL: http://localhost:3000
+  JWT_ACCESS_SECRET: ci-access-secret-at-least-32-characters-long
+  JWT_REFRESH_SECRET: ci-refresh-secret-at-least-32-characters-long
+  SMTP_HOST: localhost
+  SMTP_PORT: "1025"
+  SMTP_SECURE: "false"
+  SMTP_FROM: AgriLink CI <no-reply@example.test>
+  CLOUDINARY_CLOUD_NAME: ci-placeholder
+  CLOUDINARY_API_KEY: ci-placeholder
+  CLOUDINARY_API_SECRET: ci-placeholder
+
+jobs:
+  prisma:
+    name: Prisma and generated contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js with npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+      - name: Validate Prisma schema
+        run: npm run prisma:validate
+      - name: Verify Prisma formatting
+        run: npm run prisma:format && git diff --exit-code -- prisma/schema.prisma
+      - name: Verify generated API documentation
+        run: npm run docs:api && git diff --exit-code -- docs/openapi.yaml docs/AgriLink.postman_collection.json
+      - name: Validate workflow syntax and policy
+        run: npm run ci:validate
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js with npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Run ESLint
+        run: npm run lint
+
+  backend:
+    name: Backend TypeScript and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js with npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+      - name: Check backend TypeScript
+        run: npm run backend:typecheck
+      - name: Build backend
+        run: npm run backend:build
+
+  frontend:
+    name: Frontend production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js with npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+      - name: Build frontend
+        run: npm run build
+
+  test:
+    name: Automated tests and coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: agrilink_test
+          POSTGRES_USER: agrilink_test
+          POSTGRES_PASSWORD: agrilink_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agrilink_test -d agrilink_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js with npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+      - name: Apply test database migrations
+        run: npm run prisma:deploy
+      - name: Run automated tests with coverage
+        run: npm run test:coverage
+      - name: Upload coverage report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.sha }}
+          path: coverage/
+          if-no-files-found: error
+          retention-days: 14

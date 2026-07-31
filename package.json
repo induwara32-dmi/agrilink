@@ -20,7 +20,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "docker:validate": "node scripts/validate-docker.mjs",
-    "docs:api": "node scripts/generate-api-docs.mjs"
+    "docs:api": "node scripts/generate-api-docs.mjs",
+    "ci:validate": "node scripts/validate-workflows.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",

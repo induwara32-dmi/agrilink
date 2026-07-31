@@ -1,5 +1,6 @@
 # AgriLink
 
+[![CI](https://github.com/induwara32-dmi/agrilink/actions/workflows/ci.yml/badge.svg)](https://github.com/induwara32-dmi/agrilink/actions/workflows/ci.yml)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111827)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -160,6 +161,8 @@ Run `npm run docker:validate` for structural Compose and Dockerfile validation. 
 ## Deployment
 
 The frontend can run on Vercel or its container image. The Express API can run on Railway, Render, or another container host, with Neon or managed PostgreSQL as the database. Production deployments require HTTPS, explicit CORS origins, secure cookies, independent JWT secrets, managed backups, Cloudinary, and production SMTP. See the [deployment guide](docs/DEPLOYMENT.md) for provider-specific steps.
+
+GitHub Actions validates every push and pull request, provides protected manual deployment templates for Vercel, Railway, and Render, and publishes checked release artifacts for `v*` tags. See [CI/CD](docs/CI_CD.md).
 
 ## API overview
 

@@ -10,6 +10,8 @@ AgriLink deploys as three independently managed resources:
 
 Cloudinary stores images and SMTP delivers email. Production traffic must terminate TLS before reaching either application. The API trusts the configured reverse proxy and exposes `/api/v1/health`, `/api/v1/readiness`, and `/api/v1/version` for monitoring.
 
+GitHub Actions automation, required protected environments, provider secrets, release artifacts, and rollback procedures are documented in [CI/CD](CI_CD.md).
+
 ## Production environment variables
 
 Start from `.env.example`, store real values in the deployment provider's secret manager, and never commit `.env` or `.env.production`.

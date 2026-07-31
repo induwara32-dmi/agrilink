@@ -1,0 +1,142 @@
+name: Continuous Deployment Template
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Deployment target
+        required: true
+        type: choice
+        options:
+          - all
+          - vercel
+          - railway
+          - render
+      environment:
+        description: Protected GitHub environment
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify deployment candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+      CORS_ORIGIN: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1' }}
+      JWT_ACCESS_SECRET: deployment-verification-access-secret-32-chars
+      JWT_REFRESH_SECRET: deployment-verification-refresh-secret-32-chars
+      SMTP_HOST: localhost
+      SMTP_PORT: "1025"
+      SMTP_SECURE: "false"
+      SMTP_FROM: AgriLink Deploy <no-reply@example.test>
+      CLOUDINARY_CLOUD_NAME: deploy-placeholder
+      CLOUDINARY_API_KEY: deploy-placeholder
+      CLOUDINARY_API_SECRET: deploy-placeholder
+    steps:
+      - name: Check out requested revision
+        uses: actions/checkout@v4
+      - name: Set up Node.js with npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+      - name: Validate and build
+        run: |
+          npm run prisma:validate
+          npm run backend:typecheck
+          npm run backend:build
+          npm run lint
+          npm test
+          npm run build
+
+  vercel:
+    name: Deploy frontend to Vercel
+    if: ${{ inputs.target == 'all' || inputs.target == 'vercel' }}
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.environment }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_CLI_VERSION: 54.6.1
+    steps:
+      - name: Check out requested revision
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Pull Vercel environment
+        run: npx --yes "vercel@${VERCEL_CLI_VERSION}" pull --yes --environment=${{ inputs.environment == 'production' && 'production' || 'preview' }} --token="$VERCEL_TOKEN"
+      - name: Build Vercel output
+        run: npx --yes "vercel@${VERCEL_CLI_VERSION}" build ${{ inputs.environment == 'production' && '--prod' || '' }} --token="$VERCEL_TOKEN"
+      - name: Deploy Vercel output
+        run: npx --yes "vercel@${VERCEL_CLI_VERSION}" deploy --prebuilt ${{ inputs.environment == 'production' && '--prod' || '' }} --token="$VERCEL_TOKEN"
+
+  railway:
+    name: Trigger Railway deployment
+    if: ${{ inputs.target == 'all' || inputs.target == 'railway' }}
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
+      RAILWAY_ENVIRONMENT: ${{ secrets.RAILWAY_ENVIRONMENT }}
+      RAILWAY_CLI_VERSION: 4.65.0
+    steps:
+      - name: Check out requested revision
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Deploy checked-out revision to Railway
+        run: |
+          test -n "$RAILWAY_TOKEN"
+          test -n "$RAILWAY_PROJECT_ID"
+          test -n "$RAILWAY_SERVICE"
+          test -n "$RAILWAY_ENVIRONMENT"
+          npx --yes "@railway/cli@${RAILWAY_CLI_VERSION}" up --detach --project "$RAILWAY_PROJECT_ID" --service "$RAILWAY_SERVICE" --environment "$RAILWAY_ENVIRONMENT"
+
+  render:
+    name: Trigger Render deployment
+    if: ${{ inputs.target == 'all' || inputs.target == 'render' }}
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Trigger configured Render deploy hook
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          test -n "$DEPLOY_HOOK_URL"
+          curl --fail-with-body --silent --show-error --retry 3 --request POST "${DEPLOY_HOOK_URL}&ref=${GITHUB_SHA}"

@@ -72,7 +72,7 @@ Coverage percentage is a diagnostic, not a release guarantee. Raise thresholds o
 
 ## Continuous integration baseline
 
-A pull request or release pipeline should run:
+The checked-in GitHub Actions pipeline runs:
 
 ```bash
 npm ci
@@ -87,6 +87,8 @@ npm run docker:validate
 ```
 
 Use an isolated PostgreSQL service for database tests and inject mock/development Cloudinary and SMTP values. Do not expose secrets in command logs or uploaded artifacts.
+
+See [CI/CD](CI_CD.md) for job isolation, required branch checks, coverage retention, deployment gates, and release verification.
 
 ## Troubleshooting tests
 

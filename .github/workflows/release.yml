@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DATABASE_URL: postgresql://release:release@localhost:5432/release?schema=public
+  CORS_ORIGIN: http://localhost:3000
+  FRONTEND_URL: http://localhost:3000
+  NEXT_PUBLIC_API_URL: https://api.example.com/api/v1
+  JWT_ACCESS_SECRET: release-build-access-secret-at-least-32-characters
+  JWT_REFRESH_SECRET: release-build-refresh-secret-at-least-32-characters
+  SMTP_HOST: localhost
+  SMTP_PORT: "1025"
+  SMTP_SECURE: "false"
+  SMTP_FROM: AgriLink Release <no-reply@example.test>
+  CLOUDINARY_CLOUD_NAME: release-placeholder
+  CLOUDINARY_API_KEY: release-placeholder
+  CLOUDINARY_API_SECRET: release-placeholder
+
+jobs:
+  release:
+    name: Verify and publish release artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out tagged revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Node.js with npm cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Verify tagged source
+        run: |
+          npm run prisma:generate
+          npm run prisma:validate
+          npm run ci:validate
+          npm run lint
+          npm test
+          npm run backend:typecheck
+          npm run backend:build
+          npm run build
+      - name: Package release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release/frontend/.next release/backend release/api-contract
+          cp -R .next/standalone/. release/frontend/
+          cp -R .next/static release/frontend/.next/static
+          cp -R public release/frontend/public
+          cp -R dist/backend release/backend/dist
+          cp -R prisma release/backend/prisma
+          cp package.json package-lock.json release/backend/
+          cp docs/openapi.yaml docs/AgriLink.postman_collection.json release/api-contract/
+          tar -C release/frontend -czf "release/agrilink-frontend-${GITHUB_REF_NAME}.tar.gz" .
+          tar -C release/backend -czf "release/agrilink-backend-${GITHUB_REF_NAME}.tar.gz" .
+          tar -C release/api-contract -czf "release/agrilink-api-contract-${GITHUB_REF_NAME}.tar.gz" .
+          cd release
+          sha256sum ./*.tar.gz > SHA256SUMS.txt
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: agrilink-${{ github.ref_name }}
+          path: |
+            release/*.tar.gz
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(release/*.tar.gz release/SHA256SUMS.txt)
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${files[@]}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${files[@]}" --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+          fi

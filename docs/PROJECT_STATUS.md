@@ -41,6 +41,7 @@ Latest stabilization commit: `daf0e6b721443fdedd23399a7b3e5da7fe21ff74`
 - [x] Automated testing foundation
 - [x] Production deployment preparation
 - [x] Documentation and portfolio polish
+- [x] GitHub Actions CI/CD automation
 
 The stabilization phase covered navigation validity, active navigation states, responsive layout guards, a mobile dashboard drawer, centralized domain constants and navigation definitions, shared UI states, accessibility improvements, strict TypeScript, lint, and production build verification.
 
@@ -63,6 +64,10 @@ Vitest provides backend and frontend test execution with V8 coverage, Supertest 
 ## Next milestone
 
 The next milestone is payments.
+
+## Phase 31 CI/CD
+
+GitHub Actions now validates pushes and pull requests through isolated Prisma/contracts, lint, backend, frontend, and PostgreSQL-backed coverage jobs. Protected manual deployment templates cover Vercel, Railway, and Render without committed secrets. Version tags create checksummed frontend, backend, and API-contract release artifacts.
 
 ## Phase 30 documentation
 

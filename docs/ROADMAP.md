@@ -70,6 +70,7 @@ The completed frontend establishes the approved architecture and visual design. 
 
 - [x] Add production configuration validation, health/readiness endpoints, graceful shutdown, security middleware, Docker images, Compose templates, and deployment documentation.
 - [ ] Establish hosted staging and production environments.
-- [ ] Automate lint, type checking, tests, builds, migrations, and controlled releases in CI/CD.
+- [x] Automate lint, type checking, tests, builds, migration validation, coverage artifacts, and controlled tag releases in GitHub Actions.
+- [ ] Activate provider deployment environments, approvals, production migrations, and post-deploy smoke checks.
 - [ ] Configure live secrets, TLS, backups, monitoring, alerts, and error reporting.
 - Complete staging acceptance and a production readiness review before launch.
