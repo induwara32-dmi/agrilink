@@ -1,8 +1,7 @@
 import { clearSession, getSession, updateTokens } from './session';
 import type { ApiFailure, ApiSuccess } from './types';
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1').replace(/\/$/, '');
-
+const API_URL = 'https://agrilink-production-599d.up.railway.app/api/v1';
 export class ApiClientError extends Error {
   public constructor(
     message: string,
