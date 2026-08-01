@@ -110,6 +110,26 @@ Use a production transactional-email provider with a verified domain. Configure 
 - Production seed operations must be explicit, idempotent, and limited to reference data or the initial audited admin bootstrap. Test factories and `tests/utils/seed.ts` are never production seeds.
 - Test restore procedures on staging before each high-risk schema release.
 
+### Default category seed
+
+After migrations, add the standard product categories with:
+
+```bash
+npm run prisma:seed:categories
+```
+
+The command inserts only missing categories using stable slugs and leaves every existing category unchanged, including inactive or administrator-created records. It is safe to run repeatedly.
+
+For production Neon, set `DATABASE_URL` to the production Neon PostgreSQL connection string in the deployment environment, then run migrations and the explicit reference-data seed from a trusted release shell:
+
+```bash
+npm ci
+npm run prisma:deploy
+npm run prisma:seed:categories
+```
+
+Do not place the Neon connection string directly in shell history or repository files, and do not use `prisma db push` in production. Review the command output; a repeated run should report all defaults as already present.
+
 ## Backup and restore
 
 Enable managed point-in-time recovery and daily encrypted snapshots with retention appropriate to legal and business requirements. Store backups in a separate failure domain and restrict restore permissions.

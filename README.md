@@ -99,7 +99,10 @@ Copy `.env.example` to `.env`, replace placeholders, then prepare Prisma:
 ```bash
 npm run prisma:generate
 npm run prisma:deploy
+npm run prisma:seed:categories
 ```
+
+The category seed is idempotent reference-data setup: it adds only missing default product categories and never updates or deletes administrator-created categories. For production Neon usage, follow the reviewed sequence in [Deployment](docs/DEPLOYMENT.md#default-category-seed).
 
 ## Environment variables
 

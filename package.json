@@ -16,6 +16,7 @@
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
     "prisma:deploy": "prisma migrate deploy",
+    "prisma:seed:categories": "tsx prisma/seed-categories.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
