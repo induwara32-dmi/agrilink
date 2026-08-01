@@ -14,6 +14,7 @@ export function createCatalogRouter(catalog: CatalogController, inventory: Inven
   router.get('/categories', validateRequest(categoryListSchema), catalog.listCategories);
   router.get('/categories/:id', validateRequest(productIdSchema), catalog.getCategory);
   router.get('/management/products', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(productListSchema), catalog.listManaged);
+  router.get('/management/products/:id', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(productIdSchema), catalog.getManaged);
   router.post('/products', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(createProductSchema), catalog.createProduct);
   router.patch('/products/:id', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(updateProductSchema), catalog.updateProduct);
   router.delete('/products/:id', authenticate, authorizeRoles(Role.FARMER, Role.ADMIN), validateRequest(productIdSchema), catalog.deleteProduct);

@@ -18,6 +18,7 @@ export class CatalogController extends BaseController {
   public constructor(private readonly service: CatalogService) { super(); }
   public readonly listPublic: RequestHandler = asyncHandler(async (request, response) => { const result = await this.service.listPublic(productQuery(request.query as unknown as ProductListQuery)); return sendSuccess(response, HTTP_STATUS.OK, result.items, result.meta); });
   public readonly listManaged: RequestHandler = asyncHandler(async (request, response) => { const result = await this.service.listManaged(productQuery(request.query as unknown as ProductListQuery), actorFrom(request)); return sendSuccess(response, HTTP_STATUS.OK, result.items, result.meta); });
+  public readonly getManaged: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.getManaged(pathParameter(request, 'id'), actorFrom(request))));
   public readonly getPublic: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.getPublic(pathParameter(request, 'id'))));
   public readonly getCategory: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.getCategory(pathParameter(request, 'id'))));
   public readonly createProduct: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.CREATED, await this.service.createProduct(request.body as CreateProductBody as ProductInput, actorFrom(request))));

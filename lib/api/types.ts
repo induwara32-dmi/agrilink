@@ -74,6 +74,9 @@ export type Product = {
   unitPrice: string;
   currency: string;
   minOrderQuantity: string;
+  status: ProductStatus;
+  createdAt: string;
+  updatedAt: string;
   category: Category;
   farmer: {
     id: string;
@@ -94,6 +97,27 @@ export type Product = {
   } | null;
 };
 
+export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
+
+export type Inventory = {
+  id: string;
+  productId: string;
+  quantityOnHand: string;
+  quantityReserved: string;
+  reorderLevel: string | null;
+  updatedAt: string;
+  product: Pick<Product, 'id' | 'name' | 'unit' | 'status'>;
+};
+
+export type InventoryMovement = {
+  id: string;
+  type: 'STOCK_IN' | 'RETURN' | 'ADJUSTMENT' | 'DAMAGE' | 'EXPIRY' | 'RESERVATION' | 'RELEASE' | 'SALE';
+  quantity: string;
+  balanceAfter: string;
+  reason: string | null;
+  createdAt: string;
+};
+
 export type ProductSort = 'newest' | 'oldest' | 'priceAsc' | 'priceDesc' | 'nameAsc' | 'nameDesc';
 
 export type ProductQuery = {
@@ -101,6 +125,7 @@ export type ProductQuery = {
   pageSize?: number;
   search?: string;
   categoryId?: string;
+  status?: ProductStatus;
   minPrice?: string;
   maxPrice?: string;
   sort?: ProductSort;

@@ -17,6 +17,7 @@ export class CatalogService extends BaseService {
   public async managedFarmerId(actor: Actor): Promise<string | undefined> { return actor.role === Role.FARMER ? (await this.requireFarmer(actor.userId)).id : undefined; }
   public async listManaged(query: ProductQuery, actor: Actor) { if (actor.role === Role.ADMIN) { const result = await this.repository.listProducts(query, false); return { ...result, meta: pageMeta(query.page, query.pageSize, result.total) }; } return this.listFarmer(query, actor); }
   public async getPublic(id: string) { const item = await this.repository.findProduct(id); if (!item || item.status !== ProductStatus.ACTIVE || !item.category.isActive) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'PRODUCT_NOT_FOUND', 'Product not found.'); return item; }
+  public getManaged(id: string, actor: Actor) { return this.requireManagedProduct(id, actor); }
   public async getCategory(id: string) { const item = await this.repository.findCategory(id); if (!item || !item.isActive) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'CATEGORY_NOT_FOUND', 'Category not found.'); return item; }
   public async createProduct(input: ProductInput, actor: Actor) {
     const farmer = actor.role === Role.ADMIN ? await this.repository.findFarmerById(input.farmerId ?? '') : await this.requireFarmer(actor.userId);

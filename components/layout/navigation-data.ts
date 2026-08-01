@@ -15,3 +15,10 @@ export const dashboardNavItems = [
   { label: 'Marketplace', href: '/marketplace' },
   { label: 'Notifications', href: '/notifications' },
 ] as const;
+
+export const farmerNavItems = [
+  { label: 'Farmer dashboard', href: '/farmer' },
+  { label: 'Products', href: '/farmer/products' },
+  { label: 'Inventory', href: '/farmer/inventory' },
+  { label: 'Add Product', href: '/farmer/products/new' },
+] as const;

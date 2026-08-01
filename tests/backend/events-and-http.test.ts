@@ -16,6 +16,7 @@ import { ApiError } from '../../src/utils/api-error';
 import { AuthController } from '../../src/controllers/auth.controller';
 import type { AuthService } from '../../src/services/auth.service';
 import { registerSchema } from '../../src/validators/auth.validators';
+import { productListSchema } from '../../src/validators/catalog.validators';
 
 describe('event publishing and notification creation', () => {
   it('publishes once with de-duplicated recipients', async () => { const bus = new EventBus(); const handler = vi.fn(); bus.subscribe(['ORDER_CREATED'], handler); await bus.publish({ type: 'ORDER_CREATED', recipientIds: ['one', 'one', 'two'], data: { orderNumber: 'AG-1' } }); expect(handler).toHaveBeenCalledOnce(); expect(handler.mock.calls[0]![0].recipientIds).toEqual(['one', 'two']); });
@@ -40,6 +41,18 @@ describe('Supertest request pipeline', () => {
   const app = express(); app.use(express.json()); app.post('/login', validateRequest(loginSchema), (req, res) => res.status(200).json({ success: true, data: { email: req.body.email } })); app.use(errorMiddleware);
   it('accepts a validated login request', async () => { const response = await request(app).post('/login').send({ email: 'USER@EXAMPLE.COM', password: 'password' }); expect(response.status).toBe(200); expect(response.body.data.email).toBe('user@example.com'); });
   it('returns a structured validation error', async () => { const response = await request(app).post('/login').send({ email: 'invalid', password: '' }); expect(response.status).toBe(400); expect(response.body.error.code).toBe('VALIDATION_ERROR'); });
+});
+
+describe('GET request validation', () => {
+  const app = express();
+  app.get('/products', validateRequest(productListSchema), (req, res) => res.status(200).json({ success: true, data: req.query }));
+  app.use(errorMiddleware);
+
+  it('normalizes a missing GET body and applies query defaults', async () => {
+    const response = await request(app).get('/products');
+    expect(response.status).toBe(200);
+    expect(response.body.data).toMatchObject({ page: 1, pageSize: 20, sort: 'newest' });
+  });
 });
 
 describe('registration error responses', () => {

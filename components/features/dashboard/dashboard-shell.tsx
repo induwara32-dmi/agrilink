@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Bell, ChevronRight, Menu, Search, ShoppingBag, Sparkles, UserCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { dashboardNavItems } from '@/components/layout/navigation-data';
+import { dashboardNavItems, farmerNavItems } from '@/components/layout/navigation-data';
 import { useAuth } from '@/providers/auth-provider';
 import { useQuery } from '@tanstack/react-query';
 import { NotificationPanel } from '@/components/features/notifications/notification-panel';
@@ -46,6 +46,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const breadcrumbs = getBreadcrumbs(pathname);
   const { user, logout } = useAuth();
+  const navigationItems = user?.role === 'FARMER' ? [...farmerNavItems, ...dashboardNavItems.filter((item) => !item.href.startsWith('/farmer'))] : dashboardNavItems;
+  const isNavigationItemActive = (href: string) => pathname === href || (href !== '/farmer' && pathname.startsWith(`${href}/`));
   const displayName = user?.profile?.displayName || [user?.profile?.firstName, user?.profile?.lastName].filter(Boolean).join(' ') || user?.email;
   const unread = useQuery({ queryKey: notificationQueryKeys.unread(), queryFn: getUnreadCount, enabled: Boolean(user), refetchInterval: 60_000 });
 
@@ -64,8 +66,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
           </div>
 
           <nav className="space-y-1 px-3 pb-6" aria-label="Dashboard navigation">
-            {dashboardNavItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            {navigationItems.map((item) => {
+              const isActive = isNavigationItemActive(item.href);
 
               return (
                 <Link
@@ -137,8 +139,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
                     </Button>
                   </div>
                   <div className="flex flex-col gap-2">
-                    {dashboardNavItems.map((item) => {
-                      const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                    {navigationItems.map((item) => {
+                      const isActive = isNavigationItemActive(item.href);
                       return (
                         <Link key={item.label} href={item.href} aria-current={isActive ? 'page' : undefined} onClick={() => setIsMobileNavOpen(false)} className={`rounded-2xl px-3 py-2 text-sm font-medium shadow-sm ${isActive ? 'bg-primary/10 text-primary' : 'bg-slate-50 text-slate-700'}`}>
                           {item.label}

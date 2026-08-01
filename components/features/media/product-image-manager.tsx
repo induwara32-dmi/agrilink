@@ -7,13 +7,14 @@ import { ArrowLeft, ArrowRight, Star, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ProductImage } from '@/lib/api/types';
 import { deleteProductImage, reorderProductImages, setPrimaryProductImage, uploadProductImages } from '@/lib/api/media';
+import { catalogQueryKeys } from '@/lib/api/catalog';
 
 export function ProductImageManager({ productId, images }: { productId: string; images: ProductImage[] }) {
   const picker = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['product', productId] });
+  const refresh = async () => { await Promise.all([queryClient.invalidateQueries({ queryKey: ['product', productId] }), queryClient.invalidateQueries({ queryKey: catalogQueryKeys.product(productId) }), queryClient.invalidateQueries({ queryKey: catalogQueryKeys.all })]); };
   async function upload(files: FileList | null) { if (!files?.length) return; setError(null); try { await uploadProductImages(productId, [...files], '', setProgress); await refresh(); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Upload failed.'); } finally { setProgress(null); if (picker.current) picker.current.value = ''; } }
   async function mutate(action: () => Promise<unknown>) { setError(null); try { await action(); await refresh(); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Image update failed.'); } }
   async function move(index: number, offset: number) { const next = [...images]; const target = index + offset; if (target < 0 || target >= next.length) return; [next[index], next[target]] = [next[target]!, next[index]!]; await mutate(() => reorderProductImages(productId, next.map(image => image.id))); }
