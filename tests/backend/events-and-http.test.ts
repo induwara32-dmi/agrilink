@@ -12,6 +12,10 @@ import { createAuthenticate } from '../../src/middlewares/authentication.middlew
 import type { AuthRepository } from '../../src/repositories/auth.repository';
 import { AccountStatus, Role } from '@prisma/client';
 import { testAccessToken } from '../utils/jwt';
+import { ApiError } from '../../src/utils/api-error';
+import { AuthController } from '../../src/controllers/auth.controller';
+import type { AuthService } from '../../src/services/auth.service';
+import { registerSchema } from '../../src/validators/auth.validators';
 
 describe('event publishing and notification creation', () => {
   it('publishes once with de-duplicated recipients', async () => { const bus = new EventBus(); const handler = vi.fn(); bus.subscribe(['ORDER_CREATED'], handler); await bus.publish({ type: 'ORDER_CREATED', recipientIds: ['one', 'one', 'two'], data: { orderNumber: 'AG-1' } }); expect(handler).toHaveBeenCalledOnce(); expect(handler.mock.calls[0]![0].recipientIds).toEqual(['one', 'two']); });
@@ -35,7 +39,64 @@ describe('event publishing and notification creation', () => {
 describe('Supertest request pipeline', () => {
   const app = express(); app.use(express.json()); app.post('/login', validateRequest(loginSchema), (req, res) => res.status(200).json({ success: true, data: { email: req.body.email } })); app.use(errorMiddleware);
   it('accepts a validated login request', async () => { const response = await request(app).post('/login').send({ email: 'USER@EXAMPLE.COM', password: 'password' }); expect(response.status).toBe(200); expect(response.body.data.email).toBe('user@example.com'); });
-  it('returns a structured validation error', async () => { const response = await request(app).post('/login').send({ email: 'invalid', password: '' }); expect(response.status).toBe(422); expect(response.body.error.code).toBe('VALIDATION_ERROR'); });
+  it('returns a structured validation error', async () => { const response = await request(app).post('/login').send({ email: 'invalid', password: '' }); expect(response.status).toBe(400); expect(response.body.error.code).toBe('VALIDATION_ERROR'); });
+});
+
+describe('registration error responses', () => {
+  function registrationApp(register: AuthService['register']) {
+    const service = { register } as unknown as AuthService;
+    const controller = new AuthController(service);
+    const app = express();
+    app.use(express.json());
+    app.post('/register', validateRequest(registerSchema), controller.register);
+    app.use(errorMiddleware);
+    return app;
+  }
+
+  const registration = {
+    email: 'existing@example.com',
+    password: 'SecurePass1!',
+    firstName: 'Existing',
+    lastName: 'Buyer',
+    role: Role.BUYER,
+  };
+
+  it('preserves EMAIL_ALREADY_REGISTERED as HTTP 409 across module boundaries', async () => {
+    const duplicateError = Object.assign(new Error('An account already uses this email.'), {
+      name: 'ApiError',
+      statusCode: 409,
+      code: 'EMAIL_ALREADY_REGISTERED',
+      isOperational: true,
+    });
+    const app = registrationApp(vi.fn().mockRejectedValue(duplicateError));
+
+    const response = await request(app).post('/register').send(registration);
+
+    expect(response.status).toBe(409);
+    expect(response.body.error).toEqual({
+      code: 'EMAIL_ALREADY_REGISTERED',
+      message: 'An account already uses this email.',
+    });
+  });
+
+  it('preserves ordinary ApiError status codes', async () => {
+    const app = registrationApp(vi.fn().mockRejectedValue(
+      new ApiError(409, 'EMAIL_ALREADY_REGISTERED', 'An account already uses this email.'),
+    ));
+
+    const response = await request(app).post('/register').send(registration);
+
+    expect(response.status).toBe(409);
+  });
+
+  it('returns HTTP 500 only for unexpected exceptions', async () => {
+    const app = registrationApp(vi.fn().mockRejectedValue(new Error('database unavailable')));
+
+    const response = await request(app).post('/register').send(registration);
+
+    expect(response.status).toBe(500);
+    expect(response.body.error.code).toBe('INTERNAL_SERVER_ERROR');
+  });
 });
 
 describe('current-user authentication', () => {

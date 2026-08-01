@@ -16,7 +16,7 @@ export function validateRequest(schema: ZodType<RequestInput>): RequestHandler {
     if (!result.success) {
       next(
         new ApiError(
-          HTTP_STATUS.UNPROCESSABLE_ENTITY,
+          HTTP_STATUS.BAD_REQUEST,
           'VALIDATION_ERROR',
           'The request data is invalid.',
           result.error.flatten(),

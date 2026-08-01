@@ -11,7 +11,7 @@ export const errorMiddleware: ErrorRequestHandler = (error: unknown, request, re
   const apiError = error instanceof multer.MulterError
     ? new ApiError(error.code === 'LIMIT_FILE_SIZE' ? HTTP_STATUS.PAYLOAD_TOO_LARGE : HTTP_STATUS.UNPROCESSABLE_ENTITY, 'UPLOAD_VALIDATION_ERROR', error.code === 'LIMIT_FILE_SIZE' ? 'The selected image exceeds the upload size limit.' : 'The image upload is invalid.', { field: error.field, reason: error.code })
     :
-    error instanceof ApiError
+    ApiError.is(error)
       ? error
       : new ApiError(
           HTTP_STATUS.INTERNAL_SERVER_ERROR,
