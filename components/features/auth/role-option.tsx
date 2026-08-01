@@ -6,11 +6,17 @@ interface RoleOptionProps {
   description: string;
   selected?: boolean;
   icon: React.ReactNode;
+  onSelect?: () => void;
 }
 
-export function RoleOption({ title, description, selected = false, icon }: RoleOptionProps) {
+export function RoleOption({ title, description, selected = false, icon, onSelect }: RoleOptionProps) {
   return (
-    <div className={cn('rounded-2xl border p-4 transition', selected ? 'border-primary bg-primary/10 shadow-sm' : 'border-border bg-white')}>
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+      className={cn('w-full rounded-2xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2', selected ? 'border-primary bg-primary/10 shadow-sm' : 'border-border bg-white')}
+    >
       <div className="flex items-start gap-3">
         <div className="rounded-2xl bg-primary/10 p-3 text-primary">{icon}</div>
         <div className="flex-1">
@@ -21,6 +27,6 @@ export function RoleOption({ title, description, selected = false, icon }: RoleO
           <p className="mt-2 text-sm leading-7 text-slate-600">{description}</p>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
