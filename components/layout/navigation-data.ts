@@ -22,3 +22,8 @@ export const farmerNavItems = [
   { label: 'Inventory', href: '/farmer/inventory' },
   { label: 'Add Product', href: '/farmer/products/new' },
 ] as const;
+
+export const adminNavItems = [
+  { label: 'Admin dashboard', href: '/admin' },
+  { label: 'Categories', href: '/admin/categories' },
+] as const;

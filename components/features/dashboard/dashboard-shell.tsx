@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Bell, ChevronRight, Menu, Search, ShoppingBag, Sparkles, UserCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { dashboardNavItems, farmerNavItems } from '@/components/layout/navigation-data';
+import { adminNavItems, dashboardNavItems, farmerNavItems } from '@/components/layout/navigation-data';
 import { useAuth } from '@/providers/auth-provider';
 import { useQuery } from '@tanstack/react-query';
 import { NotificationPanel } from '@/components/features/notifications/notification-panel';
@@ -46,8 +46,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const breadcrumbs = getBreadcrumbs(pathname);
   const { user, logout } = useAuth();
-  const navigationItems = user?.role === 'FARMER' ? [...farmerNavItems, ...dashboardNavItems.filter((item) => !item.href.startsWith('/farmer'))] : dashboardNavItems;
-  const isNavigationItemActive = (href: string) => pathname === href || (href !== '/farmer' && pathname.startsWith(`${href}/`));
+  const navigationItems = user?.role === 'FARMER' ? [...farmerNavItems, ...dashboardNavItems.filter((item) => !item.href.startsWith('/farmer'))] : user?.role === 'ADMIN' ? [...adminNavItems, ...dashboardNavItems.filter((item) => !item.href.startsWith('/admin'))] : dashboardNavItems;
+  const isNavigationItemActive = (href: string) => pathname === href || (!['/farmer', '/admin'].includes(href) && pathname.startsWith(`${href}/`));
   const displayName = user?.profile?.displayName || [user?.profile?.firstName, user?.profile?.lastName].filter(Boolean).join(' ') || user?.email;
   const unread = useQuery({ queryKey: notificationQueryKeys.unread(), queryFn: getUnreadCount, enabled: Boolean(user), refetchInterval: 60_000 });
 

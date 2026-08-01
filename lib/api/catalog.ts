@@ -4,6 +4,7 @@ import type { Category, Inventory, InventoryMovement, Product, ProductQuery, Pro
 export const catalogQueryKeys = {
   all: ['catalog'] as const,
   categories: () => [...catalogQueryKeys.all, 'categories'] as const,
+  adminCategories: () => [...catalogQueryKeys.all, 'admin-categories'] as const,
   managedProducts: (query: ProductQuery) => [...catalogQueryKeys.all, 'managed-products', query] as const,
   product: (id: string) => [...catalogQueryKeys.all, 'product', id] as const,
   inventory: (id: string) => [...catalogQueryKeys.all, 'inventory', id] as const,
@@ -33,6 +34,24 @@ function queryString(query: ProductQuery): string {
 
 export function getCategories() {
   return apiRequest<Category[]>('/categories');
+}
+
+export type CategoryInput = { name: string; description?: string; isActive?: boolean; sortOrder?: number };
+
+export function getAdminCategories() {
+  return apiRequest<Category[]>('/admin/categories?includeInactive=true', { authenticated: true });
+}
+
+export function createCategory(input: CategoryInput) {
+  return apiRequest<Category>('/categories', { method: 'POST', body: input, authenticated: true });
+}
+
+export function updateCategory(id: string, input: CategoryInput) {
+  return apiRequest<Category>(`/categories/${encodeURIComponent(id)}`, { method: 'PATCH', body: input, authenticated: true });
+}
+
+export function deleteCategory(id: string) {
+  return apiRequest<{ message: string }>(`/categories/${encodeURIComponent(id)}`, { method: 'DELETE', authenticated: true });
 }
 
 export function getProducts(query: ProductQuery = {}) {

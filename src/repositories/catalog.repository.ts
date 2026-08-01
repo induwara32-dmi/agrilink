@@ -26,6 +26,7 @@ export class CatalogRepository extends BaseRepository {
   public findFarmerByUser(userId: string) { return this.database.farmerProfile.findUnique({ where: { userId } }); }
   public findFarmerById(id: string) { return this.database.farmerProfile.findUnique({ where: { id } }); }
   public findCategory(id: string) { return this.database.category.findFirst({ where: { id, deletedAt: null } }); }
+  public findCategoryByName(name: string, excludeId?: string) { return this.database.category.findFirst({ where: { name: { equals: name, mode: 'insensitive' }, deletedAt: null, ...(excludeId ? { id: { not: excludeId } } : {}) } }); }
   public findProduct(id: string): Promise<ProductRecord | null> { return this.database.product.findFirst({ where: { id, deletedAt: null }, include: productInclude }); }
 
   public async listProducts(query: ProductQuery, publicOnly: boolean, ownerFarmerId?: string) {
