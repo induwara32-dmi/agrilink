@@ -26,6 +26,10 @@ describe('authentication contracts', () => {
 describe('product and inventory contracts', () => {
   const product = { categoryId: id, name: 'Fresh tomatoes', description: 'Fresh produce from our farm', unit: 'kg', unitPrice: '12.5000', currency: 'usd', minOrderQuantity: '1' };
   it('accepts product creation and normalizes currency', () => expect(createProductSchema.parse({ ...empty, body: product }).body.currency).toBe('USD'));
+  it('applies simplified product defaults', () => {
+    const { currency, reorderLevel, status } = createProductSchema.parse({ ...empty, body: { ...product, currency: undefined } }).body;
+    expect({ currency, reorderLevel, status }).toEqual({ currency: 'LKR', reorderLevel: '5', status: 'ACTIVE' });
+  });
   it('rejects invalid product prices', () => expect(createProductSchema.safeParse({ ...empty, body: { ...product, unitPrice: '-1' } }).success).toBe(false));
   it('accepts product updates', () => expect(updateProductSchema.safeParse({ body: { name: 'Updated produce' }, params: { id }, query: {} }).success).toBe(true));
   it('accepts partial product updates without requiring create fields', () => expect(updateProductSchema.safeParse({ body: { description: 'Updated farm product details' }, params: { id }, query: {} }).success).toBe(true));

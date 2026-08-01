@@ -12,12 +12,13 @@ import { Select } from '@/components/ui/select';
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { ProductImageManager } from '@/components/features/media/product-image-manager';
-import { catalogQueryKeys, createProduct, getCategories, updateProduct, type ProductInput } from '@/lib/api/catalog';
+import { adjustInventory, catalogQueryKeys, createProduct, getCategories, updateProduct, type ProductInput } from '@/lib/api/catalog';
 import { uploadProductImages } from '@/lib/api/media';
 import type { Product } from '@/lib/api/types';
 
 const fieldClass = 'space-y-1.5';
 const labelClass = 'text-sm font-medium text-slate-700';
+const PRODUCT_UNITS = ['kg', 'g', 'crate', 'bunch', 'piece', 'bag'] as const;
 
 export function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
@@ -26,6 +27,8 @@ export function ProductForm({ product }: { product?: Product }) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [categoryId, setCategoryId] = useState(product?.categoryId ?? '');
+  const [unit, setUnit] = useState(() => PRODUCT_UNITS.includes(product?.unit as (typeof PRODUCT_UNITS)[number]) ? product!.unit : 'kg');
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,16 +37,16 @@ export function ProductForm({ product }: { product?: Product }) {
     const form = new FormData(event.currentTarget);
     const input: ProductInput = {
       name: String(form.get('name') ?? '').trim(),
-      categoryId: String(form.get('categoryId') ?? ''),
+      categoryId,
       description: String(form.get('description') ?? '').trim(),
-      unit: String(form.get('unit') ?? '').trim(),
+      unit,
       unitPrice: String(form.get('unitPrice') ?? ''),
-      currency: String(form.get('currency') ?? '').toUpperCase(),
+      currency: product?.currency ?? 'LKR',
       minOrderQuantity: String(form.get('minOrderQuantity') ?? ''),
-      status: String(form.get('status') ?? 'DRAFT') as ProductInput['status'],
+      status: product?.status ?? 'ACTIVE',
       ...(!product ? {
         initialQuantity: String(form.get('initialQuantity') ?? ''),
-        reorderLevel: String(form.get('reorderLevel') ?? ''),
+        reorderLevel: '5',
       } : {}),
     };
 
@@ -52,6 +55,10 @@ export function ProductForm({ product }: { product?: Product }) {
         const { initialQuantity: _initial, reorderLevel: _threshold, ...update } = input;
         void _initial; void _threshold;
         await updateProduct(product.id, update);
+        const requestedAvailable = Number(form.get('initialQuantity'));
+        const currentAvailable = Number(product.inventory?.quantityOnHand ?? 0) - Number(product.inventory?.quantityReserved ?? 0);
+        const difference = requestedAvailable - currentAvailable;
+        if (difference !== 0) await adjustInventory(product.id, { type: 'ADJUSTMENT', quantity: String(difference), reason: 'Updated from product form' });
       } else {
         const created = await createProduct(input);
         const files = form.getAll('images').filter((value): value is File => value instanceof File && value.size > 0);
@@ -77,14 +84,12 @@ export function ProductForm({ product }: { product?: Product }) {
     </div>
     <Card><CardHeader><CardTitle>Listing details</CardTitle></CardHeader><CardContent className="grid gap-5 md:grid-cols-2">
       <label className={fieldClass}><span className={labelClass}>Product name</span><Input name="name" required minLength={2} maxLength={180} defaultValue={product?.name} /></label>
-      <label className={fieldClass}><span className={labelClass}>Category</span><Select name="categoryId" required defaultValue={product?.categoryId ?? ''}><option value="" disabled>Select category</option>{categories.data?.data.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}</Select></label>
+      <label className={fieldClass}><span className={labelClass}>Category</span><Select name="categoryId" required value={categoryId} onChange={event => setCategoryId(event.target.value)}><option value="" disabled>Select category</option>{categories.data?.data.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}</Select></label>
       <label className={`${fieldClass} md:col-span-2`}><span className={labelClass}>Description</span><textarea name="description" required minLength={10} maxLength={10000} defaultValue={product?.description} rows={5} className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" /></label>
-      <label className={fieldClass}><span className={labelClass}>Unit</span><Input name="unit" required maxLength={40} placeholder="kg, crate, bunch" defaultValue={product?.unit} /></label>
-      <label className={fieldClass}><span className={labelClass}>Price</span><Input name="unitPrice" required inputMode="decimal" pattern="\d+(\.\d{1,4})?" defaultValue={product?.unitPrice} /></label>
-      <label className={fieldClass}><span className={labelClass}>Currency</span><Input name="currency" required minLength={3} maxLength={3} defaultValue={product?.currency ?? 'USD'} /></label>
+      <label className={fieldClass}><span className={labelClass}>Unit</span><Select name="unit" required value={unit} onChange={event => setUnit(event.target.value)}>{PRODUCT_UNITS.map(option => <option key={option} value={option}>{option}</option>)}</Select></label>
+      <label className={fieldClass}><span className={labelClass}>Price per {unit}</span><Input name="unitPrice" required inputMode="decimal" pattern="\d+(\.\d{1,4})?" defaultValue={product?.unitPrice} /></label>
+      <label className={fieldClass}><span className={labelClass}>Available stock</span><Input name="initialQuantity" required inputMode="decimal" pattern="\d+(\.\d{1,3})?" defaultValue={product ? String(Number(product.inventory?.quantityOnHand ?? 0) - Number(product.inventory?.quantityReserved ?? 0)) : '0'} /></label>
       <label className={fieldClass}><span className={labelClass}>Minimum order quantity</span><Input name="minOrderQuantity" required inputMode="decimal" pattern="\d+(\.\d{1,4})?" defaultValue={product?.minOrderQuantity ?? '1'} /></label>
-      {!product ? <><label className={fieldClass}><span className={labelClass}>Available stock</span><Input name="initialQuantity" required inputMode="decimal" pattern="\d+(\.\d{1,4})?" defaultValue="0" /></label><label className={fieldClass}><span className={labelClass}>Low-stock threshold</span><Input name="reorderLevel" required inputMode="decimal" pattern="\d+(\.\d{1,4})?" defaultValue="0" /></label></> : null}
-      <label className={fieldClass}><span className={labelClass}>Status</span><Select name="status" defaultValue={product?.status ?? 'DRAFT'}><option value="DRAFT">Draft</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option><option value="ARCHIVED">Archived</option></Select></label>
       {!product ? <label className={`${fieldClass} md:col-span-2`}><span className={labelClass}>Product images</span><Input name="images" type="file" multiple accept="image/jpeg,image/png,image/webp" /><span className="text-xs text-slate-500">Up to 8 JPEG, PNG, or WebP images. Images upload after the listing is created.</span></label> : null}
     </CardContent></Card>
     {product ? <Card><CardContent className="pt-6"><ProductImageManager productId={product.id} images={product.images} /></CardContent></Card> : null}

@@ -18,8 +18,8 @@ export const productIdSchema = request(empty, idParams, empty);
 export const createProductSchema = request(z.object({
   farmerId: uuid.optional(), categoryId: uuid, name: z.string().trim().min(2).max(180), slug: z.string().trim().min(2).max(220).optional(),
   description: z.string().trim().min(10).max(10000), sku: z.string().trim().min(1).max(100).optional(), unit: z.string().trim().min(1).max(40),
-  unitPrice: decimal, currency: z.string().length(3).transform(v => v.toUpperCase()), minOrderQuantity: decimal.default('1'),
-  status: z.nativeEnum(ProductStatus).optional(), initialQuantity: decimal.optional(), reorderLevel: decimal.optional(),
+  unitPrice: decimal, currency: z.string().length(3).transform(v => v.toUpperCase()).default('LKR'), minOrderQuantity: decimal.default('1'),
+  status: z.nativeEnum(ProductStatus).default(ProductStatus.ACTIVE), initialQuantity: decimal.optional(), reorderLevel: decimal.default('5'),
 }), empty, empty);
 export const updateProductSchema = request(createProductSchema.shape.body.omit({ farmerId: true, initialQuantity: true, reorderLevel: true }).partial().refine(v => Object.keys(v).length > 0), idParams, empty);
 export const categoryListSchema = request(empty, empty, z.object({ includeInactive: z.stringbool().default(false) }));
