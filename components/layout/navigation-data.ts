@@ -1,7 +1,7 @@
 export const siteNavItems = [
   { label: 'Features', href: '/#features' },
   { label: 'Marketplace', href: '/marketplace' },
-  { label: 'Pricing', href: '/#pricing' },
+  { label: 'Why AgriLink', href: '/#why-agrilink' },
   { label: 'About', href: '/#about' },
   { label: 'Contact', href: '/#contact' },
 ];

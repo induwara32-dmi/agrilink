@@ -4,19 +4,20 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
-  CheckCircle2,
+  BrainCircuit,
   ChevronRight,
   CircleDollarSign,
   Leaf,
   ShieldCheck,
   Sparkles,
+  Store,
   Truck,
   TrendingUp,
 } from 'lucide-react';
 import { SiteHeader } from '@/components/layout/site-header';
 import { FeatureCard } from '@/components/features/landing/feature-card';
 import { FAQItem } from '@/components/features/landing/faq-item';
-import { PricingCard } from '@/components/features/landing/pricing-card';
+import { ImpactCounter } from '@/components/features/landing/impact-counter';
 import { SectionHeading } from '@/components/features/landing/section-heading';
 import { StatCard } from '@/components/features/landing/stat-card';
 import { Badge } from '@/components/ui/badge';
@@ -72,33 +73,34 @@ const testimonials = [
   },
 ];
 
-const stats = [
-  { value: '120K+', label: 'products traded' },
-  { value: '98.6%', label: 'on-time delivery' },
-  { value: '24/7', label: 'operational visibility' },
-  { value: '4.9/5', label: 'partner satisfaction' },
+const platformValues = [
+  {
+    title: 'Direct Marketplace',
+    description: 'Connect farmers and buyers directly through transparent listings, trusted profiles, and simpler trade.',
+    icon: <Store className="h-5 w-5" />,
+  },
+  {
+    title: 'Integrated Logistics',
+    description: 'Coordinate farmer delivery, buyer pickup, and platform transport from order to final handoff.',
+    icon: <Truck className="h-5 w-5" />,
+  },
+  {
+    title: 'Smarter Agriculture',
+    description: 'Turn marketplace, inventory, and delivery insights into more confident agricultural decisions.',
+    icon: <BrainCircuit className="h-5 w-5" />,
+  },
+  {
+    title: 'Secure & Reliable',
+    description: 'Trade through role-based workflows, verified accounts, protected data, and dependable tracking.',
+    icon: <ShieldCheck className="h-5 w-5" />,
+  },
 ];
 
-const pricingPlans = [
-  {
-    name: 'Starter',
-    price: '$29',
-    description: 'For growing teams discovering digital trade workflows.',
-    features: ['Unlimited product listings', 'Basic analytics', 'Email support'],
-  },
-  {
-    name: 'Growth',
-    price: '$79',
-    description: 'For active marketplace operators managing more volume.',
-    features: ['Advanced logistics tools', 'Priority support', 'Insight dashboards'],
-    featured: true,
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    description: 'For large-scale networks with specialized integrations.',
-    features: ['Custom onboarding', 'Dedicated success team', 'API access'],
-  },
+const platformImpact = [
+  { value: 500, label: 'Farmers' },
+  { value: 2000, label: 'Buyers' },
+  { value: 150, label: 'Transporters' },
+  { value: 10000, label: 'Orders Delivered' },
 ];
 
 const faqs = [
@@ -290,48 +292,6 @@ export default function Home() {
         </section>
 
         <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-8 text-white shadow-sm">
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Why choose AgriLink</p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Built for dependable agricultural commerce.</h2>
-              <p className="mt-4 max-w-xl text-base leading-7 text-white/85">Bring clarity to every transaction with a platform designed for real-world operations and long-term growth.</p>
-            </div>
-            <div className="grid gap-4">
-              {[
-                ['Verified collaborators', 'Every participant is supported by clear trust signals and shared context.'],
-                ['Modern workflows', 'Move from listing to delivery with fewer handoffs and less friction.'],
-                ['Data-driven planning', 'Use analytics and insights to support every strategic decision.'],
-              ].map(([title, description]) => (
-                <Card key={title} className="border-border bg-white p-0">
-                  <CardContent className="flex items-start gap-3 p-5">
-                    <div className="mt-1 rounded-xl bg-primary/10 p-2 text-primary">
-                      <CheckCircle2 className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{title}</h3>
-                      <p className="mt-1 text-sm leading-7 text-slate-600">{description}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-          <div className="rounded-[2rem] border border-border bg-white p-8 shadow-sm lg:p-10">
-            <div className="grid gap-6 lg:grid-cols-4">
-              {stats.map((stat) => (
-                <div key={stat.label} className="rounded-2xl border border-border bg-slate-50 p-6 text-center">
-                  <p className="text-3xl font-semibold tracking-tight text-slate-900">{stat.value}</p>
-                  <p className="mt-2 text-sm text-slate-600">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
           <SectionHeading eyebrow="Testimonials" title="Trusted by growth-focused agricultural teams" description="AgriLink helps teams operate with more clarity and confidence in every transaction." align="center" className="mx-auto" />
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
             {testimonials.map((testimonial) => (
@@ -348,13 +308,17 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="pricing" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-          <SectionHeading eyebrow="Pricing" title="Flexible plans for every stage of growth" description="Choose the plan that best fits your current trading volume and operational goals." align="center" className="mx-auto" />
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            {pricingPlans.map((plan) => (
-              <PricingCard key={plan.name} {...plan} />
-            ))}
+        <section id="why-agrilink" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+          <SectionHeading eyebrow="Why Choose AgriLink" title="One connected platform for agricultural growth" description="AgriLink brings trusted trade, coordinated delivery, useful insight, and secure operations together for Sri Lanka's agricultural community." align="center" className="mx-auto" />
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {platformValues.map(value => <FeatureCard key={value.title} {...value} />)}
           </div>
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.2 }} className="mt-14 rounded-[2rem] border border-border bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+            <SectionHeading eyebrow="Platform Impact" title="Growing connections across agriculture" description="A modern network built to help every participant trade and deliver with confidence." align="center" className="mx-auto" />
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {platformImpact.map(item => <ImpactCounter key={item.label} {...item} />)}
+            </div>
+          </motion.div>
         </section>
 
         <section id="faq" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
@@ -371,16 +335,12 @@ export default function Home() {
             <CardContent className="flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between lg:p-12">
               <div className="max-w-2xl">
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Ready to grow</p>
-                <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Bring your agricultural operations into a modern digital marketplace.</h2>
-                <p className="mt-4 text-base leading-8 text-white/85">Launch faster, improve trust, and coordinate logistics with a platform designed for real commercial impact.</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Join Sri Lanka&apos;s Smart Agriculture Marketplace Today</h2>
+                <p className="mt-4 text-base leading-8 text-white/85">Whether you&apos;re a farmer, buyer, or transporter, AgriLink helps you connect, trade, and grow through one modern digital platform.</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-slate-50">
-                  Book a demo
-                </Button>
-                <Button size="lg" variant="outline" className="border-white/50 bg-transparent text-white hover:bg-white/10">
-                  Explore platform
-                </Button>
+                <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-slate-50" asChild><Link href="/auth/sign-up">Get Started</Link></Button>
+                <Button size="lg" variant="outline" className="border-white/50 bg-transparent text-white hover:bg-white/10" asChild><Link href="/marketplace">Explore Marketplace</Link></Button>
               </div>
             </CardContent>
           </Card>
@@ -394,7 +354,7 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap gap-4">
             <a className="transition hover:text-primary" href="#features">Features</a>
-            <a className="transition hover:text-primary" href="#pricing">Pricing</a>
+            <a className="transition hover:text-primary" href="#why-agrilink">Why AgriLink</a>
             <a className="transition hover:text-primary" href="#faq">FAQ</a>
           </div>
         </div>
