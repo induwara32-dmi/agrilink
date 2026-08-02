@@ -5,16 +5,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, Lock } from 'lucide-react';
 import { AuthFormField } from './auth-form-field';
 import { Button } from '@/components/ui/button';
+import { dashboardPathForRole } from '@/config/access-control';
 import { ApiClientError } from '@/lib/api/client';
-import type { UserRole } from '@/lib/api/types';
 import { useAuth } from '@/providers/auth-provider';
-
-const roleDestination: Record<UserRole, string> = {
-  BUYER: '/buyer',
-  FARMER: '/farmer',
-  TRANSPORTER: '/transporter',
-  ADMIN: '/admin',
-};
 
 export function LoginForm({ adminOnly = false }: { adminOnly?: boolean }) {
   const router = useRouter();
@@ -34,7 +27,7 @@ export function LoginForm({ adminOnly = false }: { adminOnly?: boolean }) {
         setError('This sign-in page is reserved for administrator accounts.');
         return;
       }
-      router.replace(roleDestination[user.role]);
+      router.replace(dashboardPathForRole(user.role));
     } catch (requestError) {
       setError(requestError instanceof ApiClientError ? requestError.message : 'Unable to sign in. Please try again.');
     } finally {

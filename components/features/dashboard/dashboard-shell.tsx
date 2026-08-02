@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Bell, ChevronRight, Menu, Search, ShoppingBag, Sparkles, UserCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { adminNavItems, dashboardNavItems, farmerNavItems } from '@/components/layout/navigation-data';
+import { navigationForRole, workspaceLabels } from '@/components/layout/navigation-data';
+import { dashboardPathForRole } from '@/config/access-control';
 import { useAuth } from '@/providers/auth-provider';
 import { useQuery } from '@tanstack/react-query';
 import { NotificationPanel } from '@/components/features/notifications/notification-panel';
@@ -41,13 +42,21 @@ function getBreadcrumbs(pathname: string) {
 
 export function DashboardShell({ children }: DashboardShellProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const breadcrumbs = getBreadcrumbs(pathname);
   const { user, logout } = useAuth();
-  const navigationItems = user?.role === 'FARMER' ? [...farmerNavItems, ...dashboardNavItems.filter((item) => !item.href.startsWith('/farmer'))] : user?.role === 'ADMIN' ? [...adminNavItems, ...dashboardNavItems.filter((item) => !item.href.startsWith('/admin'))] : dashboardNavItems;
-  const isNavigationItemActive = (href: string) => pathname === href || (!['/farmer', '/admin'].includes(href) && pathname.startsWith(`${href}/`));
+  const navigationItems = user ? navigationForRole(user.role) : [];
+  const workspaceLabel = user ? workspaceLabels[user.role] : '';
+  const dashboardPath = user ? dashboardPathForRole(user.role) : '/dashboard';
+  const currentUrl = `${pathname}${searchParams.size ? `?${searchParams.toString()}` : ''}`;
+  const isNavigationItemActive = (href: string) => {
+    if (href.includes('?')) return currentUrl === href;
+    if (href === dashboardPath) return pathname === href && searchParams.size === 0;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
   const displayName = user?.profile?.displayName || [user?.profile?.firstName, user?.profile?.lastName].filter(Boolean).join(' ') || user?.email;
   const unread = useQuery({ queryKey: notificationQueryKeys.unread(), queryFn: getUnreadCount, enabled: Boolean(user), refetchInterval: 60_000 });
 
@@ -58,7 +67,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
           <div className="flex items-center justify-between p-6">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">AgriLink</p>
-              <p className="text-sm text-slate-500">Buyer workspace</p>
+              <p className="text-sm text-slate-500">{workspaceLabel}</p>
             </div>
             <div className="rounded-2xl bg-primary/10 p-2 text-primary">
               <ShoppingBag className="h-5 w-5" />
@@ -67,9 +76,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
           <nav className="space-y-1 px-3 pb-6" aria-label="Dashboard navigation">
             {navigationItems.map((item) => {
-              const isActive = isNavigationItemActive(item.href);
+              const isActive = item.href ? isNavigationItemActive(item.href) : isProfileOpen;
 
-              return (
+              return item.href ? (
                 <Link
                   key={item.label}
                   href={item.href}
@@ -79,6 +88,17 @@ export function DashboardShell({ children }: DashboardShellProps) {
                   <span>{item.label}</span>
                   {isActive ? <Sparkles className="h-4 w-4" /> : null}
                 </Link>
+              ) : (
+                <button
+                  key={item.label}
+                  type="button"
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={() => { setIsProfileOpen(true); setIsNotificationsOpen(false); }}
+                  className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${isActive ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-100'}`}
+                >
+                  <span>{item.label}</span>
+                  {isActive ? <Sparkles className="h-4 w-4" /> : null}
+                </button>
               );
             })}
           </nav>
@@ -140,11 +160,15 @@ export function DashboardShell({ children }: DashboardShellProps) {
                   </div>
                   <div className="flex flex-col gap-2">
                     {navigationItems.map((item) => {
-                      const isActive = isNavigationItemActive(item.href);
-                      return (
+                      const isActive = item.href ? isNavigationItemActive(item.href) : isProfileOpen;
+                      return item.href ? (
                         <Link key={item.label} href={item.href} aria-current={isActive ? 'page' : undefined} onClick={() => setIsMobileNavOpen(false)} className={`rounded-2xl px-3 py-2 text-sm font-medium shadow-sm ${isActive ? 'bg-primary/10 text-primary' : 'bg-slate-50 text-slate-700'}`}>
                           {item.label}
                         </Link>
+                      ) : (
+                        <button key={item.label} type="button" aria-current={isActive ? 'page' : undefined} onClick={() => { setIsMobileNavOpen(false); setIsProfileOpen(true); setIsNotificationsOpen(false); }} className={`rounded-2xl px-3 py-2 text-left text-sm font-medium shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${isActive ? 'bg-primary/10 text-primary' : 'bg-slate-50 text-slate-700'}`}>
+                          {item.label}
+                        </button>
                       );
                     })}
                   </div>
