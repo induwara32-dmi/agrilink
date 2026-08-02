@@ -25,10 +25,11 @@ describe('Cloudinary media adapter', () => {
     }), 'Cloudinary image upload failed');
   });
 
-  it('redacts secrets if they are accidentally included in upload options', async () => {
+  it('removes authentication fields accidentally included in upload options', async () => {
     uploadStream.mockImplementation((_options, callback) => { callback(new Error('provider rejected request'), undefined); return writableStream(); });
     await expect(uploadImage(Buffer.from('image'), { folder: 'test', api_key: 'must-not-log' } as never)).rejects.toMatchObject({ code: 'MEDIA_UPLOAD_FAILED' });
-    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({ cloudinary: expect.objectContaining({ uploadOptions: expect.objectContaining({ api_key: '[REDACTED]' }) }) }), 'Cloudinary image upload failed');
+    expect(uploadStream).toHaveBeenCalledWith(expect.not.objectContaining({ api_key: expect.anything() }), expect.any(Function));
+    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({ cloudinary: expect.objectContaining({ uploadOptions: expect.not.objectContaining({ api_key: expect.anything() }) }) }), 'Cloudinary image upload failed');
   });
 
   it('omits absent optional provider metadata', async () => {

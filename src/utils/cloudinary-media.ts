@@ -8,7 +8,7 @@ export interface UploadedImage { publicId: string; secureUrl: string; width: num
 
 export function uploadImage(buffer: Buffer, options: UploadApiOptions): Promise<UploadedImage> {
   return new Promise((resolve, reject) => {
-    const uploadOptions: UploadApiOptions = { resource_type: 'image', overwrite: false, unique_filename: true, ...options };
+    const uploadOptions = providerUploadOptions(options);
     try {
       const stream = cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
         if (error || !result) {
@@ -29,6 +29,12 @@ export function uploadImage(buffer: Buffer, options: UploadApiOptions): Promise<
       reject(mediaProviderError('MEDIA_UPLOAD_FAILED', 'The image could not be sent to image storage.'));
     }
   });
+}
+
+function providerUploadOptions(options: UploadApiOptions): UploadApiOptions {
+  const authenticationKeys = new Set(['api_key', 'api_secret', 'signature', 'timestamp', 'oauth_token']);
+  const entries = Object.entries(options).filter(([key]) => !authenticationKeys.has(key));
+  return { resource_type: 'image', overwrite: false, unique_filename: true, ...Object.fromEntries(entries) };
 }
 
 function logCloudinaryUploadError(error: unknown, uploadOptions: UploadApiOptions): void {
