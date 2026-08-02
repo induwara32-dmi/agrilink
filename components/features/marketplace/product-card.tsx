@@ -25,7 +25,7 @@ export function ProductCard({ id, title, price, farmer, location, rating, badge,
           <Button variant="ghost" size="icon" aria-label={`Save ${title}`}><Heart className="h-4 w-4" /></Button>
         </div>
         <div className="mt-4 flex min-h-28 items-center justify-center overflow-hidden rounded-2xl border border-border bg-slate-50 p-6 text-center text-4xl">
-          {imageUrl ? <Image src={imageUrl} alt="" width={320} height={96} unoptimized className="h-24 w-full object-cover" /> : '🌿'}
+          {imageUrl ? <Image src={imageUrl} alt={title} width={320} height={96} unoptimized className="h-24 w-full object-cover" /> : '🌿'}
         </div>
         <div className="mt-4">
           <p className="text-lg font-semibold text-slate-900">{title}</p>
