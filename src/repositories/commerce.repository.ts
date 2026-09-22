@@ -4,7 +4,10 @@ import { BaseRepository } from './base.repository';
 
 const cartInclude = { items: { include: { product: { include: { farmer: { select: { id: true, farmName: true, deletedAt: true, verificationStatus: true } }, category: { select: { isActive: true, deletedAt: true } }, images: { orderBy: { sortOrder: 'asc' as const }, take: 1 }, inventory: true } } }, orderBy: { createdAt: 'asc' as const } } } satisfies Prisma.CartInclude;
 const orderInclude = { farmerOrders: { include: { items: true, delivery: { include: { statusHistory: { orderBy: { occurredAt: 'asc' as const } }, transportJob: true } }, statusHistory: { orderBy: { createdAt: 'asc' as const } }, farmer: { select: { id: true, farmName: true, userId: true } } } }, statusHistory: { orderBy: { createdAt: 'asc' as const } }, couponRedemptions: { include: { coupon: { select: { code: true, type: true, value: true } } } }, payment: true } satisfies Prisma.OrderInclude;
-const orderIncludeFor = (actor: CommerceActor): Prisma.OrderInclude => actor.role === Role.FARMER ? { ...orderInclude, farmerOrders: { where: { farmer: { userId: actor.userId } }, include: orderInclude.farmerOrders.include } } : orderInclude;
+const orderIncludeFor = (actor: CommerceActor): Prisma.OrderInclude =>
+  actor.role === Role.FARMER ? { ...orderInclude, farmerOrders: { where: { farmer: { userId: actor.userId } }, include: orderInclude.farmerOrders.include } } :
+  actor.role === Role.TRANSPORTER ? { ...orderInclude, farmerOrders: { where: { delivery: { transportJob: { transporter: { userId: actor.userId } } } }, include: orderInclude.farmerOrders.include } } :
+  orderInclude;
 
 function isProductAvailable(product: { status: ProductStatus; deletedAt: Date | null; category: { isActive: boolean; deletedAt: Date | null }; farmer: { deletedAt: Date | null; verificationStatus: VerificationStatus } }): boolean {
   return (
@@ -275,9 +278,38 @@ export class CommerceRepository extends BaseRepository {
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   }
 
+  public async acceptFarmerOrder(orderId: string, farmerOrderId: string, actor: CommerceActor) {
+    return this.database.$transaction(async transaction => {
+      const group = await transaction.farmerOrder.findFirst({ where: { id: farmerOrderId, orderId, farmer: { userId: actor.userId } }, include: { order: true } });
+      if (!group) throw new Error('FARMER_ORDER_NOT_FOUND');
+      if (group.status !== FarmerOrderStatus.PENDING) throw new Error('FARMER_ORDER_NOT_PENDING');
+
+      await transaction.farmerOrder.update({ where: { id: group.id }, data: { status: FarmerOrderStatus.ACCEPTED, acceptedAt: new Date() } });
+      await transaction.farmerOrderStatusHistory.create({ data: { farmerOrderId: group.id, actorId: actor.userId, fromStatus: group.status, toStatus: FarmerOrderStatus.ACCEPTED, reason: 'Farmer accepted order' } });
+
+      const siblings = await transaction.farmerOrder.findMany({ where: { orderId }, select: { status: true } });
+      if (group.order.status === OrderStatus.PENDING && siblings.every(sibling => sibling.status === FarmerOrderStatus.ACCEPTED)) {
+        await transaction.order.update({ where: { id: orderId }, data: { status: OrderStatus.CONFIRMED } });
+        await transaction.orderStatusHistory.create({ data: { orderId, actorId: actor.userId, fromStatus: group.order.status, toStatus: OrderStatus.CONFIRMED, reason: 'All farmer groups accepted' } });
+      }
+
+      await transaction.auditLog.create({ data: { actorId: actor.userId, action: 'FARMER_ORDER_ACCEPTED', entityType: 'FarmerOrder', entityId: group.id, requestId: actor.requestId } });
+
+      return transaction.order.findUniqueOrThrow({ where: { id: orderId }, include: orderIncludeFor(actor) });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  }
+
   public findOrder(orderId: string, actor: CommerceActor) {
-    const access: Prisma.OrderWhereInput = actor.role === Role.BUYER ? { buyerId: actor.userId } : actor.role === Role.FARMER ? { farmerOrders: { some: { farmer: { userId: actor.userId } } } } : {};
+    const access: Prisma.OrderWhereInput =
+      actor.role === Role.BUYER ? { buyerId: actor.userId } :
+      actor.role === Role.FARMER ? { farmerOrders: { some: { farmer: { userId: actor.userId } } } } :
+      actor.role === Role.TRANSPORTER ? { farmerOrders: { some: { delivery: { transportJob: { transporter: { userId: actor.userId } } } } } } :
+      {};
     return this.database.order.findFirst({ where: { id: orderId, ...access }, include: orderIncludeFor(actor) });
   }
   public stockAlertsForOrder(orderId: string) { return this.database.orderItem.findMany({ where: { farmerOrder: { orderId } }, select: { product: { select: { id: true, name: true, farmer: { select: { userId: true } }, inventory: true } } } }); }
+
+  public findTransportJobForFarmerOrder(farmerOrderId: string) {
+    return this.database.transportJob.findFirst({ where: { delivery: { farmerOrderId } }, select: { id: true, status: true, transporterId: true } });
+  }
 }

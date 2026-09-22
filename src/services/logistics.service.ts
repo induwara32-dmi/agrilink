@@ -46,7 +46,25 @@ export class LogisticsService extends BaseService {
 
   private async requireVehicle(id: string, actor: LogisticsActor) { const vehicle = await this.repository.findVehicle(id); if (!vehicle || (actor.role !== Role.ADMIN && vehicle.ownerId !== actor.userId)) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'VEHICLE_NOT_FOUND', 'Vehicle not found.'); return vehicle; }
   private deliveryRecipients(delivery: Awaited<ReturnType<LogisticsRepository['findDelivery']>> & {}) { if (!delivery) return []; return [...new Set([delivery.farmerOrder.order.buyerId, delivery.farmerOrder.farmer.userId, ...(delivery.transportJob?.transporter?.userId ? [delivery.transportJob.transporter.userId] : [])])]; }
-  private async publishJobEvent(type: DomainEventType, job: NonNullable<Awaited<ReturnType<LogisticsRepository['findJob']>>>) { await this.events.publish({ type, recipientIds: [...new Set([job.delivery.farmerOrder.order.buyerId, job.delivery.farmerOrder.farmer.userId, ...(job.transporter?.userId ? [job.transporter.userId] : [])])], data: { deliveryId: job.deliveryId, orderNumber: job.delivery.farmerOrder.order.orderNumber } }); }
+  private async publishJobEvent(type: DomainEventType, job: NonNullable<Awaited<ReturnType<LogisticsRepository['findJob']>>>) {
+    const farmerOrder = job.delivery.farmerOrder;
+    await this.events.publish({
+      type,
+      recipientIds: [...new Set([farmerOrder.order.buyerId, farmerOrder.farmer.userId, ...(job.transporter?.userId ? [job.transporter.userId] : [])])],
+      data: {
+        deliveryId: job.deliveryId,
+        orderNumber: farmerOrder.order.orderNumber,
+        ...(farmerOrder.deliveryLine1 ? { deliveryLine1: farmerOrder.deliveryLine1 } : {}),
+        ...(farmerOrder.deliveryLine2 ? { deliveryLine2: farmerOrder.deliveryLine2 } : {}),
+        ...(farmerOrder.deliveryCity ? { deliveryCity: farmerOrder.deliveryCity } : {}),
+        ...(farmerOrder.deliveryDistrict ? { deliveryDistrict: farmerOrder.deliveryDistrict } : {}),
+        ...(farmerOrder.deliveryRegion ? { deliveryRegion: farmerOrder.deliveryRegion } : {}),
+        ...(farmerOrder.deliveryCountryCode ? { deliveryCountryCode: farmerOrder.deliveryCountryCode } : {}),
+        ...(farmerOrder.deliveryRecipientPhone ? { buyerPhone: farmerOrder.deliveryRecipientPhone } : {}),
+        ...(farmerOrder.farmer.user.phone ? { farmerPhone: farmerOrder.farmer.user.phone } : {}),
+      },
+    });
+  }
   private async requireDeliveryAccess(id: string, actor: LogisticsActor) { const delivery = await this.repository.findDelivery(id); if (!delivery) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'DELIVERY_NOT_FOUND', 'Delivery not found.'); if (actor.role === Role.ADMIN) return delivery; const allowed = delivery.method === DeliveryMethod.PLATFORM_TRANSPORTER ? actor.role === Role.TRANSPORTER && delivery.transportJob?.transporter?.userId === actor.userId : delivery.method === DeliveryMethod.FARMER_DELIVERY ? actor.role === Role.FARMER && delivery.farmerOrder.farmer.userId === actor.userId : actor.role === Role.BUYER && delivery.farmerOrder.order.buyerId === actor.userId; if (!allowed) throw new ApiError(HTTP_STATUS.FORBIDDEN, 'DELIVERY_FORBIDDEN', 'You cannot manage this delivery.'); return delivery; }
   private translate(error: unknown): never { if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === 'P2002' || error.code === 'P2034')) throw new ApiError(HTTP_STATUS.CONFLICT, 'LOGISTICS_CONFLICT', 'The assignment changed concurrently; retry.'); const code = error instanceof Error ? error.message : ''; const mapping: Record<string, [number, string]> = { JOB_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Transport job not found.'], JOB_NOT_ASSIGNABLE: [HTTP_STATUS.CONFLICT, 'Transport job cannot be assigned in its current state.'], NO_AVAILABLE_DRIVER: [HTTP_STATUS.CONFLICT, 'No eligible driver and vehicle are available.'], ASSIGNMENT_CONFLICT: [HTTP_STATUS.CONFLICT, 'The driver or vehicle already has an active assignment.'], JOB_NOT_ASSIGNED: [HTTP_STATUS.CONFLICT, 'This job is not assigned to the driver.'], DRIVER_UNAVAILABLE: [HTTP_STATUS.CONFLICT, 'The driver is unavailable or unverified.'], VEHICLE_REQUIRED: [HTTP_STATUS.BAD_REQUEST, 'A vehicle is required.'], VEHICLE_UNAVAILABLE: [HTTP_STATUS.CONFLICT, 'The vehicle is unavailable.'], VEHICLE_CAPACITY: [HTTP_STATUS.CONFLICT, 'The vehicle does not have the required capacity.'], DELIVERY_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Delivery not found.'], INVENTORY_RESERVATION_INVALID: [HTTP_STATUS.CONFLICT, 'The order inventory reservation is inconsistent.'] }; const mapped = mapping[code]; if (mapped) throw new ApiError(mapped[0], code, mapped[1]); throw error; }
 }

@@ -64,8 +64,9 @@ export function createApp(): Express {
   const catalogService = new CatalogService(new CatalogRepository(prisma), eventBus);
   const catalogController = new CatalogController(catalogService);
   const inventoryController = new InventoryController(new InventoryService(new InventoryRepository(prisma), catalogService, eventBus));
-  const commerceController = new CommerceController(new CommerceService(new CommerceRepository(prisma), eventBus));
-  const logisticsController = new LogisticsController(new LogisticsService(new LogisticsRepository(prisma), eventBus));
+  const logisticsService = new LogisticsService(new LogisticsRepository(prisma), eventBus);
+  const commerceController = new CommerceController(new CommerceService(new CommerceRepository(prisma), eventBus, logisticsService));
+  const logisticsController = new LogisticsController(logisticsService);
   const mediaController = new MediaController(new MediaService(new MediaRepository(prisma)));
 
   app.disable('x-powered-by');

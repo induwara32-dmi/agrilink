@@ -14,7 +14,19 @@ const templates: Record<DomainEventType, { type: NotificationType; title: string
   ORDER_ACCEPTED: { type: NotificationType.ORDER, title: 'Order accepted', body: data => `Order ${String(data?.orderNumber ?? '')} has been accepted.` },
   ORDER_CANCELLED: { type: NotificationType.ORDER, title: 'Order cancelled', body: data => `Order ${String(data?.orderNumber ?? '')} has been cancelled.` },
   PAYMENT_RECEIVED: { type: NotificationType.PAYMENT, title: 'Payment received', body: data => `Payment for order ${String(data?.orderNumber ?? '')} was received.` },
-  DELIVERY_ASSIGNED: { type: NotificationType.DELIVERY, title: 'Delivery assigned', body: () => 'A delivery has been assigned.' },
+  DELIVERY_ASSIGNED: {
+    type: NotificationType.DELIVERY,
+    title: 'Delivery assigned',
+    body: data => {
+      const parts = [`A delivery has been assigned for order ${String(data?.orderNumber ?? '')}.`];
+      const deliveryLine = [data?.deliveryLine1, data?.deliveryLine2, data?.deliveryCity, data?.deliveryDistrict, data?.deliveryRegion, data?.deliveryCountryCode].filter(Boolean).join(', ');
+      if (deliveryLine) parts.push(`Delivery to: ${deliveryLine}.`);
+      if (data?.pickupLabel) parts.push(`Pickup at: ${String(data.pickupLabel)}.`);
+      if (data?.buyerPhone) parts.push(`Buyer phone: ${String(data.buyerPhone)}.`);
+      if (data?.farmerPhone) parts.push(`Farmer phone: ${String(data.farmerPhone)}.`);
+      return parts.join(' ');
+    },
+  },
   DELIVERY_ACCEPTED: { type: NotificationType.DELIVERY, title: 'Delivery accepted', body: () => 'The assigned driver accepted the delivery.' },
   DELIVERY_PICKED_UP: { type: NotificationType.DELIVERY, title: 'Order picked up', body: () => 'The delivery has been picked up.' },
   DELIVERY_IN_TRANSIT: { type: NotificationType.DELIVERY, title: 'Delivery in transit', body: () => 'The delivery is now in transit.' },

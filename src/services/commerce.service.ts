@@ -1,6 +1,7 @@
 import { Prisma, ProductStatus, VerificationStatus } from '@prisma/client';
 import { HTTP_STATUS } from '../constants/application';
 import type { CommerceRepository } from '../repositories/commerce.repository';
+import type { LogisticsService } from './logistics.service';
 import type { CartItemInput, CartItemUpdate, CheckoutInput, CheckoutPreviewInput, CommerceActor, OrderQuery } from '../types/commerce';
 import { ApiError } from '../utils/api-error';
 import { createTokenId } from '../utils/token';
@@ -11,7 +12,11 @@ import { logger } from '../config/logger';
 const pageMeta = (query: OrderQuery, total: number) => ({ ...query, total, totalPages: Math.ceil(total / query.pageSize) });
 
 export class CommerceService extends BaseService {
-  public constructor(private readonly repository: CommerceRepository, private readonly events: DomainEventPublisher) { super(); }
+  public constructor(
+    private readonly repository: CommerceRepository,
+    private readonly events: DomainEventPublisher,
+    private readonly logistics: LogisticsService,
+  ) { super(); }
 
   public async getCart(actor: CommerceActor) {
     const { cart, removedItems } = await this.repository.getCartWithAvailability(actor.userId, actor.requestId);
@@ -49,6 +54,20 @@ export class CommerceService extends BaseService {
   public async getOrder(orderId: string, actor: CommerceActor) { const order = await this.repository.findOrder(orderId, actor); if (!order) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'ORDER_NOT_FOUND', 'Order not found.'); return order; }
   public async cancelOrder(orderId: string, actor: CommerceActor) { try { const order = await this.repository.cancelOrder(orderId, actor.userId, actor.requestId); await this.events.publish({ type: 'ORDER_CANCELLED', recipientIds: [order.buyerId, ...order.farmerOrders.map(group => group.farmer.userId)], data: { orderId: order.id, orderNumber: order.orderNumber } }); return order; } catch (error) { this.translate(error); } }
 
+  public async acceptFarmerOrder(orderId: string, farmerOrderId: string, actor: CommerceActor) {
+    try {
+      const order = await this.repository.acceptFarmerOrder(orderId, farmerOrderId, actor);
+      await this.events.publish({ type: 'ORDER_ACCEPTED', recipientIds: [order.buyerId, actor.userId], data: { orderId: order.id, orderNumber: order.orderNumber, farmerOrderId } });
+      try {
+        const job = await this.repository.findTransportJobForFarmerOrder(farmerOrderId);
+        if (job && job.status === 'OPEN' && !job.transporterId) await this.logistics.automaticAssign(job.id, actor);
+      } catch (assignError) {
+        logger.error({ err: assignError, farmerOrderId }, 'Automatic transporter assignment after farmer acceptance failed');
+      }
+      return order;
+    } catch (error) { this.translate(error); }
+  }
+
   private groupCart<T extends { items: Array<{ quantity: Prisma.Decimal; product: { unitPrice: Prisma.Decimal; currency: string; farmer: { id: string; farmName: string } }; savedForLater: boolean }> }>(cart: T) {
     const groups = new Map<string, { farmer: { id: string; farmName: string }; items: T['items']; subtotal: string }>();
     const savedForLater: T['items'] = [];
@@ -75,7 +94,7 @@ export class CommerceService extends BaseService {
     if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === 'P2002' || error.code === 'P2034')) throw new ApiError(HTTP_STATUS.CONFLICT, 'CHECKOUT_CONFLICT', 'The cart or inventory changed; retry the request.');
     const code = error instanceof Error ? error.message : '';
     const errors: Record<string, [number, string]> = {
-      CART_EMPTY: [HTTP_STATUS.BAD_REQUEST, 'The cart has no active items.'], CART_EXPIRED: [HTTP_STATUS.CONFLICT, 'The cart expired; refresh it before checking out.'], CART_ITEM_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Cart item not found.'], ORDER_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Order not found.'], ORDER_NOT_CANCELLABLE: [HTTP_STATUS.CONFLICT, 'Only a fully pending, unpaid order can be cancelled.'], INVENTORY_RESERVATION_INVALID: [HTTP_STATUS.CONFLICT, 'The order inventory reservation is inconsistent.'], INVENTORY_UNAVAILABLE: [HTTP_STATUS.CONFLICT, 'Inventory is unavailable.'], PRODUCT_UNAVAILABLE: [HTTP_STATUS.CONFLICT, 'A product is no longer available.'], MINIMUM_QUANTITY: [HTTP_STATUS.BAD_REQUEST, 'An item is below its minimum order quantity.'], INSUFFICIENT_STOCK: [HTTP_STATUS.CONFLICT, 'An item no longer has enough stock.'], MULTI_CURRENCY_CART: [HTTP_STATUS.BAD_REQUEST, 'A checkout must use one currency.'], DELIVERY_METHOD_REQUIRED: [HTTP_STATUS.BAD_REQUEST, 'Select a delivery method for every farmer.'], DELIVERY_METHOD_CONFLICT: [HTTP_STATUS.BAD_REQUEST, 'Cart delivery preferences conflict within a farmer group.'], INVALID_FARMER_GROUP: [HTTP_STATUS.BAD_REQUEST, 'The checkout contains an invalid farmer group.'], DELIVERY_ADDRESS_REQUIRED: [HTTP_STATUS.BAD_REQUEST, 'A delivery address is required.'], DELIVERY_ADDRESS_INVALID: [HTTP_STATUS.BAD_REQUEST, 'The delivery address is invalid.'], COUPON_INVALID: [HTTP_STATUS.BAD_REQUEST, 'The coupon is invalid or expired.'], COUPON_CURRENCY: [HTTP_STATUS.BAD_REQUEST, 'The coupon currency does not match the order.'], COUPON_MINIMUM: [HTTP_STATUS.BAD_REQUEST, 'The order does not meet the coupon minimum.'], COUPON_LIMIT: [HTTP_STATUS.CONFLICT, 'The coupon usage limit has been reached.'],
+      CART_EMPTY: [HTTP_STATUS.BAD_REQUEST, 'The cart has no active items.'], CART_EXPIRED: [HTTP_STATUS.CONFLICT, 'The cart expired; refresh it before checking out.'], CART_ITEM_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Cart item not found.'], ORDER_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Order not found.'], ORDER_NOT_CANCELLABLE: [HTTP_STATUS.CONFLICT, 'Only a fully pending, unpaid order can be cancelled.'], FARMER_ORDER_NOT_FOUND: [HTTP_STATUS.NOT_FOUND, 'Farmer order not found.'], FARMER_ORDER_NOT_PENDING: [HTTP_STATUS.CONFLICT, 'This order has already been accepted or is no longer pending.'], INVENTORY_RESERVATION_INVALID: [HTTP_STATUS.CONFLICT, 'The order inventory reservation is inconsistent.'], INVENTORY_UNAVAILABLE: [HTTP_STATUS.CONFLICT, 'Inventory is unavailable.'], PRODUCT_UNAVAILABLE: [HTTP_STATUS.CONFLICT, 'A product is no longer available.'], MINIMUM_QUANTITY: [HTTP_STATUS.BAD_REQUEST, 'An item is below its minimum order quantity.'], INSUFFICIENT_STOCK: [HTTP_STATUS.CONFLICT, 'An item no longer has enough stock.'], MULTI_CURRENCY_CART: [HTTP_STATUS.BAD_REQUEST, 'A checkout must use one currency.'], DELIVERY_METHOD_REQUIRED: [HTTP_STATUS.BAD_REQUEST, 'Select a delivery method for every farmer.'], DELIVERY_METHOD_CONFLICT: [HTTP_STATUS.BAD_REQUEST, 'Cart delivery preferences conflict within a farmer group.'], INVALID_FARMER_GROUP: [HTTP_STATUS.BAD_REQUEST, 'The checkout contains an invalid farmer group.'], DELIVERY_ADDRESS_REQUIRED: [HTTP_STATUS.BAD_REQUEST, 'A delivery address is required.'], DELIVERY_ADDRESS_INVALID: [HTTP_STATUS.BAD_REQUEST, 'The delivery address is invalid.'], COUPON_INVALID: [HTTP_STATUS.BAD_REQUEST, 'The coupon is invalid or expired.'], COUPON_CURRENCY: [HTTP_STATUS.BAD_REQUEST, 'The coupon currency does not match the order.'], COUPON_MINIMUM: [HTTP_STATUS.BAD_REQUEST, 'The order does not meet the coupon minimum.'], COUPON_LIMIT: [HTTP_STATUS.CONFLICT, 'The coupon usage limit has been reached.'],
     };
     const mapped = errors[code];
     if (mapped) throw new ApiError(mapped[0], code, mapped[1]);

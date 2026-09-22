@@ -3,7 +3,7 @@ import { Router, type RequestHandler } from 'express';
 import type { CommerceController } from '../controllers/commerce.controller';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validateRequest } from '../middlewares/validation.middleware';
-import { addCartItemSchema, cartItemSchema, cartSchema, checkoutPreviewSchema, checkoutSchema, orderIdSchema, orderListSchema, updateCartItemSchema } from '../validators/commerce.validators';
+import { addCartItemSchema, cartItemSchema, cartSchema, checkoutPreviewSchema, checkoutSchema, farmerOrderAcceptSchema, orderIdSchema, orderListSchema, updateCartItemSchema } from '../validators/commerce.validators';
 
 export function createCommerceRouter(controller: CommerceController, authenticate: RequestHandler): Router {
   const router = Router();
@@ -17,7 +17,8 @@ export function createCommerceRouter(controller: CommerceController, authenticat
   router.post('/checkout/preview', ...buyer, validateRequest(checkoutPreviewSchema), controller.previewCheckout);
   router.post('/checkout', ...buyer, validateRequest(checkoutSchema), controller.checkout);
   router.get('/orders', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.ADMIN), validateRequest(orderListSchema), controller.listOrders);
-  router.get('/orders/:orderId', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.ADMIN), validateRequest(orderIdSchema), controller.getOrder);
+  router.get('/orders/:orderId', authenticate, authorizeRoles(Role.BUYER, Role.FARMER, Role.TRANSPORTER, Role.ADMIN), validateRequest(orderIdSchema), controller.getOrder);
   router.post('/orders/:orderId/cancel', ...buyer, validateRequest(orderIdSchema), controller.cancelOrder);
+  router.post('/orders/:orderId/farmer-groups/:farmerOrderId/accept', authenticate, authorizeRoles(Role.FARMER), validateRequest(farmerOrderAcceptSchema), controller.acceptFarmerOrder);
   return router;
 }

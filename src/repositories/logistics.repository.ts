@@ -3,7 +3,7 @@ import { ACTIVE_DELIVERY_STATUSES, DEFAULT_DELIVERY_MINUTES } from '../constants
 import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
 import { BaseRepository } from './base.repository';
 
-const jobInclude = { delivery: { include: { farmerOrder: { include: { items: true, farmer: true, order: { select: { buyerId: true, orderNumber: true } } } }, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } }, transporter: { include: { user: { select: { id: true, profile: true } } } }, vehicle: true, rejections: { orderBy: { createdAt: 'desc' as const } } } satisfies Prisma.TransportJobInclude;
+const jobInclude = { delivery: { include: { farmerOrder: { include: { items: true, farmer: { include: { user: { select: { phone: true } } } }, order: { select: { id: true, buyerId: true, orderNumber: true } } } }, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } }, transporter: { include: { user: { select: { id: true, profile: true } } } }, vehicle: true, rejections: { orderBy: { createdAt: 'desc' as const } } } satisfies Prisma.TransportJobInclude;
 const deliveryInclude = { farmerOrder: { include: { farmer: true, order: true, items: true } }, transportJob: { include: { transporter: true, vehicle: true } }, vehicle: true, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } satisfies Prisma.DeliveryInclude;
 const activeJobStatuses = [TransportJobStatus.ASSIGNED, TransportJobStatus.ACCEPTED, TransportJobStatus.IN_PROGRESS];
 
@@ -47,7 +47,7 @@ export class LogisticsRepository extends BaseRepository {
       await transaction.deliveryStatusHistory.create({ data: { deliveryId: job.deliveryId, actorId, fromStatus: job.delivery.status, toStatus: DeliveryStatus.ASSIGNED, note: input ? 'Manually assigned by admin' : 'Automatically assigned' } });
       await transaction.auditLog.create({ data: { actorId, action: input ? 'TRANSPORT_JOB_MANUALLY_ASSIGNED' : 'TRANSPORT_JOB_AUTO_ASSIGNED', entityType: 'TransportJob', entityId: job.id, requestId, after: { transporterId: candidate.transporter.id, vehicleId: candidate.vehicle.id } } });
       return transaction.transportJob.findUniqueOrThrow({ where: { id: updated.id }, include: jobInclude });
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 15_000 });
   }
 
   public async accept(jobId: string, userId: string, vehicleId: string | undefined, requestId: string) {
@@ -71,7 +71,7 @@ export class LogisticsRepository extends BaseRepository {
       await transaction.deliveryStatusHistory.create({ data: { deliveryId: job.deliveryId, actorId: userId, fromStatus: job.delivery.status, toStatus: DeliveryStatus.ACCEPTED, note: 'Driver accepted assignment' } });
       await transaction.auditLog.create({ data: { actorId: userId, action: 'TRANSPORT_JOB_ACCEPTED', entityType: 'TransportJob', entityId: job.id, requestId } });
       return transaction.transportJob.findUniqueOrThrow({ where: { id: job.id }, include: jobInclude });
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 15_000 });
   }
 
   public async reject(jobId: string, userId: string, reason: string | undefined, requestId: string) {
@@ -86,7 +86,7 @@ export class LogisticsRepository extends BaseRepository {
       await transaction.deliveryStatusHistory.create({ data: { deliveryId: job.deliveryId, actorId: userId, fromStatus: job.delivery.status, toStatus: DeliveryStatus.REJECTED, ...(reason ? { note: reason } : {}) } });
       await transaction.auditLog.create({ data: { actorId: userId, action: 'TRANSPORT_JOB_REJECTED', entityType: 'TransportJob', entityId: job.id, requestId } });
       return transaction.transportJob.findUniqueOrThrow({ where: { id: job.id }, include: jobInclude });
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 15_000 });
   }
 
   public async schedule(deliveryId: string, input: ScheduleInput, vehicleId: string | undefined, actor: LogisticsActor) {
@@ -100,7 +100,7 @@ export class LogisticsRepository extends BaseRepository {
       await transaction.deliveryStatusHistory.create({ data: { deliveryId: delivery.id, actorId: actor.userId, fromStatus: delivery.status, toStatus: DeliveryStatus.PICKUP_SCHEDULED, note: 'Pickup scheduled' } });
       await transaction.auditLog.create({ data: { actorId: actor.userId, action: 'DELIVERY_SCHEDULED', entityType: 'Delivery', entityId: delivery.id, requestId: actor.requestId, after: { scheduledPickupAt: input.scheduledPickupAt.toISOString(), estimatedDeliveryAt: estimatedDeliveryAt.toISOString() } } });
       return transaction.delivery.findUniqueOrThrow({ where: { id: delivery.id }, include: deliveryInclude });
-    });
+    }, { timeout: 15_000 });
   }
 
   public async transition(deliveryId: string, input: DeliveryTransitionInput, actor: LogisticsActor) {
@@ -111,6 +111,7 @@ export class LogisticsRepository extends BaseRepository {
       await transaction.delivery.update({ where: { id: delivery.id }, data: { status: input.status, ...(input.status === DeliveryStatus.PICKED_UP ? { pickedUpAt: now } : {}), ...(input.status === DeliveryStatus.DELIVERED ? { deliveredAt: now } : {}) } });
       await transaction.deliveryStatusHistory.create({ data: { deliveryId: delivery.id, actorId: actor.userId, fromStatus: delivery.status, toStatus: input.status, ...(input.note ? { note: input.note } : {}), ...(input.latitude ? { latitude: new Prisma.Decimal(input.latitude) } : {}), ...(input.longitude ? { longitude: new Prisma.Decimal(input.longitude) } : {}) } });
       if (delivery.transportJob) await transaction.transportJob.update({ where: { id: delivery.transportJob.id }, data: { status: input.status === DeliveryStatus.DELIVERED ? TransportJobStatus.COMPLETED : input.status === DeliveryStatus.CANCELLED ? TransportJobStatus.CANCELLED : input.status === DeliveryStatus.FAILED ? TransportJobStatus.FAILED : input.status === DeliveryStatus.PICKED_UP || input.status === DeliveryStatus.IN_TRANSIT ? TransportJobStatus.IN_PROGRESS : delivery.transportJob.status, ...(input.status === DeliveryStatus.PICKED_UP ? { startedAt: now } : {}), ...(input.status === DeliveryStatus.DELIVERED ? { completedAt: now } : {}) } });
+      if (input.status === DeliveryStatus.PICKED_UP) await this.markInTransit(transaction, delivery, actor.userId);
       if (input.status === DeliveryStatus.DELIVERED) await this.completeFulfillment(transaction, delivery, actor.userId);
       if (input.status === DeliveryStatus.CANCELLED) await this.cancelFulfillment(transaction, delivery, actor.userId);
       if ((input.status === DeliveryStatus.DELIVERED || input.status === DeliveryStatus.CANCELLED || input.status === DeliveryStatus.FAILED) && delivery.transportJob) {
@@ -119,7 +120,7 @@ export class LogisticsRepository extends BaseRepository {
       }
       await transaction.auditLog.create({ data: { actorId: actor.userId, action: `DELIVERY_${input.status}`, entityType: 'Delivery', entityId: delivery.id, requestId: actor.requestId } });
       return transaction.delivery.findUniqueOrThrow({ where: { id: delivery.id }, include: deliveryInclude });
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 15_000 });
   }
 
   public async listVehicles(actor: LogisticsActor, query: PageQuery) {
@@ -153,6 +154,7 @@ export class LogisticsRepository extends BaseRepository {
   }
   private validateCapacity(job: { requiredCapacity: Prisma.Decimal | null; capacityUnit: string | null }, vehicle: { capacity: Prisma.Decimal | null; capacityUnit: string | null }): void { if (job.requiredCapacity && (!vehicle.capacity || vehicle.capacity.lessThan(job.requiredCapacity) || vehicle.capacityUnit !== job.capacityUnit)) throw new Error('VEHICLE_CAPACITY'); }
   private async validateDirectVehicle(transaction: Prisma.TransactionClient, delivery: Prisma.DeliveryGetPayload<{ include: typeof deliveryInclude }>, vehicleId: string, actor: LogisticsActor) { const expectedOwner = delivery.method === DeliveryMethod.FARMER_DELIVERY ? delivery.farmerOrder.farmer.userId : delivery.farmerOrder.order.buyerId; const vehicle = await transaction.vehicle.findFirst({ where: { id: vehicleId, ownerId: expectedOwner, isActive: true, isAvailable: true, deletedAt: null } }); if (!vehicle || (actor.role !== Role.ADMIN && actor.userId !== expectedOwner)) throw new Error('VEHICLE_UNAVAILABLE'); const units = new Set(delivery.farmerOrder.items.map(item => item.unit)); if (units.size === 1) { const required = delivery.farmerOrder.items.reduce((sum, item) => sum.add(item.quantity), new Prisma.Decimal(0)); if (!vehicle.capacity || vehicle.capacity.lessThan(required) || vehicle.capacityUnit !== delivery.farmerOrder.items[0]!.unit) throw new Error('VEHICLE_CAPACITY'); } const conflict = await transaction.delivery.findFirst({ where: { id: { not: delivery.id }, vehicleId, status: { in: [...ACTIVE_DELIVERY_STATUSES] } } }); if (conflict) throw new Error('ASSIGNMENT_CONFLICT'); }
+  private async markInTransit(transaction: Prisma.TransactionClient, delivery: Prisma.DeliveryGetPayload<{ include: typeof deliveryInclude }>, actorId: string) { await transaction.farmerOrder.update({ where: { id: delivery.farmerOrderId }, data: { status: FarmerOrderStatus.IN_TRANSIT } }); await transaction.farmerOrderStatusHistory.create({ data: { farmerOrderId: delivery.farmerOrderId, actorId, fromStatus: delivery.farmerOrder.status, toStatus: FarmerOrderStatus.IN_TRANSIT, reason: 'Delivery picked up by transporter' } }); }
   private async completeFulfillment(transaction: Prisma.TransactionClient, delivery: Prisma.DeliveryGetPayload<{ include: typeof deliveryInclude }>, actorId: string) { for (const item of delivery.farmerOrder.items) { const inventory = await transaction.inventory.findUniqueOrThrow({ where: { productId: item.productId } }); if (inventory.quantityReserved.lessThan(item.quantity) || inventory.quantityOnHand.lessThan(item.quantity)) throw new Error('INVENTORY_RESERVATION_INVALID'); await transaction.inventory.update({ where: { id: inventory.id }, data: { quantityOnHand: { decrement: item.quantity }, quantityReserved: { decrement: item.quantity }, version: { increment: 1 } } }); await transaction.inventoryMovement.create({ data: { inventoryId: inventory.id, actorId, type: InventoryMovementType.SALE, quantity: item.quantity.negated(), balanceAfter: inventory.quantityOnHand.sub(item.quantity), referenceType: 'FarmerOrder', referenceId: delivery.farmerOrderId, reason: 'Delivery completed' } }); } await transaction.farmerOrder.update({ where: { id: delivery.farmerOrderId }, data: { status: FarmerOrderStatus.DELIVERED, completedAt: new Date() } }); await transaction.farmerOrderStatusHistory.create({ data: { farmerOrderId: delivery.farmerOrderId, actorId, fromStatus: delivery.farmerOrder.status, toStatus: FarmerOrderStatus.DELIVERED, reason: 'Delivery completed' } }); await this.updateAggregateOrder(transaction, delivery.farmerOrder.orderId, delivery.farmerOrder.order.status, actorId); }
   private async cancelFulfillment(transaction: Prisma.TransactionClient, delivery: Prisma.DeliveryGetPayload<{ include: typeof deliveryInclude }>, actorId: string) { for (const item of delivery.farmerOrder.items) { const inventory = await transaction.inventory.findUniqueOrThrow({ where: { productId: item.productId } }); if (inventory.quantityReserved.lessThan(item.quantity)) throw new Error('INVENTORY_RESERVATION_INVALID'); await transaction.inventory.update({ where: { id: inventory.id }, data: { quantityReserved: { decrement: item.quantity }, version: { increment: 1 } } }); await transaction.inventoryMovement.create({ data: { inventoryId: inventory.id, actorId, type: InventoryMovementType.RESERVATION_RELEASE, quantity: item.quantity.negated(), balanceAfter: inventory.quantityOnHand, referenceType: 'FarmerOrder', referenceId: delivery.farmerOrderId, reason: 'Delivery cancelled' } }); } await transaction.farmerOrder.update({ where: { id: delivery.farmerOrderId }, data: { status: FarmerOrderStatus.CANCELLED, cancelledAt: new Date() } }); await transaction.farmerOrderStatusHistory.create({ data: { farmerOrderId: delivery.farmerOrderId, actorId, fromStatus: delivery.farmerOrder.status, toStatus: FarmerOrderStatus.CANCELLED, reason: 'Delivery cancelled' } }); await this.updateAggregateOrder(transaction, delivery.farmerOrder.orderId, delivery.farmerOrder.order.status, actorId); }
   private async updateAggregateOrder(transaction: Prisma.TransactionClient, orderId: string, fromStatus: OrderStatus, actorId: string) { const groups = await transaction.farmerOrder.findMany({ where: { orderId }, select: { status: true } }); const terminal = groups.every(group => group.status === FarmerOrderStatus.DELIVERED || group.status === FarmerOrderStatus.CANCELLED || group.status === FarmerOrderStatus.REJECTED); if (!terminal) return; const nextStatus = groups.every(group => group.status === FarmerOrderStatus.DELIVERED) ? OrderStatus.FULFILLED : groups.every(group => group.status !== FarmerOrderStatus.DELIVERED) ? OrderStatus.CANCELLED : OrderStatus.PARTIALLY_FULFILLED; if (nextStatus === fromStatus) return; await transaction.order.update({ where: { id: orderId }, data: { status: nextStatus, ...(nextStatus === OrderStatus.CANCELLED ? { cancelledAt: new Date() } : {}) } }); await transaction.orderStatusHistory.create({ data: { orderId, actorId, fromStatus, toStatus: nextStatus, reason: 'Farmer order fulfillment aggregate updated' } }); }
