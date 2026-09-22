@@ -29,7 +29,11 @@ export function LoginForm({ adminOnly = false }: { adminOnly?: boolean }) {
       }
       router.replace(dashboardPathForRole(user.role));
     } catch (requestError) {
-      setError(requestError instanceof ApiClientError ? requestError.message : 'Unable to sign in. Please try again.');
+      setError(
+        requestError instanceof ApiClientError
+          ? requestError.message
+          : "Can't reach the server — is the backend running?",
+      );
     } finally {
       setIsSubmitting(false);
     }
