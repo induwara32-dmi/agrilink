@@ -2,9 +2,20 @@ import { CouponType, DeliveryMethod, DeliveryStatus, FarmerOrderStatus, Inventor
 import type { CartItemInput, CartItemUpdate, CheckoutInput, CheckoutPreviewInput, CommerceActor, DeliveryAddressInput, OrderQuery } from '../types/commerce';
 import { BaseRepository } from './base.repository';
 
-const cartInclude = { items: { include: { product: { include: { farmer: { select: { id: true, farmName: true } }, images: { orderBy: { sortOrder: 'asc' as const }, take: 1 }, inventory: true } } }, orderBy: { createdAt: 'asc' as const } } } satisfies Prisma.CartInclude;
+const cartInclude = { items: { include: { product: { include: { farmer: { select: { id: true, farmName: true, deletedAt: true, verificationStatus: true } }, category: { select: { isActive: true, deletedAt: true } }, images: { orderBy: { sortOrder: 'asc' as const }, take: 1 }, inventory: true } } }, orderBy: { createdAt: 'asc' as const } } } satisfies Prisma.CartInclude;
 const orderInclude = { farmerOrders: { include: { items: true, delivery: { include: { statusHistory: { orderBy: { occurredAt: 'asc' as const } }, transportJob: true } }, statusHistory: { orderBy: { createdAt: 'asc' as const } }, farmer: { select: { id: true, farmName: true, userId: true } } } }, statusHistory: { orderBy: { createdAt: 'asc' as const } }, couponRedemptions: { include: { coupon: { select: { code: true, type: true, value: true } } } }, payment: true } satisfies Prisma.OrderInclude;
 const orderIncludeFor = (actor: CommerceActor): Prisma.OrderInclude => actor.role === Role.FARMER ? { ...orderInclude, farmerOrders: { where: { farmer: { userId: actor.userId } }, include: orderInclude.farmerOrders.include } } : orderInclude;
+
+function isProductAvailable(product: { status: ProductStatus; deletedAt: Date | null; category: { isActive: boolean; deletedAt: Date | null }; farmer: { deletedAt: Date | null; verificationStatus: VerificationStatus } }): boolean {
+  return (
+    product.status === ProductStatus.ACTIVE &&
+    !product.deletedAt &&
+    product.category.isActive &&
+    !product.category.deletedAt &&
+    !product.farmer.deletedAt &&
+    product.farmer.verificationStatus === VerificationStatus.APPROVED
+  );
+}
 
 export class CommerceRepository extends BaseRepository {
   public constructor(database: PrismaClient) { super(database); }
@@ -12,6 +23,33 @@ export class CommerceRepository extends BaseRepository {
   public async getOrCreateCart(buyerId: string) {
     const existing = await this.database.cart.findFirst({ where: { buyerId, isActive: true }, include: cartInclude });
     return existing ?? this.database.cart.create({ data: { buyerId }, include: cartInclude });
+  }
+
+  public async getCartWithAvailability(
+    buyerId: string,
+    requestId: string,
+  ): Promise<{ cart: Awaited<ReturnType<CommerceRepository['getOrCreateCart']>>; removedItems: Array<{ id: string; productId: string; productName: string }> }> {
+    const cart = await this.getOrCreateCart(buyerId);
+    const staleItems = cart.items.filter(item => !isProductAvailable(item.product));
+    const removedItems = staleItems.map(item => ({ id: item.id, productId: item.productId, productName: item.product.name }));
+
+    if (staleItems.length === 0) return { cart, removedItems };
+
+    await this.database.$transaction(async transaction => {
+      await transaction.cartItem.deleteMany({ where: { id: { in: staleItems.map(item => item.id) } } });
+      await transaction.auditLog.createMany({
+        data: staleItems.map(item => ({
+          actorId: buyerId,
+          action: 'CART_ITEM_AUTO_REMOVED',
+          entityType: 'CartItem',
+          entityId: item.id,
+          requestId,
+          before: { productId: item.productId, productName: item.product.name },
+        })),
+      });
+    });
+
+    return { cart: await this.getOrCreateCart(buyerId), removedItems };
   }
 
   public findProductForCart(productId: string) { return this.database.product.findFirst({ where: { id: productId, deletedAt: null }, include: { inventory: true, farmer: true, category: true } }); }
@@ -68,7 +106,7 @@ export class CommerceRepository extends BaseRepository {
     const grouped = new Map<string, typeof items>();
     for (const item of items) {
       const product = item.product;
-      if (product.status !== ProductStatus.ACTIVE || product.deletedAt || !product.category.isActive || product.category.deletedAt || product.farmer.deletedAt || product.farmer.verificationStatus !== VerificationStatus.APPROVED) throw new Error('PRODUCT_UNAVAILABLE');
+      if (!isProductAvailable(product)) throw new Error('PRODUCT_UNAVAILABLE');
       if (item.quantity.lessThan(product.minOrderQuantity)) throw new Error('MINIMUM_QUANTITY');
       if (!product.inventory || product.inventory.quantityOnHand.sub(product.inventory.quantityReserved).lessThan(item.quantity)) throw new Error('INSUFFICIENT_STOCK');
       const group = groupInputs.get(product.farmerId);
@@ -121,7 +159,7 @@ export class CommerceRepository extends BaseRepository {
       const grouped = new Map<string, typeof checkoutItems>();
       for (const item of checkoutItems) {
         const product = item.product;
-        if (product.status !== ProductStatus.ACTIVE || product.deletedAt || !product.category.isActive || product.category.deletedAt || product.farmer.deletedAt || product.farmer.verificationStatus !== VerificationStatus.APPROVED) throw new Error('PRODUCT_UNAVAILABLE');
+        if (!isProductAvailable(product)) throw new Error('PRODUCT_UNAVAILABLE');
         if (item.quantity.lessThan(product.minOrderQuantity)) throw new Error('MINIMUM_QUANTITY');
         if (!product.inventory || product.inventory.quantityOnHand.sub(product.inventory.quantityReserved).lessThan(item.quantity)) throw new Error('INSUFFICIENT_STOCK');
         const group = groupInputs.get(product.farmerId);

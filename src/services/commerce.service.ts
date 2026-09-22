@@ -13,7 +13,10 @@ const pageMeta = (query: OrderQuery, total: number) => ({ ...query, total, total
 export class CommerceService extends BaseService {
   public constructor(private readonly repository: CommerceRepository, private readonly events: DomainEventPublisher) { super(); }
 
-  public async getCart(actor: CommerceActor) { return this.groupCart(await this.repository.getOrCreateCart(actor.userId)); }
+  public async getCart(actor: CommerceActor) {
+    const { cart, removedItems } = await this.repository.getCartWithAvailability(actor.userId, actor.requestId);
+    return Object.assign(this.groupCart(cart), { removedItems });
+  }
 
   public async addItem(input: CartItemInput, actor: CommerceActor) {
     const product = await this.repository.findProductForCart(input.productId);
