@@ -27,7 +27,7 @@ export function OrderTracking({ orderId }: { orderId: string }) {
   if (tracking.isLoading) return <LoadingSkeleton />;
   if (tracking.isError) return <ErrorState title="Tracking unavailable" description="We could not load the delivery timeline." onRetry={() => void tracking.refetch()} />;
   const data = tracking.data;
-  if (!data?.deliveries.length) return <EmptyState title="Tracking not available" description="Delivery records have not been created for this order." />;
+  if (!data?.deliveries.length) return <EmptyState icon={<Truck />} title="Tracking not available" description="Delivery records have not been created for this order." />;
   const isTransporter = user?.role === 'TRANSPORTER';
   const canUploadProof = user?.role === 'FARMER' || user?.role === 'TRANSPORTER';
   return <div className="space-y-6">

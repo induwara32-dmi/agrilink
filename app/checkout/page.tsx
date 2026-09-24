@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { ChevronRight, CreditCard, MapPin, PackageCheck, Truck } from 'lucide-react';
+import { ChevronRight, CreditCard, MapPin, PackageCheck, ShoppingCart, Truck } from 'lucide-react';
 import { ProtectedRoute } from '@/components/features/auth/protected-route';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,7 +47,7 @@ function CheckoutContent() {
 
   if (cart.isLoading) return <LoadingSkeleton />;
   if (cart.isError) return <ErrorState title="Checkout unavailable" description="We could not load your current cart." onRetry={() => void cart.refetch()} />;
-  if (!groups.length) return <EmptyState title="Your cart is empty" description="Add products before starting checkout." action={<Button asChild><Link href="/marketplace">Browse marketplace</Link></Button>} />;
+  if (!groups.length) return <EmptyState icon={<ShoppingCart />} title="Your cart is empty" description="Browse the marketplace to add items before checking out." action={<Button asChild><Link href="/marketplace">Browse marketplace</Link></Button>} />;
   const totals = preview.data?.data;
 
   function continueStep() {

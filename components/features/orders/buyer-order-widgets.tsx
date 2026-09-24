@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, ShoppingCart } from 'lucide-react';
-import { DataTable } from '@/components/features/dashboard/data-table';
+import { CheckCircle2, Package, ShoppingCart } from 'lucide-react';
 import { KPICard } from '@/components/features/dashboard/kpi-card';
+import { OrderCard } from './order-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -20,10 +20,10 @@ export function BuyerOrderStats() {
 
 export function BuyerRecentOrders() {
   const orders = useQuery({ queryKey: ['orders', 'dashboard-recent'], queryFn: () => listOrders({ page: 1, pageSize: 5 }) });
-  if (orders.isLoading) return <LoadingSkeleton />;
-  if (orders.isError) return <ErrorState title="Recent orders unavailable" description="We could not load recent orders." onRetry={() => void orders.refetch()} />;
-  const rows = (orders.data?.data ?? []).map(order => ({ order: order.orderNumber, farmers: order.farmerOrders.map(group => group.farmer.farmName).join(', '), date: new Date(order.createdAt).toLocaleDateString(), status: order.status.replaceAll('_', ' ').toLowerCase() }));
-  return rows.length ? <DataTable title="Recent Orders" columns={['Order', 'Farmers', 'Date', 'Status']} rows={rows} /> : <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Recent Orders</CardTitle></CardHeader><CardContent><EmptyState title="No orders yet" description="Completed checkouts will appear here." /></CardContent></Card>;
+  const items = orders.data?.data ?? [];
+  return <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Recent Orders</CardTitle></CardHeader><CardContent className="space-y-3">
+    {orders.isLoading ? <LoadingSkeleton /> : orders.isError ? <ErrorState title="Recent orders unavailable" description="We could not load recent orders." onRetry={() => void orders.refetch()} /> : items.length ? items.map(order => <OrderCard key={order.id} order={order} />) : <EmptyState icon={<Package />} title="No orders yet" description="Completed checkouts will appear here." />}
+  </CardContent></Card>;
 }
 
 export function BuyerOrderTrackingShortcut() { return <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Order tracking</CardTitle></CardHeader><CardContent><p className="mb-4 text-sm text-slate-600">Open an active order to see its live backend delivery timeline.</p><Button asChild><Link href="/orders">View orders</Link></Button></CardContent></Card>; }

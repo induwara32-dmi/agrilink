@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Leaf, Package, ShoppingCart, Wallet } from 'lucide-react';
+import { Leaf, Package, ShoppingCart, Sprout, Truck, Wallet } from 'lucide-react';
 import { AnalyticsChart } from '@/components/features/dashboard/analytics-chart';
 import { AnalyticsControls, comparisonLabel, moneyLabel, trendData } from '@/components/features/dashboard/analytics-controls';
 import { DataTable } from '@/components/features/dashboard/data-table';
@@ -29,7 +29,10 @@ export default function FarmerDashboardPage() {
   const activeOrders = report?.current.orderStatusDistribution.filter(item => !['DELIVERED', 'REJECTED', 'CANCELLED'].includes(item.status)).reduce((sum, item) => sum + item.count, 0) ?? 0;
   const recentOrders = orders.data?.data ?? [];
   const recentDeliveries = deliveries.data?.data ?? [];
-  return <div className="space-y-6"><section className="rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-sm"><p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Farmer analytics</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back, {user?.profile?.firstName ?? 'Farmer'}</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-white/85">Monitor products, inventory, sales, revenue, orders, and deliveries.</p></section><AnalyticsControls query={period} onChange={setPeriod} />
+  return <div className="space-y-6"><section className="relative overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-sm">
+    <Sprout className="pointer-events-none absolute -bottom-10 -right-8 h-48 w-48 text-white/10" strokeWidth={1} aria-hidden="true" />
+    <div className="relative z-10"><p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Farmer analytics</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back, {user?.profile?.firstName ?? 'Farmer'}</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-white/85">Monitor products, inventory, sales, revenue, orders, and deliveries.</p></div>
+  </section><AnalyticsControls query={period} onChange={setPeriod} />
   {!enabled ? <EmptyState title="Select a custom range" description="Choose both dates to load analytics." /> : analytics.isLoading ? <LoadingSkeleton /> : analytics.isError ? <ErrorState title="Farmer analytics unavailable" description="We could not load farm performance." onRetry={() => void analytics.refetch()} /> : report ? <>
     <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><KPICard title="Total Products" value={String(report.snapshot.productSummary.total)} change={`${report.snapshot.productSummary.active} active listings`} icon={<Package className="h-5 w-5" />} /><KPICard title="Active Orders" value={String(activeOrders)} change="Selected period" icon={<ShoppingCart className="h-5 w-5" />} /><KPICard title="Monthly Revenue" value={moneyLabel(report.current.revenue)} change={report.comparison.revenue.map(item => `${item.currency}: ${comparisonLabel(item.percentChange)}`).join(' · ') || 'No previous revenue'} icon={<Wallet className="h-5 w-5" />} /><KPICard title="Inventory Stock" value={report.snapshot.inventoryStock.map(item => `${item.quantity} ${item.unit}`).join(' · ') || '—'} change="Available, grouped by unit" icon={<Leaf className="h-5 w-5" />} /></section>
     <section className="grid gap-6 xl:grid-cols-2">{report.current.revenue.map(total => <AnalyticsChart key={total.currency} title={`Revenue trend (${total.currency})`} data={trendData(report.current.salesTrends, total.currency)} dataKey="value" color="#4F46E5" />)}<AnalyticsChart title="Sales trend (orders)" data={report.current.salesTrends.map(point => ({ name: new Date(point.bucket).toLocaleDateString(), value: point.count }))} dataKey="value" color="#2E7D32" /></section>
@@ -48,11 +51,11 @@ export default function FarmerDashboardPage() {
       <DataTable title="Inventory Turnover" columns={['Product', 'Sold', 'Average Inventory', 'Turnover']} rows={report.current.inventoryTurnover.map(item => ({ Product: item.productName, Sold: `${item.soldQuantity} ${item.unit}`, 'Average Inventory': item.averageInventory, Turnover: item.turnover }))} />
     </section>
     <section className="grid gap-6 xl:grid-cols-2">
-      <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Recent Orders</CardTitle></CardHeader><CardContent className="space-y-3">{recentOrders.length ? recentOrders.map(item => <OrderCard key={item.id} order={item} />) : <EmptyState title="No recent orders" description="New orders will appear here." />}</CardContent></Card>
+      <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Recent Orders</CardTitle></CardHeader><CardContent className="space-y-3">{recentOrders.length ? recentOrders.map(item => <OrderCard key={item.id} order={item} />) : <EmptyState icon={<Package />} title="No recent orders" description="New orders will appear here." />}</CardContent></Card>
       <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Recent Deliveries</CardTitle></CardHeader><CardContent className="p-0">{recentDeliveries.length ? <ClickableRowList>{recentDeliveries.map(item => <ClickableRow key={item.id} href={`/orders/${item.farmerOrder.order.id}/tracking`}>
         <div><p className="font-semibold text-slate-900">{item.farmerOrder.order.orderNumber}</p><p className="text-slate-600">{item.method.replaceAll('_', ' ').toLowerCase()}</p></div>
         <div className="flex items-center gap-3"><span className="text-slate-600">{item.status.replaceAll('_', ' ')}</span><span className="text-slate-600">{item.estimatedDeliveryAt ? new Date(item.estimatedDeliveryAt).toLocaleString() : 'Pending'}</span></div>
-      </ClickableRow>)}</ClickableRowList> : <div className="p-6"><EmptyState title="No recent deliveries" description="Deliveries will appear here once fulfillment begins." /></div>}</CardContent></Card>
+      </ClickableRow>)}</ClickableRowList> : <div className="p-6"><EmptyState icon={<Truck />} title="No recent deliveries" description="Deliveries will appear here once fulfillment begins." /></div>}</CardContent></Card>
     </section>
   </> : null}</div>;
 }

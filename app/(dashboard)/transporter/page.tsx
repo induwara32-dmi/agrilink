@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, PackageCheck, Route, Wallet } from 'lucide-react';
+import { CheckCircle2, PackageCheck, Route, Truck, Wallet } from 'lucide-react';
 import { AnalyticsChart } from '@/components/features/dashboard/analytics-chart';
 import { AnalyticsControls, comparisonLabel, moneyLabel, trendData } from '@/components/features/dashboard/analytics-controls';
 import { DataTable } from '@/components/features/dashboard/data-table';
@@ -36,8 +36,9 @@ export default function TransporterDashboardPage() {
   }, [highlightEarnings, report]);
 
   return <div className="space-y-6">
-    <section className="rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-sm">
-      <div className="flex items-center justify-between gap-6">
+    <section className="relative overflow-hidden rounded-[2rem] border border-border bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-sm">
+      <Truck className="pointer-events-none absolute -bottom-10 -left-8 h-48 w-48 text-white/10" strokeWidth={1} aria-hidden="true" />
+      <div className="relative z-10 flex items-center justify-between gap-6">
         <div><p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Transport analytics</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">Welcome back, {user?.profile?.firstName ?? 'Transporter'}</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-white/85">Track available work, delivery performance, earnings, and vehicle readiness.</p></div>
         <div className="hidden shrink-0 overflow-hidden rounded-2xl border-2 border-white/30 shadow-lg md:block"><Image src="/images/delivery-handoff.jpg" alt="A transporter handing off crates of fresh produce" width={236} height={157} className="h-auto w-[220px] object-cover" /></div>
       </div>
