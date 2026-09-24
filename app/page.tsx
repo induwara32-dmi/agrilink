@@ -1,11 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
   BrainCircuit,
-  ChevronRight,
   CircleDollarSign,
   Leaf,
   ShieldCheck,
@@ -19,7 +19,6 @@ import { FeatureCard } from '@/components/features/landing/feature-card';
 import { FAQItem } from '@/components/features/landing/faq-item';
 import { ImpactCounter } from '@/components/features/landing/impact-counter';
 import { SectionHeading } from '@/components/features/landing/section-heading';
-import { StatCard } from '@/components/features/landing/stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -166,49 +165,9 @@ export default function Home() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }} className="relative">
-              <Card className="overflow-hidden border-border/80 bg-white p-0 shadow-xl">
-                <CardContent className="p-0">
-                  <div className="border-b border-border bg-slate-50 p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">Operations dashboard</p>
-                        <p className="text-sm text-slate-600">Live overview for your marketplace</p>
-                      </div>
-                      <Badge variant="success">Live</Badge>
-                    </div>
-                  </div>
-                  <div className="grid gap-4 p-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <div className="space-y-4">
-                      <div className="rounded-2xl border border-border bg-primary/5 p-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-semibold text-slate-900">Today’s volume</p>
-                          <p className="text-sm text-primary">+12.8%</p>
-                        </div>
-                        <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">4,280 kg</p>
-                        <p className="mt-2 text-sm text-slate-600">Across fresh produce, grains, and logistics.</p>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <StatCard value="84" label="active listings" />
-                        <StatCard value="18" label="pending deliveries" />
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-border bg-slate-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-slate-900">Delivery mix</p>
-                        <ChevronRight className="h-4 w-4 text-slate-500" />
-                      </div>
-                      <div className="mt-4 space-y-3">
-                        {['Produce', 'Grains', 'Logistics'].map((item, index) => (
-                          <div key={item} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2">
-                            <span className="text-sm text-slate-700">{item}</span>
-                            <span className="text-sm font-semibold text-slate-900">{[62, 24, 14][index]}%</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="overflow-hidden rounded-[2rem] border border-border/80 shadow-xl">
+                <Image src="/images/hero-truck.jpg" alt="A refrigerated delivery truck loaded with fresh produce" width={643} height={360} priority className="h-auto w-full object-cover" />
+              </div>
 
               <div className="absolute -left-4 top-8 hidden rounded-2xl border border-border bg-white p-3 shadow-lg lg:block">
                 <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Trusted by</p>
@@ -331,8 +290,10 @@ export default function Home() {
         </section>
 
         <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-          <Card className="border-primary/20 bg-gradient-to-r from-primary to-secondary p-0 text-white shadow-sm">
-            <CardContent className="flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between lg:p-12">
+          <Card className="relative overflow-hidden border-primary/20 p-0 text-white shadow-sm">
+            <Image src="/images/farmer-buyer-handshake.jpg" alt="A farmer and a buyer shaking hands at a busy trade port" fill sizes="(min-width: 1024px) 1152px, 100vw" className="object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-secondary/80" />
+            <CardContent className="relative flex flex-col gap-6 p-8 lg:flex-row lg:items-center lg:justify-between lg:p-12">
               <div className="max-w-2xl">
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Ready to grow</p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Join Sri Lanka&apos;s Smart Agriculture Marketplace Today</h2>
