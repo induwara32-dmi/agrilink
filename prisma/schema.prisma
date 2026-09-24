@@ -299,6 +299,7 @@ model FarmerProfile {
   userId             String             @unique @db.Uuid
   farmName           String             @db.VarChar(180)
   description        String?            @db.Text
+  whatsappNumber     String?            @db.VarChar(32)
   verificationStatus VerificationStatus @default(NOT_SUBMITTED)
   verifiedAt         DateTime?          @db.Timestamptz(6)
   createdAt          DateTime           @default(now()) @db.Timestamptz(6)
@@ -317,6 +318,7 @@ model TransporterProfile {
   userId             String             @unique @db.Uuid
   businessName       String?            @db.VarChar(180)
   licenseNumber      String?            @unique @db.VarChar(100)
+  whatsappNumber     String?            @db.VarChar(32)
   verificationStatus VerificationStatus @default(NOT_SUBMITTED)
   verifiedAt         DateTime?          @db.Timestamptz(6)
   isAvailable        Boolean            @default(false)

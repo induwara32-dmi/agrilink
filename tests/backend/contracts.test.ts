@@ -12,7 +12,7 @@ const id2 = '22222222-2222-4222-8222-222222222222';
 const password = 'StrongPassword!1';
 
 describe('authentication contracts', () => {
-  it('accepts buyer registration', () => expect(registerSchema.safeParse({ ...empty, body: { email: 'BUYER@example.com', password, firstName: 'Ada', lastName: 'Buyer', role: Role.BUYER } }).success).toBe(true));
+  it('accepts buyer registration', () => expect(registerSchema.safeParse({ ...empty, body: { email: 'BUYER@example.com', password, firstName: 'Ada', lastName: 'Buyer', phone: '+94770000000', role: Role.BUYER } }).success).toBe(true));
   it('requires a farm name for farmer registration', () => expect(registerSchema.safeParse({ ...empty, body: { email: 'farmer@example.com', password, firstName: 'Ada', lastName: 'Farmer', role: Role.FARMER } }).success).toBe(false));
   it('prevents public admin registration', () => expect(registerSchema.safeParse({ ...empty, body: { email: 'admin@example.com', password, firstName: 'A', lastName: 'B', role: Role.ADMIN } }).success).toBe(false));
   it('accepts login credentials', () => expect(loginSchema.safeParse({ ...empty, body: { email: 'USER@example.com', password } }).success).toBe(true));

@@ -1,18 +1,25 @@
 import { apiRequest } from './client';
+import type { VehicleTypeCode } from './logistics';
 import { clearSession, getSession, setSession } from './session';
 import type { AuthSession, AuthUser } from './types';
 
 export type PublicRegistrationRole = 'BUYER' | 'FARMER' | 'TRANSPORTER';
+
+export type RegistrationAddressInput = { line1: string; city: string; latitude: string; longitude: string };
+export type RegistrationVehicleInput = { type: VehicleTypeCode; registrationNumber: string; make?: string; model?: string; color?: string; capacity?: string; capacityUnit?: string };
 
 export type RegistrationInput = {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  phone?: string;
+  phone: string;
   role: PublicRegistrationRole;
   farmName?: string;
   businessName?: string;
+  whatsappNumber?: string;
+  address?: RegistrationAddressInput;
+  vehicle?: RegistrationVehicleInput;
 };
 
 export async function register(input: RegistrationInput): Promise<{ user: AuthUser; message: string }> {

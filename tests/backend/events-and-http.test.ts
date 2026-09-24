@@ -71,6 +71,7 @@ describe('registration error responses', () => {
     password: 'SecurePass1!',
     firstName: 'Existing',
     lastName: 'Buyer',
+    phone: '+94770000000',
     role: Role.BUYER,
   };
 

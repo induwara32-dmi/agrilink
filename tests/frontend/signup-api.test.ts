@@ -19,9 +19,9 @@ describe('frontend registration API', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it.each<RegistrationInput>([
-    { firstName: 'Buyer', lastName: 'User', email: 'buyer@example.com', password: 'StrongPassword!1', role: 'BUYER' },
-    { firstName: 'Farmer', lastName: 'User', email: 'farmer@example.com', password: 'StrongPassword!1', role: 'FARMER', farmName: 'Green Farm' },
-    { firstName: 'Transporter', lastName: 'User', email: 'transporter@example.com', password: 'StrongPassword!1', role: 'TRANSPORTER', businessName: 'Farm Logistics' },
+    { firstName: 'Buyer', lastName: 'User', email: 'buyer@example.com', password: 'StrongPassword!1', phone: '+94771234567', role: 'BUYER' },
+    { firstName: 'Farmer', lastName: 'User', email: 'farmer@example.com', password: 'StrongPassword!1', phone: '+94771234568', role: 'FARMER', farmName: 'Green Farm', address: { line1: '1 Farm Road', city: 'Kandy', latitude: '7.2906', longitude: '80.6337' } },
+    { firstName: 'Transporter', lastName: 'User', email: 'transporter@example.com', password: 'StrongPassword!1', phone: '+94771234569', role: 'TRANSPORTER', businessName: 'Farm Logistics', vehicle: { type: 'TRUCK', registrationNumber: 'WP-1234' } },
   ])('submits $role through the centralized register endpoint', async (input) => {
     const fetchMock = vi.fn().mockResolvedValue(successfulResponse({ user: { ...user, email: input.email, role: input.role }, message: 'Check your email.' }));
     vi.stubGlobal('fetch', fetchMock);

@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { Role, VehicleType } from '@prisma/client';
 import { z } from 'zod';
 
 const request = <TBody extends z.ZodType>(body: TBody) =>
@@ -13,20 +13,49 @@ const passwordSchema = z
   .regex(/\d/, 'Password must contain a number.')
   .regex(/[^A-Za-z0-9]/, 'Password must contain a symbol.');
 
+const latitude = z.string().regex(/^-?\d+(\.\d{1,7})?$/).refine(value => Number(value) >= -90 && Number(value) <= 90, 'Latitude must be between -90 and 90.');
+const longitude = z.string().regex(/^-?\d+(\.\d{1,7})?$/).refine(value => Number(value) >= -180 && Number(value) <= 180, 'Longitude must be between -180 and 180.');
+const decimal = z.string().regex(/^\d+(\.\d{1,3})?$/).refine(value => Number(value) > 0);
+
+const registerAddressSchema = z.object({
+  line1: z.string().trim().min(1).max(255),
+  city: z.string().trim().min(1).max(120),
+  latitude,
+  longitude,
+});
+const registerVehicleSchema = z.object({
+  type: z.nativeEnum(VehicleType),
+  registrationNumber: z.string().trim().min(2).max(64).transform(value => value.toUpperCase()),
+  make: z.string().trim().max(80).optional(),
+  model: z.string().trim().max(80).optional(),
+  color: z.string().trim().max(50).optional(),
+  capacity: decimal.optional(),
+  capacityUnit: z.string().trim().min(1).max(30).optional(),
+}).refine(value => Boolean(value.capacity) === Boolean(value.capacityUnit), 'Capacity and capacity unit must be provided together.');
+
 export const registerBodySchema = z
   .object({
     email: z.string().email().max(320).transform((value) => value.toLowerCase()),
     password: passwordSchema,
     firstName: z.string().trim().min(1).max(100),
     lastName: z.string().trim().min(1).max(100),
-    phone: z.string().trim().min(7).max(32).optional(),
+    phone: z.string().trim().min(7).max(32),
     role: z.enum([Role.BUYER, Role.FARMER, Role.TRANSPORTER]),
     farmName: z.string().trim().min(2).max(180).optional(),
     businessName: z.string().trim().min(2).max(180).optional(),
+    whatsappNumber: z.string().trim().min(7).max(32).optional(),
+    address: registerAddressSchema.optional(),
+    vehicle: registerVehicleSchema.optional(),
   })
   .superRefine((value, context) => {
     if (value.role === Role.FARMER && !value.farmName) {
       context.addIssue({ code: 'custom', path: ['farmName'], message: 'Farm name is required for farmers.' });
+    }
+    if (value.role === Role.FARMER && !value.address) {
+      context.addIssue({ code: 'custom', path: ['address'], message: 'A pickup address is required for farmers.' });
+    }
+    if (value.role === Role.TRANSPORTER && !value.vehicle) {
+      context.addIssue({ code: 'custom', path: ['vehicle'], message: 'Vehicle details are required for transporters.' });
     }
   });
 

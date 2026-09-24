@@ -7,7 +7,7 @@ export type SignupDraft = {
   lastName: string;
   email: string;
   password: string;
-  phone?: string;
+  phone: string;
 };
 
 type SignupContextValue = {

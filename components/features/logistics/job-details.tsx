@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { CheckCircle2, MapPin, Package, Phone, Route as RouteIcon, XCircle } from 'lucide-react';
+import { CheckCircle2, MapPin, MessageCircle, Package, Phone, Route as RouteIcon, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,6 +39,8 @@ export function JobDetails({ jobId }: { jobId: string }) {
   const pending = item.status === 'ASSIGNED';
   const active = ['ACCEPTED', 'IN_PROGRESS'].includes(item.status);
   const deliveryLine = [farmerOrder.deliveryLine1, farmerOrder.deliveryLine2, farmerOrder.deliveryCity, farmerOrder.deliveryDistrict, farmerOrder.deliveryRegion, farmerOrder.deliveryCountryCode].filter(Boolean).join(', ');
+  const pickupAddress = farmerOrder.farmer.user.addresses[0];
+  const pickupLine = pickupAddress ? [pickupAddress.line1, pickupAddress.line2, pickupAddress.city, pickupAddress.district, pickupAddress.region].filter(Boolean).join(', ') : null;
 
   return <>
     <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -58,8 +60,9 @@ export function JobDetails({ jobId }: { jobId: string }) {
 
         <Card className="border-border/80 bg-white"><CardHeader><CardTitle>Pickup</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm text-slate-600">
-            <div className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 text-primary" /><span>{item.delivery.routePlan?.originLabel ?? farmerOrder.farmer.farmName}<span className="ml-2 text-xs text-slate-400">(exact pickup address is not yet configured for farmers)</span></span></div>
+            <div className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 text-primary" /><span>{item.delivery.routePlan?.originLabel ?? pickupLine ?? `${farmerOrder.farmer.farmName} (pickup address not yet configured)`}</span></div>
             <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /><span>{farmerOrder.farmer.user.phone ?? 'Farmer phone not provided'}</span></div>
+            {farmerOrder.farmer.whatsappNumber ? <div className="flex items-center gap-2"><MessageCircle className="h-4 w-4 text-primary" /><span>WhatsApp: {farmerOrder.farmer.whatsappNumber}</span></div> : null}
           </CardContent>
         </Card>
 

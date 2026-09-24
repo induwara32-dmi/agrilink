@@ -35,6 +35,9 @@ export type AuthUser = {
     displayName: string | null;
     avatarUrl: string | null;
   } | null;
+  farmerProfile?: { farmName: string; whatsappNumber: string | null; verificationStatus: string } | null;
+  transporterProfile?: { businessName: string | null; whatsappNumber: string | null; verificationStatus: string } | null;
+  buyerProfile?: { id: string } | null;
 };
 
 export type AuthSession = {

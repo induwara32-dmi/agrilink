@@ -1,4 +1,4 @@
-import { AccountStatus, type Prisma, type PrismaClient, type RefreshToken } from '@prisma/client';
+import { AccountStatus, Prisma, type PrismaClient, type RefreshToken } from '@prisma/client';
 import type { RegisterInput } from '../types/auth-input';
 import { BaseRepository } from './base.repository';
 
@@ -50,20 +50,56 @@ export class AuthRepository extends BaseRepository {
       input.role === 'BUYER'
         ? { buyerProfile: { create: {} } }
         : input.role === 'FARMER'
-          ? { farmerProfile: { create: { farmName: input.farmName ?? '' } } }
+          ? { farmerProfile: { create: { farmName: input.farmName ?? '', ...(input.whatsappNumber ? { whatsappNumber: input.whatsappNumber } : {}) } } }
           : {
               transporterProfile: {
-                create: { ...(input.businessName ? { businessName: input.businessName } : {}) },
+                create: {
+                  ...(input.businessName ? { businessName: input.businessName } : {}),
+                  ...(input.whatsappNumber ? { whatsappNumber: input.whatsappNumber } : {}),
+                },
               },
             };
 
     const data: Prisma.UserCreateInput = {
       email: input.email,
-      ...(input.phone ? { phone: input.phone } : {}),
+      phone: input.phone,
       passwordHash,
       role: input.role,
       profile: { create: { firstName: input.firstName, lastName: input.lastName } },
       ...roleProfile,
+      // Phase 1: no country selection at signup yet; every address defaults to Sri Lanka.
+      ...(input.address
+        ? {
+            addresses: {
+              create: [{
+                recipientName: `${input.firstName} ${input.lastName}`,
+                recipientPhone: input.phone,
+                line1: input.address.line1,
+                city: input.address.city,
+                countryCode: 'LK',
+                latitude: new Prisma.Decimal(input.address.latitude),
+                longitude: new Prisma.Decimal(input.address.longitude),
+                isDefault: true,
+              }],
+            },
+          }
+        : {}),
+      ...(input.vehicle
+        ? {
+            vehicles: {
+              create: [{
+                type: input.vehicle.type,
+                registrationNumber: input.vehicle.registrationNumber,
+                ...(input.vehicle.make ? { make: input.vehicle.make } : {}),
+                ...(input.vehicle.model ? { model: input.vehicle.model } : {}),
+                ...(input.vehicle.color ? { color: input.vehicle.color } : {}),
+                ...(input.vehicle.capacity && input.vehicle.capacityUnit
+                  ? { capacity: new Prisma.Decimal(input.vehicle.capacity), capacityUnit: input.vehicle.capacityUnit }
+                  : {}),
+              }],
+            },
+          }
+        : {}),
       emailVerificationTokens: {
         create: { tokenHash: verificationTokenHash, expiresAt: verificationExpiresAt },
       },

@@ -45,6 +45,12 @@ export class AuthService extends BaseService {
     if (input.role === Role.FARMER && !input.farmName) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'FARM_NAME_REQUIRED', 'Farm name is required for farmers.');
     }
+    if (input.role === Role.FARMER && !input.address) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'PICKUP_ADDRESS_REQUIRED', 'A pickup address is required for farmers.');
+    }
+    if (input.role === Role.TRANSPORTER && !input.vehicle) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'VEHICLE_REQUIRED', 'Vehicle details are required for transporters.');
+    }
     if (await this.authRepository.findByEmail(input.email)) {
       throw new ApiError(HTTP_STATUS.CONFLICT, 'EMAIL_ALREADY_REGISTERED', 'An account already uses this email.');
     }

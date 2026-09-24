@@ -34,10 +34,25 @@ export class AuthController extends BaseController {
       password: body.password,
       firstName: body.firstName,
       lastName: body.lastName,
+      phone: body.phone,
       role: body.role,
-      ...(body.phone ? { phone: body.phone } : {}),
       ...(body.farmName ? { farmName: body.farmName } : {}),
       ...(body.businessName ? { businessName: body.businessName } : {}),
+      ...(body.whatsappNumber ? { whatsappNumber: body.whatsappNumber } : {}),
+      ...(body.address ? { address: { line1: body.address.line1, city: body.address.city, latitude: body.address.latitude, longitude: body.address.longitude } } : {}),
+      ...(body.vehicle
+        ? {
+            vehicle: {
+              type: body.vehicle.type,
+              registrationNumber: body.vehicle.registrationNumber,
+              ...(body.vehicle.make ? { make: body.vehicle.make } : {}),
+              ...(body.vehicle.model ? { model: body.vehicle.model } : {}),
+              ...(body.vehicle.color ? { color: body.vehicle.color } : {}),
+              ...(body.vehicle.capacity ? { capacity: body.vehicle.capacity } : {}),
+              ...(body.vehicle.capacityUnit ? { capacityUnit: body.vehicle.capacityUnit } : {}),
+            },
+          }
+        : {}),
     });
     return sendSuccess(response, HTTP_STATUS.CREATED, { user, message: 'Check your email to verify your account.' });
   });

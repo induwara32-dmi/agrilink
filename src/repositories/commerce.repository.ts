@@ -1,4 +1,5 @@
 import { CouponType, DeliveryMethod, DeliveryStatus, FarmerOrderStatus, InventoryMovementType, OrderStatus, Prisma, ProductStatus, Role, TransportJobStatus, VerificationStatus, type PrismaClient } from '@prisma/client';
+import { env } from '../config/env';
 import type { CartItemInput, CartItemUpdate, CheckoutInput, CheckoutPreviewInput, CommerceActor, DeliveryAddressInput, OrderQuery } from '../types/commerce';
 import { BaseRepository } from './base.repository';
 
@@ -219,7 +220,7 @@ export class CommerceRepository extends BaseRepository {
         if (groupInput.deliveryMethod === DeliveryMethod.PLATFORM_TRANSPORTER) {
           const capacityUnits = new Set(items.map(item => item.product.unit));
           const requiredCapacity = capacityUnits.size === 1 ? items.reduce((sum, item) => sum.add(item.quantity), new Prisma.Decimal(0)) : null;
-          await transaction.transportJob.create({ data: { deliveryId: delivery.id, status: TransportJobStatus.OPEN, offeredFee: 0, currency, ...(requiredCapacity ? { requiredCapacity, capacityUnit: items[0]!.product.unit } : {}) } });
+          await transaction.transportJob.create({ data: { deliveryId: delivery.id, status: TransportJobStatus.OPEN, offeredFee: env.FLAT_TRANSPORT_FEE_LKR, currency, ...(requiredCapacity ? { requiredCapacity, capacityUnit: items[0]!.product.unit } : {}) } });
         }
         for (const item of items) {
           const lineTotal = item.product.unitPrice.mul(item.quantity).toDecimalPlaces(4);

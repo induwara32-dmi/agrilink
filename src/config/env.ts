@@ -32,6 +32,7 @@ const environmentSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().trim().min(1),
   CLOUDINARY_API_KEY: z.string().trim().min(1),
   CLOUDINARY_API_SECRET: z.string().trim().min(1),
+  FLAT_TRANSPORT_FEE_LKR: z.coerce.number().min(0).default(500),
 }).superRefine((value, context) => {
   const origins = value.CORS_ORIGIN.split(',').map(origin => origin.trim());
   for (const origin of origins) if (origin === '*' || !z.url().safeParse(origin).success) context.addIssue({ code: 'custom', path: ['CORS_ORIGIN'], message: 'CORS origins must be explicit absolute URLs.' });

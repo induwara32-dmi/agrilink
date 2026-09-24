@@ -15,6 +15,7 @@ import { LogisticsController } from './controllers/logistics.controller';
 import { NotificationController } from './controllers/notification.controller';
 import { AnalyticsController } from './controllers/analytics.controller';
 import { MediaController } from './controllers/media.controller';
+import { AccountController } from './controllers/account.controller';
 import { createAuthenticate } from './middlewares/authentication.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/not-found.middleware';
@@ -28,6 +29,7 @@ import { LogisticsRepository } from './repositories/logistics.repository';
 import { NotificationRepository } from './repositories/notification.repository';
 import { AnalyticsRepository } from './repositories/analytics.repository';
 import { MediaRepository } from './repositories/media.repository';
+import { AccountRepository } from './repositories/account.repository';
 import { createApiRouter } from './routes';
 import { SystemService } from './services/system.service';
 import { AuthService } from './services/auth.service';
@@ -40,6 +42,7 @@ import { NotificationService } from './services/notification.service';
 import { AnalyticsService } from './services/analytics.service';
 import { MemoryAnalyticsCacheService } from './services/analytics-cache.service';
 import { MediaService } from './services/media.service';
+import { AccountService } from './services/account.service';
 import { API_PREFIX } from './constants/application';
 import { EventBus } from './utils/event-bus';
 import { DOMAIN_EVENT_TYPES } from './types/domain-events';
@@ -68,6 +71,7 @@ export function createApp(): Express {
   const commerceController = new CommerceController(new CommerceService(new CommerceRepository(prisma), eventBus, logisticsService));
   const logisticsController = new LogisticsController(logisticsService);
   const mediaController = new MediaController(new MediaService(new MediaRepository(prisma)));
+  const accountController = new AccountController(new AccountService(new AccountRepository(prisma)));
 
   app.disable('x-powered-by');
   app.set('trust proxy', trustProxy);
@@ -90,7 +94,7 @@ export function createApp(): Express {
   app.use(API_PREFIX, apiRateLimit);
   app.use(`${API_PREFIX}/auth`, authRateLimit);
 
-  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController, notificationController, analyticsController, mediaController));
+  app.use(API_PREFIX, createApiRouter(systemController, authController, authenticate, catalogController, inventoryController, commerceController, logisticsController, notificationController, analyticsController, mediaController, accountController));
   app.use(notFoundMiddleware);
   app.use(errorMiddleware);
 

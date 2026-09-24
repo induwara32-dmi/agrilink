@@ -3,7 +3,7 @@ import { ACTIVE_DELIVERY_STATUSES, DEFAULT_DELIVERY_MINUTES } from '../constants
 import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
 import { BaseRepository } from './base.repository';
 
-const jobInclude = { delivery: { include: { farmerOrder: { include: { items: true, farmer: { include: { user: { select: { phone: true } } } }, order: { select: { id: true, buyerId: true, orderNumber: true } } } }, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } }, transporter: { include: { user: { select: { id: true, profile: true } } } }, vehicle: true, rejections: { orderBy: { createdAt: 'desc' as const } } } satisfies Prisma.TransportJobInclude;
+const jobInclude = { delivery: { include: { farmerOrder: { include: { items: true, farmer: { include: { user: { select: { phone: true, addresses: { where: { isDefault: true, deletedAt: null }, take: 1 } } } } }, order: { select: { id: true, buyerId: true, orderNumber: true } } } }, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } }, transporter: { include: { user: { select: { id: true, profile: true } } } }, vehicle: true, rejections: { orderBy: { createdAt: 'desc' as const } } } satisfies Prisma.TransportJobInclude;
 const deliveryInclude = { farmerOrder: { include: { farmer: true, order: true, items: true } }, transportJob: { include: { transporter: true, vehicle: true } }, vehicle: true, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } satisfies Prisma.DeliveryInclude;
 const activeJobStatuses = [TransportJobStatus.ASSIGNED, TransportJobStatus.ACCEPTED, TransportJobStatus.IN_PROGRESS];
 

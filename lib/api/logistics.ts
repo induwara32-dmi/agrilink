@@ -1,6 +1,19 @@
 import { apiRequest } from './client';
 import type { DeliveryMethodCode, DeliveryStatusCode, DeliveryStatusHistory } from './commerce';
 
+export type VehicleTypeCode = 'BICYCLE' | 'MOTORCYCLE' | 'TRICYCLE' | 'CAR' | 'PICKUP_TRUCK' | 'VAN' | 'REFRIGERATED_VAN' | 'TRUCK' | 'OTHER';
+export const VEHICLE_TYPE_OPTIONS: Array<{ value: VehicleTypeCode; label: string }> = [
+  { value: 'BICYCLE', label: 'Bicycle' },
+  { value: 'MOTORCYCLE', label: 'Motorcycle' },
+  { value: 'TRICYCLE', label: 'Tricycle' },
+  { value: 'CAR', label: 'Car' },
+  { value: 'PICKUP_TRUCK', label: 'Pickup truck' },
+  { value: 'VAN', label: 'Van' },
+  { value: 'REFRIGERATED_VAN', label: 'Refrigerated van' },
+  { value: 'TRUCK', label: 'Truck' },
+  { value: 'OTHER', label: 'Other' },
+];
+
 export type DeliveryTracking = {
   id: string; method: DeliveryMethodCode; status: DeliveryStatusCode; scheduledPickupAt: string | null; estimatedDeliveryAt: string | null; pickedUpAt: string | null; deliveredAt: string | null; recipientName: string | null; recipientNote: string | null; proofStorageKey: string | null; proofUrl: string | null; proofUploadedById: string | null;
   farmerOrder: { id: string; farmerOrderNumber: string; buyerNotes: string | null; deliveryRecipientName: string | null; deliveryRecipientPhone: string | null; deliveryLine1: string | null; deliveryLine2: string | null; deliveryCity: string | null; deliveryDistrict: string | null; deliveryRegion: string | null; farmer: { id: string; farmName: string; userId: string }; order: { id: string; orderNumber: string; buyerId: string }; items: Array<{ id: string; productName: string; quantity: string; unit: string }> };
@@ -25,16 +38,20 @@ export type TransportJobDetail = {
       deliveryRecipientName: string | null; deliveryRecipientPhone: string | null;
       deliveryLine1: string | null; deliveryLine2: string | null; deliveryCity: string | null; deliveryDistrict: string | null; deliveryRegion: string | null; deliveryCountryCode: string | null;
       items: Array<{ id: string; productName: string; quantity: string; unit: string }>;
-      farmer: { id: string; farmName: string; userId: string; user: { phone: string | null } };
+      farmer: { id: string; farmName: string; userId: string; whatsappNumber: string | null; user: { phone: string | null; addresses: Array<{ line1: string; line2: string | null; city: string; district: string | null; region: string | null }> } };
       order: { id: string; orderNumber: string; buyerId: string };
     };
     routePlan: { originLabel: string; destinationLabel: string; distanceKm: string | null; estimatedMinutes: number | null } | null;
   };
 };
-export type VehicleRecord = { id: string; type: string; registrationNumber: string; make: string | null; model: string | null; capacity: string | null; capacityUnit: string | null; isActive: boolean; isAvailable: boolean };
+export type VehicleRecord = { id: string; type: VehicleTypeCode; registrationNumber: string; make: string | null; model: string | null; color: string | null; capacity: string | null; capacityUnit: string | null; isActive: boolean; isAvailable: boolean };
 export const listDeliveries = (page = 1, pageSize = 10) => apiRequest<DeliveryTracking[]>(`/deliveries?page=${page}&pageSize=${pageSize}`, { authenticated: true });
 export const listTransportJobs = (page = 1, pageSize = 10) => apiRequest<TransportJob[]>(`/transport-jobs?page=${page}&pageSize=${pageSize}`, { authenticated: true });
 export const getTransportJob = (jobId: string) => apiRequest<TransportJobDetail>(`/transport-jobs/${encodeURIComponent(jobId)}`, { authenticated: true });
 export const acceptTransportJob = (jobId: string) => apiRequest<TransportJobDetail>(`/transport-jobs/${encodeURIComponent(jobId)}/accept`, { method: 'POST', authenticated: true, body: {} });
 export const rejectTransportJob = (jobId: string, reason?: string) => apiRequest<TransportJobDetail>(`/transport-jobs/${encodeURIComponent(jobId)}/reject`, { method: 'POST', authenticated: true, body: reason ? { reason } : {} });
 export const listVehicles = (page = 1, pageSize = 20) => apiRequest<VehicleRecord[]>(`/vehicles?page=${page}&pageSize=${pageSize}`, { authenticated: true });
+export type VehicleInput = { type: VehicleTypeCode; registrationNumber: string; make?: string; model?: string; color?: string; capacity?: string; capacityUnit?: string };
+export type VehicleUpdateInput = Partial<VehicleInput> & { isActive?: boolean };
+export const createVehicle = (input: VehicleInput) => apiRequest<VehicleRecord>('/vehicles', { method: 'POST', authenticated: true, body: input });
+export const updateVehicle = (vehicleId: string, input: VehicleUpdateInput) => apiRequest<VehicleRecord>(`/vehicles/${encodeURIComponent(vehicleId)}`, { method: 'PATCH', authenticated: true, body: input });

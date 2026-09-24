@@ -8,9 +8,7 @@ export const siteNavItems = [
   { label: 'Contact', href: '/#contact' },
 ];
 
-export type DashboardNavigationItem =
-  | { label: string; href: string; action?: never }
-  | { label: string; action: 'profile'; href?: never };
+export interface DashboardNavigationItem { label: string; href: string }
 
 export const dashboardNavigationByRole: Record<UserRole, readonly DashboardNavigationItem[]> = {
   FARMER: [
@@ -21,7 +19,7 @@ export const dashboardNavigationByRole: Record<UserRole, readonly DashboardNavig
     { label: 'Orders', href: '/orders' },
     { label: 'Marketplace', href: '/marketplace' },
     { label: 'Notifications', href: '/notifications' },
-    { label: 'Profile', action: 'profile' },
+    { label: 'Profile', href: '/profile' },
   ],
   BUYER: [
     { label: 'Buyer Dashboard', href: '/buyer' },
@@ -31,17 +29,17 @@ export const dashboardNavigationByRole: Record<UserRole, readonly DashboardNavig
     { label: 'Wishlist', href: '/marketplace/wishlist' },
     { label: 'Recently Viewed', href: '/marketplace/recently-viewed' },
     { label: 'Notifications', href: '/notifications' },
-    { label: 'Profile', action: 'profile' },
+    { label: 'Profile', href: '/profile' },
   ],
   TRANSPORTER: [
     { label: 'Transporter Dashboard', href: '/transporter' },
     { label: 'Available Jobs', href: '/transporter?view=available-jobs' },
     { label: 'Active Deliveries', href: '/transporter?view=active-deliveries' },
     { label: 'Delivery History', href: '/transporter?view=delivery-history' },
-    { label: 'Vehicle', href: '/transporter?view=vehicle' },
+    { label: 'Vehicle', href: '/profile' },
     { label: 'Earnings', href: '/transporter?view=earnings' },
     { label: 'Notifications', href: '/notifications' },
-    { label: 'Profile', action: 'profile' },
+    { label: 'Profile', href: '/profile' },
   ],
   ADMIN: [
     { label: 'Admin Dashboard', href: '/admin' },
@@ -52,7 +50,7 @@ export const dashboardNavigationByRole: Record<UserRole, readonly DashboardNavig
     { label: 'Approvals', href: '/admin?view=approvals' },
     { label: 'Analytics', href: '/admin?view=analytics' },
     { label: 'Notifications', href: '/notifications' },
-    { label: 'Profile', action: 'profile' },
+    { label: 'Profile', href: '/profile' },
   ],
 };
 

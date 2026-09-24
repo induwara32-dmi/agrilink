@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { Bell, ChevronRight, Menu, Search, ShoppingBag, Sparkles, UserCircle2, X } from 'lucide-react';
+import { Bell, ChevronRight, LogOut, Menu, Search, ShoppingBag, Sparkles, UserCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { navigationForRole, workspaceLabels } from '@/components/layout/navigation-data';
@@ -12,7 +12,6 @@ import { useAuth } from '@/providers/auth-provider';
 import { useQuery } from '@tanstack/react-query';
 import { NotificationPanel } from '@/components/features/notifications/notification-panel';
 import { getUnreadCount, notificationQueryKeys } from '@/lib/api/notifications';
-import { ProfileImageControl } from '@/components/features/media/profile-image-control';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -45,7 +44,6 @@ export function DashboardShell({ children }: DashboardShellProps) {
   const searchParams = useSearchParams();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const breadcrumbs = getBreadcrumbs(pathname);
   const { user, logout } = useAuth();
   const navigationItems = user ? navigationForRole(user.role) : [];
@@ -57,7 +55,6 @@ export function DashboardShell({ children }: DashboardShellProps) {
     if (href === dashboardPath) return pathname === href && searchParams.size === 0;
     return pathname === href || pathname.startsWith(`${href}/`);
   };
-  const displayName = user?.profile?.displayName || [user?.profile?.firstName, user?.profile?.lastName].filter(Boolean).join(' ') || user?.email;
   const unread = useQuery({ queryKey: notificationQueryKeys.unread(), queryFn: getUnreadCount, enabled: Boolean(user), refetchInterval: 60_000 });
 
   return (
@@ -76,9 +73,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
           <nav className="space-y-1 px-3 pb-6" aria-label="Dashboard navigation">
             {navigationItems.map((item) => {
-              const isActive = item.href ? isNavigationItemActive(item.href) : isProfileOpen;
-
-              return item.href ? (
+              const isActive = isNavigationItemActive(item.href);
+              return (
                 <Link
                   key={item.label}
                   href={item.href}
@@ -88,17 +84,6 @@ export function DashboardShell({ children }: DashboardShellProps) {
                   <span>{item.label}</span>
                   {isActive ? <Sparkles className="h-4 w-4" /> : null}
                 </Link>
-              ) : (
-                <button
-                  key={item.label}
-                  type="button"
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={() => { setIsProfileOpen(true); setIsNotificationsOpen(false); }}
-                  className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${isActive ? 'bg-primary/10 text-primary' : 'text-slate-600 hover:bg-slate-100'}`}
-                >
-                  <span>{item.label}</span>
-                  {isActive ? <Sparkles className="h-4 w-4" /> : null}
-                </button>
               );
             })}
           </nav>
@@ -119,7 +104,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <Button variant="ghost" size="icon" aria-label="Notifications" aria-expanded={isNotificationsOpen} onClick={() => { setIsNotificationsOpen((open) => !open); setIsProfileOpen(false); }}>
+                  <Button variant="ghost" size="icon" aria-label="Notifications" aria-expanded={isNotificationsOpen} onClick={() => setIsNotificationsOpen((open) => !open)}>
                     <Bell className="h-4 w-4" />
                     {(unread.data?.data.count ?? 0) > 0 ? <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] text-white">{unread.data!.data.count > 99 ? '99+' : unread.data!.data.count}</span> : null}
                   </Button>
@@ -130,22 +115,12 @@ export function DashboardShell({ children }: DashboardShellProps) {
                     </div>
                   ) : null}
                 </div>
-                <div className="relative">
-                  <Button variant="outline" className="gap-2" aria-expanded={isProfileOpen} onClick={() => { setIsProfileOpen((open) => !open); setIsNotificationsOpen(false); }}>
-                    <UserCircle2 className="h-4 w-4" />
-                    Profile
-                  </Button>
-                  {isProfileOpen ? (
-                    <div className="absolute right-0 z-10 mt-2 w-72 rounded-2xl border border-border bg-white p-3 shadow-lg">
-                      <p className="text-sm font-semibold text-slate-900">{displayName}</p>
-                      <p className="mt-1 text-sm capitalize text-slate-600">{user?.role.toLowerCase()} account</p>
-                      <ProfileImageControl />
-                      <Button variant="ghost" className="mt-2 w-full justify-start" onClick={() => void logout().then(() => window.location.assign('/auth/sign-in'))}>
-                        Sign out
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
+                <Button asChild variant="outline" className="gap-2">
+                  <Link href="/profile"><UserCircle2 className="h-4 w-4" /> Profile</Link>
+                </Button>
+                <Button variant="ghost" size="icon" aria-label="Sign out" onClick={() => void logout().then(() => window.location.assign('/auth/sign-in'))}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
@@ -160,15 +135,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
                   </div>
                   <div className="flex flex-col gap-2">
                     {navigationItems.map((item) => {
-                      const isActive = item.href ? isNavigationItemActive(item.href) : isProfileOpen;
-                      return item.href ? (
+                      const isActive = isNavigationItemActive(item.href);
+                      return (
                         <Link key={item.label} href={item.href} aria-current={isActive ? 'page' : undefined} onClick={() => setIsMobileNavOpen(false)} className={`rounded-2xl px-3 py-2 text-sm font-medium shadow-sm ${isActive ? 'bg-primary/10 text-primary' : 'bg-slate-50 text-slate-700'}`}>
                           {item.label}
                         </Link>
-                      ) : (
-                        <button key={item.label} type="button" aria-current={isActive ? 'page' : undefined} onClick={() => { setIsMobileNavOpen(false); setIsProfileOpen(true); setIsNotificationsOpen(false); }} className={`rounded-2xl px-3 py-2 text-left text-sm font-medium shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${isActive ? 'bg-primary/10 text-primary' : 'bg-slate-50 text-slate-700'}`}>
-                          {item.label}
-                        </button>
                       );
                     })}
                   </div>

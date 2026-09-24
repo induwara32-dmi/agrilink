@@ -16,13 +16,12 @@ export default function CreateAccountPage() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const phone = String(form.get('phone') ?? '').trim();
     saveDraft({
       firstName: String(form.get('firstName')).trim(),
       lastName: String(form.get('lastName')).trim(),
       email: String(form.get('email')).trim(),
       password: String(form.get('password')),
-      ...(phone ? { phone } : {}),
+      phone: String(form.get('phone') ?? '').trim(),
     });
     router.push('/auth/role-selection');
   }
@@ -39,7 +38,7 @@ export default function CreateAccountPage() {
           <AuthFormField label="Last name" name="lastName" autoComplete="family-name" required defaultValue={draft?.lastName} placeholder="Yusuf" />
         </div>
         <AuthFormField label="Email" name="email" type="email" autoComplete="email" required defaultValue={draft?.email} placeholder="you@example.com" />
-        <AuthFormField label="Phone (optional)" name="phone" type="tel" autoComplete="tel" minLength={7} maxLength={32} defaultValue={draft?.phone} placeholder="+94 77 123 4567" />
+        <AuthFormField label="Phone" name="phone" type="tel" autoComplete="tel" required minLength={7} maxLength={32} defaultValue={draft?.phone} placeholder="+94 77 123 4567" />
         <AuthFormField label="Password" name="password" type="password" autoComplete="new-password" required minLength={12} maxLength={128} defaultValue={draft?.password} placeholder="••••••••••••" />
         <p className="text-xs leading-5 text-slate-500">Use at least 12 characters with uppercase, lowercase, number, and symbol.</p>
         <div className="rounded-2xl border border-border bg-slate-50 p-4 text-sm text-slate-600">
