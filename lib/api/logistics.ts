@@ -27,6 +27,7 @@ export const getDelivery = (deliveryId: string) => apiRequest<DeliveryTracking>(
 export const scheduleDelivery = (deliveryId: string, scheduledPickupAt: string) => apiRequest<DeliveryTracking>(`/deliveries/${encodeURIComponent(deliveryId)}/schedule`, { method: 'POST', authenticated: true, body: { scheduledPickupAt } });
 export const transitionDelivery = (deliveryId: string, status: DeliveryStatusCode, note?: string) => apiRequest<DeliveryTracking>(`/deliveries/${encodeURIComponent(deliveryId)}/transitions`, { method: 'POST', authenticated: true, body: note ? { status, note } : { status } });
 export type TransportJob = { id: string; status: string; offeredFee: string; currency: string; requiredCapacity: string | null; capacityUnit: string | null; delivery: { id: string; status: DeliveryStatusCode; farmerOrder: { farmerOrderNumber: string; items: Array<{ productName: string; quantity: string; unit: string }>; farmer: { farmName: string }; order: { orderNumber: string } }; routePlan: { originLabel: string; destinationLabel: string; estimatedMinutes: number | null } | null } };
+export type JobStatusBucketCode = 'open' | 'active' | 'history';
 export type TransportJobDetail = {
   id: string; status: string; offeredFee: string; currency: string; requiredCapacity: string | null; capacityUnit: string | null;
   transporter: { id: string; businessName: string | null; userId: string } | null;
@@ -46,7 +47,7 @@ export type TransportJobDetail = {
 };
 export type VehicleRecord = { id: string; type: VehicleTypeCode; registrationNumber: string; make: string | null; model: string | null; color: string | null; capacity: string | null; capacityUnit: string | null; isActive: boolean; isAvailable: boolean };
 export const listDeliveries = (page = 1, pageSize = 10) => apiRequest<DeliveryTracking[]>(`/deliveries?page=${page}&pageSize=${pageSize}`, { authenticated: true });
-export const listTransportJobs = (page = 1, pageSize = 10) => apiRequest<TransportJob[]>(`/transport-jobs?page=${page}&pageSize=${pageSize}`, { authenticated: true });
+export const listTransportJobs = (page = 1, pageSize = 10, status?: JobStatusBucketCode) => apiRequest<TransportJob[]>(`/transport-jobs?page=${page}&pageSize=${pageSize}${status ? `&status=${status}` : ''}`, { authenticated: true });
 export const getTransportJob = (jobId: string) => apiRequest<TransportJobDetail>(`/transport-jobs/${encodeURIComponent(jobId)}`, { authenticated: true });
 export const acceptTransportJob = (jobId: string) => apiRequest<TransportJobDetail>(`/transport-jobs/${encodeURIComponent(jobId)}/accept`, { method: 'POST', authenticated: true, body: {} });
 export const rejectTransportJob = (jobId: string, reason?: string) => apiRequest<TransportJobDetail>(`/transport-jobs/${encodeURIComponent(jobId)}/reject`, { method: 'POST', authenticated: true, body: reason ? { reason } : {} });

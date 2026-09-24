@@ -2,7 +2,7 @@ import { DeliveryMethod, DeliveryStatus, Prisma, Role } from '@prisma/client';
 import { DELIVERY_TRANSITIONS } from '../constants/logistics';
 import { HTTP_STATUS } from '../constants/application';
 import type { LogisticsRepository } from '../repositories/logistics.repository';
-import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
+import type { AssignmentInput, DeliveryTransitionInput, JobListQuery, LogisticsActor, PageQuery, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
 import { ApiError } from '../utils/api-error';
 import { BaseService } from './base.service';
 import type { DomainEventPublisher, DomainEventType } from '../types/domain-events';
@@ -11,7 +11,7 @@ const meta = (query: PageQuery, total: number) => ({ ...query, total, totalPages
 
 export class LogisticsService extends BaseService {
   public constructor(private readonly repository: LogisticsRepository, private readonly events: DomainEventPublisher) { super(); }
-  public async listJobs(query: PageQuery, actor: LogisticsActor) { const result = await this.repository.listJobs(actor, query); return { ...result, meta: meta(query, result.total) }; }
+  public async listJobs(query: JobListQuery, actor: LogisticsActor) { const result = await this.repository.listJobs(actor, query); return { ...result, meta: meta(query, result.total) }; }
   public async getJob(id: string, actor: LogisticsActor) { const job = await this.repository.findJob(id); if (!job || (actor.role === Role.TRANSPORTER && job.status !== 'OPEN' && job.transporter?.userId !== actor.userId)) throw new ApiError(HTTP_STATUS.NOT_FOUND, 'TRANSPORT_JOB_NOT_FOUND', 'Transport job not found.'); return job; }
   public async automaticAssign(id: string, actor: LogisticsActor) { try { const job = await this.repository.assign(id, null, actor.userId, actor.requestId); await this.publishJobEvent('DELIVERY_ASSIGNED', job); return job; } catch (error) { this.translate(error); } }
   public async manualAssign(id: string, input: AssignmentInput, actor: LogisticsActor) { try { const job = await this.repository.assign(id, input, actor.userId, actor.requestId); await this.publishJobEvent('DELIVERY_ASSIGNED', job); return job; } catch (error) { this.translate(error); } }

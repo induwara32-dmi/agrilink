@@ -10,7 +10,7 @@ const jobParams = z.object({ jobId: uuid });
 const deliveryParams = z.object({ deliveryId: uuid });
 const vehicleParams = z.object({ vehicleId: uuid });
 
-export const listJobsSchema = request(empty, empty, pages);
+export const listJobsSchema = request(empty, empty, pages.extend({ status: z.enum(['open', 'active', 'history']).optional() }));
 export const jobSchema = request(empty, jobParams, empty);
 export const deliverySchema = request(empty, deliveryParams, empty);
 export const manualAssignmentSchema = request(z.object({ transporterId: uuid, vehicleId: uuid }), jobParams, empty);

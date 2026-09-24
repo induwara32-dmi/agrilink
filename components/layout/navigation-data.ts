@@ -33,9 +33,9 @@ export const dashboardNavigationByRole: Record<UserRole, readonly DashboardNavig
   ],
   TRANSPORTER: [
     { label: 'Transporter Dashboard', href: '/transporter' },
-    { label: 'Available Jobs', href: '/transporter?view=available-jobs' },
-    { label: 'Active Deliveries', href: '/transporter?view=active-deliveries' },
-    { label: 'Delivery History', href: '/transporter?view=delivery-history' },
+    { label: 'Available Jobs', href: '/transport-jobs?status=open' },
+    { label: 'Active Deliveries', href: '/transport-jobs?status=active' },
+    { label: 'Delivery History', href: '/transport-jobs?status=history' },
     { label: 'Vehicle', href: '/profile' },
     { label: 'Earnings', href: '/transporter?view=earnings' },
     { label: 'Notifications', href: '/notifications' },

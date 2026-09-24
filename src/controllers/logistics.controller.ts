@@ -1,7 +1,7 @@
 import type { Request, RequestHandler } from 'express';
 import { HTTP_STATUS } from '../constants/application';
 import type { LogisticsService } from '../services/logistics.service';
-import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
+import type { AssignmentInput, DeliveryTransitionInput, JobStatusBucket, LogisticsActor, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
 import type { AcceptJobBody, CreateVehicleBody, ManualAssignmentBody, RejectJobBody, ScheduleDeliveryBody, TransitionDeliveryBody, UpdateVehicleBody } from '../validators/logistics.validators';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess } from '../utils/response';
@@ -10,10 +10,11 @@ import { BaseController } from './base.controller';
 const actorFrom = (request: Request): LogisticsActor => ({ userId: request.auth!.userId, role: request.auth!.role, requestId: request.requestId });
 const parameter = (request: Request, name: string): string => { const value = request.params[name]; return Array.isArray(value) ? value[0]! : value!; };
 const pageQuery = (request: Request) => ({ page: Number(request.query.page), pageSize: Number(request.query.pageSize) });
+const jobListQuery = (request: Request) => ({ ...pageQuery(request), ...(typeof request.query.status === 'string' ? { status: request.query.status as JobStatusBucket } : {}) });
 
 export class LogisticsController extends BaseController {
   public constructor(private readonly service: LogisticsService) { super(); }
-  public readonly listJobs: RequestHandler = asyncHandler(async (request, response) => { const result = await this.service.listJobs(pageQuery(request), actorFrom(request)); return sendSuccess(response, HTTP_STATUS.OK, result.items, result.meta); });
+  public readonly listJobs: RequestHandler = asyncHandler(async (request, response) => { const result = await this.service.listJobs(jobListQuery(request), actorFrom(request)); return sendSuccess(response, HTTP_STATUS.OK, result.items, result.meta); });
   public readonly getJob: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.getJob(parameter(request, 'jobId'), actorFrom(request))));
   public readonly automaticAssign: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.automaticAssign(parameter(request, 'jobId'), actorFrom(request))));
   public readonly manualAssign: RequestHandler = asyncHandler(async (request, response) => sendSuccess(response, HTTP_STATUS.OK, await this.service.manualAssign(parameter(request, 'jobId'), request.body as ManualAssignmentBody as AssignmentInput, actorFrom(request))));

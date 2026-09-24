@@ -2,6 +2,8 @@ import type { DeliveryStatus, Role, VehicleType } from '@prisma/client';
 
 export interface LogisticsActor { userId: string; role: Role; requestId: string }
 export interface PageQuery { page: number; pageSize: number }
+export type JobStatusBucket = 'open' | 'active' | 'history';
+export interface JobListQuery extends PageQuery { status?: JobStatusBucket }
 export interface VehicleInput { ownerId?: string; type: VehicleType; registrationNumber: string; make?: string; model?: string; color?: string; capacity?: string; capacityUnit?: string; isActive?: boolean }
 export type VehicleUpdateInput = Partial<Omit<VehicleInput, 'ownerId'>>;
 export interface AssignmentInput { transporterId: string; vehicleId: string }

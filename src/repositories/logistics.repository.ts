@@ -1,17 +1,19 @@
 import { AccountStatus, DeliveryMethod, DeliveryStatus, FarmerOrderStatus, InventoryMovementType, OrderStatus, Prisma, Role, TransportJobStatus, VerificationStatus, type PrismaClient } from '@prisma/client';
 import { ACTIVE_DELIVERY_STATUSES, DEFAULT_DELIVERY_MINUTES } from '../constants/logistics';
-import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuery, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
+import type { AssignmentInput, DeliveryTransitionInput, JobListQuery, JobStatusBucket, LogisticsActor, PageQuery, ScheduleInput, VehicleInput, VehicleUpdateInput } from '../types/logistics';
 import { BaseRepository } from './base.repository';
 
 const jobInclude = { delivery: { include: { farmerOrder: { include: { items: true, farmer: { include: { user: { select: { phone: true, addresses: { where: { isDefault: true, deletedAt: null }, take: 1 } } } } }, order: { select: { id: true, buyerId: true, orderNumber: true } } } }, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } }, transporter: { include: { user: { select: { id: true, profile: true } } } }, vehicle: true, rejections: { orderBy: { createdAt: 'desc' as const } } } satisfies Prisma.TransportJobInclude;
 const deliveryInclude = { farmerOrder: { include: { farmer: true, order: true, items: true } }, transportJob: { include: { transporter: { include: { user: { select: { phone: true, profile: { select: { firstName: true, lastName: true } } } } } }, vehicle: true } }, vehicle: true, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } satisfies Prisma.DeliveryInclude;
 const activeJobStatuses = [TransportJobStatus.ASSIGNED, TransportJobStatus.ACCEPTED, TransportJobStatus.IN_PROGRESS];
+const jobStatusBuckets: Record<JobStatusBucket, TransportJobStatus[]> = { open: [TransportJobStatus.OPEN], active: activeJobStatuses, history: [TransportJobStatus.COMPLETED, TransportJobStatus.FAILED, TransportJobStatus.CANCELLED, TransportJobStatus.REJECTED] };
 
 export class LogisticsRepository extends BaseRepository {
   public constructor(database: PrismaClient) { super(database); }
 
-  public async listJobs(actor: LogisticsActor, query: PageQuery) {
-    const where: Prisma.TransportJobWhereInput = actor.role === Role.TRANSPORTER ? { OR: [{ status: TransportJobStatus.OPEN }, { transporter: { userId: actor.userId } }] } : {};
+  public async listJobs(actor: LogisticsActor, query: JobListQuery) {
+    const accessWhere: Prisma.TransportJobWhereInput = actor.role === Role.TRANSPORTER ? { OR: [{ status: TransportJobStatus.OPEN }, { transporter: { userId: actor.userId } }] } : {};
+    const where: Prisma.TransportJobWhereInput = query.status ? { AND: [accessWhere, { status: { in: jobStatusBuckets[query.status] ?? [] } }] } : accessWhere;
     const [items, total] = await this.database.$transaction([this.database.transportJob.findMany({ where, include: jobInclude, orderBy: { createdAt: 'desc' }, skip: (query.page - 1) * query.pageSize, take: query.pageSize }), this.database.transportJob.count({ where })]);
     return { items, total };
   }
