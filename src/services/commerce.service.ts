@@ -58,13 +58,15 @@ export class CommerceService extends BaseService {
     try {
       const order = await this.repository.acceptFarmerOrder(orderId, farmerOrderId, actor);
       await this.events.publish({ type: 'ORDER_ACCEPTED', recipientIds: [order.buyerId, actor.userId], data: { orderId: order.id, orderNumber: order.orderNumber, farmerOrderId } });
+      let assigned = false;
       try {
         const job = await this.repository.findTransportJobForFarmerOrder(farmerOrderId);
-        if (job && job.status === 'OPEN' && !job.transporterId) await this.logistics.automaticAssign(job.id, actor);
+        if (job && job.status === 'OPEN' && !job.transporterId) { await this.logistics.automaticAssign(job.id, actor); assigned = true; }
       } catch (assignError) {
         logger.error({ err: assignError, farmerOrderId }, 'Automatic transporter assignment after farmer acceptance failed');
       }
-      return order;
+      // The order snapshot above predates the auto-assignment above; re-fetch so the response reflects the job's actual post-assignment status.
+      return assigned ? (await this.repository.findOrder(orderId, actor)) ?? order : order;
     } catch (error) { this.translate(error); }
   }
 

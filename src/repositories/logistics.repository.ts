@@ -4,7 +4,7 @@ import type { AssignmentInput, DeliveryTransitionInput, LogisticsActor, PageQuer
 import { BaseRepository } from './base.repository';
 
 const jobInclude = { delivery: { include: { farmerOrder: { include: { items: true, farmer: { include: { user: { select: { phone: true, addresses: { where: { isDefault: true, deletedAt: null }, take: 1 } } } } }, order: { select: { id: true, buyerId: true, orderNumber: true } } } }, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } }, transporter: { include: { user: { select: { id: true, profile: true } } } }, vehicle: true, rejections: { orderBy: { createdAt: 'desc' as const } } } satisfies Prisma.TransportJobInclude;
-const deliveryInclude = { farmerOrder: { include: { farmer: true, order: true, items: true } }, transportJob: { include: { transporter: true, vehicle: true } }, vehicle: true, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } satisfies Prisma.DeliveryInclude;
+const deliveryInclude = { farmerOrder: { include: { farmer: true, order: true, items: true } }, transportJob: { include: { transporter: { include: { user: { select: { phone: true, profile: { select: { firstName: true, lastName: true } } } } } }, vehicle: true } }, vehicle: true, routePlan: true, statusHistory: { orderBy: { occurredAt: 'asc' as const } } } satisfies Prisma.DeliveryInclude;
 const activeJobStatuses = [TransportJobStatus.ASSIGNED, TransportJobStatus.ACCEPTED, TransportJobStatus.IN_PROGRESS];
 
 export class LogisticsRepository extends BaseRepository {
@@ -43,7 +43,9 @@ export class LogisticsRepository extends BaseRepository {
       }
 
       const updated = await transaction.transportJob.update({ where: { id: job.id }, data: { transporterId: candidate.transporter.id, vehicleId: candidate.vehicle.id, acceptedById: null, acceptedAt: null, status: TransportJobStatus.ASSIGNED } });
-      await transaction.delivery.update({ where: { id: job.deliveryId }, data: { status: DeliveryStatus.ASSIGNED } });
+      // Give the buyer/farmer an ETA as soon as a transporter is assigned; schedule() below refines it once an actual pickup time is set.
+      const estimatedDeliveryAt = new Date(Date.now() + DEFAULT_DELIVERY_MINUTES * 60_000);
+      await transaction.delivery.update({ where: { id: job.deliveryId }, data: { status: DeliveryStatus.ASSIGNED, estimatedDeliveryAt } });
       await transaction.deliveryStatusHistory.create({ data: { deliveryId: job.deliveryId, actorId, fromStatus: job.delivery.status, toStatus: DeliveryStatus.ASSIGNED, note: input ? 'Manually assigned by admin' : 'Automatically assigned' } });
       await transaction.auditLog.create({ data: { actorId, action: input ? 'TRANSPORT_JOB_MANUALLY_ASSIGNED' : 'TRANSPORT_JOB_AUTO_ASSIGNED', entityType: 'TransportJob', entityId: job.id, requestId, after: { transporterId: candidate.transporter.id, vehicleId: candidate.vehicle.id } } });
       return transaction.transportJob.findUniqueOrThrow({ where: { id: updated.id }, include: jobInclude });
